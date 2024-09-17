@@ -2,23 +2,34 @@
 package com.contact.manager.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import org.hibernate.proxy.HibernateProxy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Objects;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 public class Attachment {
+    ///Yo can not update an attachment
+
+    private static final Logger log = LoggerFactory.getLogger(Attachment.class);
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     private String fileName;
     private String fileType;
+    @NotBlank
     private String filePath; // New field to store file path
 
     @CreatedDate
@@ -82,6 +93,17 @@ public class Attachment {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    @PostRemove
+    public void postRemove() {
+        try {
+            Path path = Paths.get(filePath);
+            Files.deleteIfExists(path);
+        } catch (Exception e) {
+            log.error("Could not delete file: {}", filePath, e);
+//            throw new IllegalStateException("Could not delete file: " + filePath, e);
+        }
     }
 
     @Override

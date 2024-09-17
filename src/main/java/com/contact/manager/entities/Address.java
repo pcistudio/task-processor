@@ -1,6 +1,8 @@
 package com.contact.manager.entities;
 
+import com.contact.manager.entities.contraints.AtLeastOneField;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -11,11 +13,12 @@ import java.util.Objects;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
+@AtLeastOneField(fields = {"street", "city", "state", "zipCode", "country"})
 public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    @NotBlank
     private String street;
     private String city;
     private String state;

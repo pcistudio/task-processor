@@ -1,10 +1,12 @@
 package com.contact.manager.config;
 
+import com.contact.manager.services.AttachmentManagerImpl;
 import com.contact.manager.services.AttachmentManager;
-import com.contact.manager.services.AttachmentManagerInterface;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Clock;
 
 @Configuration
 public class CommonConfig {
@@ -13,7 +15,7 @@ public class CommonConfig {
     private String attachmentDirectory;
 
     @Bean
-    public AttachmentManagerInterface attachmentManager() {
-        return new AttachmentManager(attachmentDirectory);
+    public AttachmentManager attachmentManager() {
+        return new AttachmentManagerImpl(attachmentDirectory, Clock.systemDefaultZone());
     }
 }

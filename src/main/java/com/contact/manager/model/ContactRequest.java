@@ -1,14 +1,22 @@
 // src/main/java/com/contact/manager/model/ContactRequest.java
 package com.contact.manager.model;
 
+import com.contact.manager.entities.contraints.AtLeastOneField;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+
+@AtLeastOneField(fields = {"officePhone", "mobile", "email"})
 public class ContactRequest {
+    @NotBlank
     private String firstName;
     private String lastName;
     private String jobTitle;
     private String officePhone;
     private String mobile;
     private String description;
+    @Valid
     private AddressRequest primaryAddress;
+    @Valid
     private AddressRequest secondaryAddress;
 
     public String getFirstName() {

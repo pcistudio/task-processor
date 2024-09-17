@@ -15,7 +15,7 @@ public class NoteView {
         Assert.notNull(note, "Note must not be null");
         this.id = note.getId();
         this.content = note.getContent();
-        this.contactId = note.getContact().getId();
+        this.contactId = note.getContact()!= null ? note.getContact().getId() : null;
     }
 
     public static List<NoteView> fromNotes(Set<Note> notes) {

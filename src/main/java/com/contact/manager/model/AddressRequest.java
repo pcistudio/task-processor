@@ -1,11 +1,15 @@
 // src/main/java/com/contact/manager/model/AddressRequest.java
 package com.contact.manager.model;
 
+import com.contact.manager.entities.contraints.AtLeastOneField;
+
+@AtLeastOneField(fields = {"street", "city", "state", "zipCode", "country"})
 public class AddressRequest {
     private String street;
     private String city;
     private String state;
     private String zipCode;
+    private String country;
 
     public String getStreet() {
         return street;
@@ -37,5 +41,13 @@ public class AddressRequest {
 
     public void setZipCode(String zipCode) {
         this.zipCode = zipCode;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 }

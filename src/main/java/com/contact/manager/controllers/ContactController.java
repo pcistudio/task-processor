@@ -9,19 +9,23 @@ import com.contact.manager.services.AddressService;
 import com.contact.manager.services.AttachmentService;
 import com.contact.manager.services.ContactService;
 import com.contact.manager.services.NoteService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/contacts")
 public class ContactController {
 
+    private static final Logger log = LoggerFactory.getLogger(ContactController.class);
     private final ContactService contactService;
     private final NoteService noteService;
     private final AddressService addressService;
@@ -35,7 +39,7 @@ public class ContactController {
     }
 
     @PostMapping
-    public ResponseEntity<Contact> createContact(@RequestBody Contact contact) {
+    public ResponseEntity<Contact> createContact(@RequestBody @Valid Contact contact) {
         return ResponseEntity.ok(contactService.saveContact(contact));
     }
 
@@ -55,7 +59,7 @@ public class ContactController {
     @GetMapping
     public ResponseEntity<List<ContactView>> searchContact(@RequestParam(required = false) String filter) {
 
-        List<Contact> contacts = StringUtils.hasLength(filter)? contactService.searchContact(filter): contactService.getAllContacts();
+        List<Contact> contacts = StringUtils.hasLength(filter) ? contactService.searchContact(filter) : contactService.getAllContacts();
         return ResponseEntity.ok(
                 contacts.stream()
                         .map(ContactView::new)
@@ -65,14 +69,14 @@ public class ContactController {
 
 
     @PostMapping("/{id}/notes")
-    public ResponseEntity<NoteView> createNote(@PathVariable("id") Long contactId, @RequestBody NoteRequest note) {
+    public ResponseEntity<NoteView> createNote(@PathVariable("id") Long contactId, @RequestBody @Valid NoteRequest note) {
         Note createdNote = noteService.saveNote(contactId, note);
         return ResponseEntity.ok(new NoteView(createdNote));
     }
 
     // Update Address
     @PutMapping("/{contactId}/addresses/{addressId}")
-    public ResponseEntity<Address> updateAddress(@PathVariable Long contactId, @PathVariable Long addressId, @RequestBody AddressRequest addressRequest) {
+    public ResponseEntity<Address> updateAddress(@PathVariable Long contactId, @PathVariable Long addressId, @RequestBody @Valid AddressRequest addressRequest) {
         Address updatedAddress = addressService.updateAddress(contactId, addressId, addressRequest);
         return ResponseEntity.ok(updatedAddress);
     }
@@ -84,13 +88,13 @@ public class ContactController {
         return ResponseEntity.noContent().build();
     }
 
-    // Update Attachment
-    //TODO Add contactId and check if the attachment belongs to the contact
-    @PutMapping("/{contactId}/attachments/{attachmentId}")
-    public ResponseEntity<AttachmentView> updateAttachment(@PathVariable Long contactId, @PathVariable Long attachmentId, @RequestBody AttachmentRequest attachmentRequest) {
-        Attachment updatedAttachment = attachmentService.updateAttachment(attachmentId, attachmentRequest);
-        return ResponseEntity.ok(new AttachmentView(updatedAttachment));
-    }
+//    // Update Attachment not allowed
+//    //TODO Add contactId and check if the attachment belongs to the contact
+//    @PutMapping("/{contactId}/attachments/{attachmentId}")
+//    public ResponseEntity<AttachmentView> updateAttachment(@PathVariable Long contactId, @PathVariable Long attachmentId, @RequestBody AttachmentRequest attachmentRequest) {
+//        Attachment updatedAttachment = attachmentService.updateAttachment(attachmentId, attachmentRequest);
+//        return ResponseEntity.ok(new AttachmentView(updatedAttachment));
+//    }
 
     // Delete Attachment
     @DeleteMapping("/{contactId}/attachments/{attachmentId}")
@@ -101,7 +105,7 @@ public class ContactController {
 
     // Update Note
     @PutMapping("/{contactId}/notes/{noteId}")
-    public ResponseEntity<NoteView> updateNote(@PathVariable Long contactId, @PathVariable Long noteId, @RequestBody NoteRequest noteRequest) {
+    public ResponseEntity<NoteView> updateNote(@PathVariable Long contactId, @PathVariable Long noteId, @RequestBody @Valid NoteRequest noteRequest) {
         Note updatedNote = noteService.updateNote(noteId, noteRequest);
         return ResponseEntity.ok(new NoteView(updatedNote));
     }
@@ -115,9 +119,9 @@ public class ContactController {
 
 
     @PutMapping("/{contactId}")
-    public ResponseEntity<ContactView> updateContact(@PathVariable Long contactId, @RequestBody Contact contactDetails) {
+    public ResponseEntity<ContactModel> updateContact(@PathVariable Long contactId, @RequestBody @Valid Contact contactDetails) {
         Contact updatedContact = contactService.updateContact(contactId, contactDetails);
-        return ResponseEntity.ok(new ContactView(updatedContact));
+        return ResponseEntity.ok(new ContactModel(updatedContact));
     }
 
     @DeleteMapping("/{contactId}")
@@ -125,5 +129,20 @@ public class ContactController {
         contactService.deleteContact(contactId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{contactId}/attachments/{attachmentId}")
+    public ResponseEntity<Resource> serveFile(@PathVariable long contactId, @PathVariable long attachmentId) {
+        try {
+            AttachmentResource attachmentResource = attachmentService.loadAttachmentAsResource(contactId, attachmentId);
+            log.info("Downloading attachment: {}", attachmentResource.getAttachment().getFileName());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachmentResource.getAttachment().getFileName() + "\"")
+                    .body(attachmentResource.getResource());
+        } catch (IllegalArgumentException ex) {
+            log.error("Attachment not found contactId={}, index={}", contactId, attachmentId, ex);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
 }

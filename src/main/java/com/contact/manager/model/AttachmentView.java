@@ -2,27 +2,34 @@ package com.contact.manager.model;
 
 import com.contact.manager.entities.Attachment;
 import org.springframework.util.Assert;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 public class AttachmentView {
     private Long id;
     private String fileName;
     private String fileType;
-    private String filePath; // New field to store file path
-    private Long contactId;
+    // Change this value for a fileURL instead of a physical path
+//    private String filePath; // New field to store file path
+    private String url;
+//    private Long contactId;
 
     public AttachmentView(Attachment attachment) {
+
         Assert.notNull(attachment, "Attachment must not be null");
+        Assert.notNull(attachment.getId(), "Attachment id must not be null");
         this.id = attachment.getId();
         this.fileName = attachment.getFileName();
         this.fileType = attachment.getFileType();
-        this.filePath = attachment.getFilePath();
-        this.contactId = attachment.getContact().getId();
+//        this.contactId = attachment.getContact().getId();
+//        this.url = buildUrl(attachment.getId());
+
     }
 
-    public static List<AttachmentView> fromAttachments(Set<Attachment> attachments) {
+    public static List<AttachmentView> fromAttachments(Collection<Attachment> attachments) {
         if (attachments != null) {
             return attachments.stream().map(AttachmentView::new).toList();
         }
@@ -56,21 +63,31 @@ public class AttachmentView {
         return this;
     }
 
-    public String getFilePath() {
-        return filePath;
+//    public String getFilePath() {
+//        return filePath;
+//    }
+//
+//    public AttachmentView setFilePath(String filePath) {
+//        this.filePath = filePath;
+//        return this;
+//    }
+
+
+    public String getUrl() {
+        return url;
     }
 
-    public AttachmentView setFilePath(String filePath) {
-        this.filePath = filePath;
+    public AttachmentView setUrl(String url) {
+        this.url = url;
         return this;
     }
 
-    public Long getContactId() {
-        return contactId;
-    }
-
-    public AttachmentView setContactId(Long contactId) {
-        this.contactId = contactId;
-        return this;
-    }
+//    public Long getContactId() {
+//        return contactId;
+//    }
+//
+//    public AttachmentView setContactId(Long contactId) {
+//        this.contactId = contactId;
+//        return this;
+//    }
 }

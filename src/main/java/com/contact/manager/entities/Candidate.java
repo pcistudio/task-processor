@@ -1,6 +1,8 @@
+// src/main/java/com/contact/manager/entities/Candidate.java
 package com.contact.manager.entities;
 
 import com.contact.manager.entities.contraints.AtLeastOneField;
+import com.contact.manager.entities.converter.JsonConverters;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.proxy.HibernateProxy;
@@ -9,18 +11,15 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @AtLeastOneField(fields = {"officePhone", "mobile", "email"})
-public class Contact {
+public class Candidate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @NotBlank
     private String firstName;
     private String lastName;
@@ -36,24 +35,28 @@ public class Contact {
 
     @LastModifiedDate
     private Instant updatedAt;
-    
-    @OneToOne(cascade = CascadeType.ALL)
+
+    @Convert(converter = JsonConverters.AddressJsonConverter.class)
+    @Column(columnDefinition = "TEXT")
     private Address primaryAddress;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @Convert(converter = JsonConverters.AddressJsonConverter.class)
+    @Column(columnDefinition = "TEXT")
     private Address secondaryAddress;
 
-    @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Convert(converter = JsonConverters.NoteSetJsonConverter.class)
+    @Column(columnDefinition = "TEXT")
     private Set<Note> notes = new HashSet<>();
 
-    @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Attachment> attachments = new HashSet<>();
+    @Convert(converter = JsonConverters.AttachmentListJsonConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private List<Attachment> attachments = new ArrayList<>();
 
     public Long getId() {
         return id;
     }
 
-    public Contact setId(Long id) {
+    public Candidate setId(Long id) {
         this.id = id;
         return this;
     }
@@ -62,17 +65,8 @@ public class Contact {
         return firstName;
     }
 
-    public Contact setFirstName(String firstName) {
+    public Candidate setFirstName(String firstName) {
         this.firstName = firstName;
-        return this;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public Contact setEmail(String email) {
-        this.email = email;
         return this;
     }
 
@@ -80,7 +74,7 @@ public class Contact {
         return lastName;
     }
 
-    public Contact setLastName(String lastName) {
+    public Candidate setLastName(String lastName) {
         this.lastName = lastName;
         return this;
     }
@@ -89,7 +83,7 @@ public class Contact {
         return jobTitle;
     }
 
-    public Contact setJobTitle(String jobTitle) {
+    public Candidate setJobTitle(String jobTitle) {
         this.jobTitle = jobTitle;
         return this;
     }
@@ -98,7 +92,7 @@ public class Contact {
         return officePhone;
     }
 
-    public Contact setOfficePhone(String officePhone) {
+    public Candidate setOfficePhone(String officePhone) {
         this.officePhone = officePhone;
         return this;
     }
@@ -107,8 +101,17 @@ public class Contact {
         return mobile;
     }
 
-    public Contact setMobile(String mobile) {
+    public Candidate setMobile(String mobile) {
         this.mobile = mobile;
+        return this;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public Candidate setEmail(String email) {
+        this.email = email;
         return this;
     }
 
@@ -116,44 +119,8 @@ public class Contact {
         return description;
     }
 
-    public Contact setDescription(String description) {
+    public Candidate setDescription(String description) {
         this.description = description;
-        return this;
-    }
-
-    public Address getPrimaryAddress() {
-        return primaryAddress;
-    }
-
-    public Contact setPrimaryAddress(Address primaryAddress) {
-        this.primaryAddress = primaryAddress;
-        return this;
-    }
-
-    public Address getSecondaryAddress() {
-        return secondaryAddress;
-    }
-
-    public Contact setSecondaryAddress(Address secondaryAddress) {
-        this.secondaryAddress = secondaryAddress;
-        return this;
-    }
-
-    public Set<Note> getNotes() {
-        return notes;
-    }
-
-    public Contact setNotes(Set<Note> notes) {
-        this.notes = notes;
-        return this;
-    }
-
-    public Set<Attachment> getAttachments() {
-        return attachments;
-    }
-
-    public Contact setAttachments(Set<Attachment> attachments) {
-        this.attachments = attachments;
         return this;
     }
 
@@ -165,21 +132,50 @@ public class Contact {
         return updatedAt;
     }
 
-    @Override
-    public String toString() {
-        return "Contact{" +
-                "id=" + id +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", jobTitle='" + jobTitle + '\'' +
-                ", officePhone='" + officePhone + '\'' +
-                ", mobile='" + mobile + '\'' +
-                ", description='" + description + '\'' +
-                ", primaryAddress=" + primaryAddress +
-                ", secondaryAddress=" + secondaryAddress +
-                ", notes=" + notes +
-                ", attachments=" + attachments +
-                '}';
+    public Candidate setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+        return this;
+    }
+
+    public Candidate setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+        return this;
+    }
+
+    public Address getPrimaryAddress() {
+        return primaryAddress;
+    }
+
+    public Candidate setPrimaryAddress(Address primaryAddress) {
+        this.primaryAddress = primaryAddress;
+        return this;
+    }
+
+    public Address getSecondaryAddress() {
+        return secondaryAddress;
+    }
+
+    public Candidate setSecondaryAddress(Address secondaryAddress) {
+        this.secondaryAddress = secondaryAddress;
+        return this;
+    }
+
+    public Set<Note> getNotes() {
+        return notes;
+    }
+
+    public Candidate setNotes(Set<Note> notes) {
+        this.notes = notes;
+        return this;
+    }
+
+    public List<Attachment> getAttachments() {
+        return attachments;
+    }
+
+    public Candidate setAttachments(List<Attachment> attachments) {
+        this.attachments = attachments;
+        return this;
     }
 
     @Override
@@ -189,8 +185,8 @@ public class Contact {
         Class<?> oEffectiveClass = o instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        Contact contact = (Contact) o;
-        return getId() != null && Objects.equals(getId(), contact.getId());
+        Candidate candidate = (Candidate) o;
+        return getId() != null && Objects.equals(getId(), candidate.getId());
     }
 
     @Override
@@ -199,14 +195,4 @@ public class Contact {
                 ? proxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
                 : getClass().hashCode();
     }
-
-    public void addAttachment(String originalFilename, String contentType, String path) {
-        Attachment attachment = new Attachment();
-        attachment.setFileName(originalFilename);
-        attachment.setFileType(contentType);
-        attachment.setFilePath(path);
-        attachment.setContact(this);
-        attachments.add(attachment);
-    }
 }
-

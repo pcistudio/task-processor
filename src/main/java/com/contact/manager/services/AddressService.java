@@ -24,6 +24,7 @@ public class AddressService {
         address.setCity(addressRequest.getCity());
         address.setState(addressRequest.getState());
         address.setZipCode(addressRequest.getZipCode());
+        address.setCountry(addressRequest.getCountry());
 
         return addressRepository.save(address);
     }
