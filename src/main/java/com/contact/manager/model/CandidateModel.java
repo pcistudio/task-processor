@@ -16,6 +16,7 @@ public class CandidateModel {
     private String mobile;
     private String email;
     private String description;
+    private boolean markForInterview;
 
     private Address primaryAddress;
 
@@ -25,11 +26,14 @@ public class CandidateModel {
 
     private List<AttachmentView> attachments;
 
+    private PositionView position;
+
     private CandidateModel(Candidate candidate) {
         Assert.notNull(candidate, "Candidate must not be null");
         this.id = candidate.getId();
         this.lastName = candidate.getLastName();
         this.firstName = candidate.getFirstName();
+        this.markForInterview = candidate.isMarkForInterview();
         this.jobTitle = candidate.getJobTitle();
         this.email = candidate.getEmail();
 
@@ -40,6 +44,7 @@ public class CandidateModel {
         this.secondaryAddress = candidate.getSecondaryAddress();
         this.notes = NoteView.fromNotes(candidate.getNotes());
         this.attachments = AttachmentView.fromAttachments(candidate.getAttachments());
+        this.position = PositionView.from(candidate.getPosition());
     }
 
     public static CandidateModel fromCandidate(Candidate candidate) {
@@ -98,6 +103,15 @@ public class CandidateModel {
 
     public CandidateModel setEmail(String email) {
         this.email = email;
+        return this;
+    }
+
+    public boolean isMarkForInterview() {
+        return markForInterview;
+    }
+
+    public CandidateModel setMarkForInterview(boolean markForInterview) {
+        this.markForInterview = markForInterview;
         return this;
     }
 
@@ -170,6 +184,15 @@ public class CandidateModel {
 
     public CandidateModel setFirstName(String firstName) {
         this.firstName = firstName;
+        return this;
+    }
+
+    public PositionView getPosition() {
+        return position;
+    }
+
+    public CandidateModel setPosition(PositionView position) {
+        this.position = position;
         return this;
     }
 }

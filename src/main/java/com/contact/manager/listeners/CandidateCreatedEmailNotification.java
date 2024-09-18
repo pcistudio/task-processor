@@ -23,22 +23,11 @@ public class CandidateCreatedEmailNotification {
 
     @EventListener
     public void handleCandidateCreatedEvent(CandidateCreatedEvent event) {
-        String email = event.getCandidate().getEmail();
-        if (email == null || email.isBlank()) {
-            log.info("Candidate email is empty, skipping email notification");
-            return;
-        }
-
-        // Handle the event, e.g., send an email notification
-        Map<String, Object> templateModel = new HashMap<>();
-        templateModel.put("firstName", event.getCandidate().getFirstName());
-        templateModel.put("lastName", event.getCandidate().getLastName());
-
+        log.debug("Sending email notification for candidate {}", event.getCandidate().getEmail());
         mailService.sendEmailWithTemplate(
-                email,
+                event.getCandidate(),
                 "Candidatura recibida",
-                "candidate-created-email",
-                templateModel
+                "candidate-created-email"
         );
     }
 }

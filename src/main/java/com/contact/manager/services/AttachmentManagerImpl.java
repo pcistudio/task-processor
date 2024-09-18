@@ -77,7 +77,6 @@ public class AttachmentManagerImpl implements AttachmentManager {
             log.info("Deleted attachment: {}", fileName);
         } catch (IOException e) {
             log.error("Could not delete attachment: {}", fileName, e);
-//            throw new IllegalArgumentException("Could not delete attachment", e);
         }
     }
 

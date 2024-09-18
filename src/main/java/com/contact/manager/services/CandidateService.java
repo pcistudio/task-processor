@@ -4,9 +4,12 @@ package com.contact.manager.services;
 import com.contact.manager.entities.Candidate;
 import com.contact.manager.entities.Contact;
 import com.contact.manager.model.AttachmentResource;
+import com.contact.manager.services.scheduler.LocalDateTimeRange;
+import com.contact.manager.services.scheduler.ScheduleMeeting;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface CandidateService {
@@ -18,6 +21,8 @@ public interface CandidateService {
 
     Candidate updateCandidate(Long id, Candidate candidate);
 
+    Candidate addCandidateNote(Long candidateId, String note);
+
     boolean deleteCandidate(Long id);
 
     Candidate addAttachment(Long id, MultipartFile file);
@@ -27,4 +32,8 @@ public interface CandidateService {
     AttachmentResource loadAttachmentAsResource(long candidateId, int index);
 
     Contact convertToContact(Long candidateId);
+
+    Candidate assignPosition(Long candidateId, Long positionId);
+
+    ScheduleMeeting scheduleInterview(Long candidateId, String subject, String templateName, LocalDateTimeRange range);
 }

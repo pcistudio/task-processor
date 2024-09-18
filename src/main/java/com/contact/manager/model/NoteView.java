@@ -3,6 +3,7 @@ package com.contact.manager.model;
 import com.contact.manager.entities.Note;
 import org.springframework.util.Assert;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -18,7 +19,7 @@ public class NoteView {
         this.contactId = note.getContact()!= null ? note.getContact().getId() : null;
     }
 
-    public static List<NoteView> fromNotes(Set<Note> notes) {
+    public static List<NoteView> fromNotes(Collection<Note> notes) {
         if (notes != null) {
             return notes.stream().map(NoteView::new).toList();
         }

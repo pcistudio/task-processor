@@ -3,11 +3,9 @@ package com.contact.manager.controllers;
 
 import com.contact.manager.entities.Candidate;
 import com.contact.manager.entities.Contact;
-import com.contact.manager.model.AttachmentResource;
-import com.contact.manager.model.CandidateModel;
-import com.contact.manager.model.CandidateView;
-import com.contact.manager.model.ContactModel;
+import com.contact.manager.model.*;
 import com.contact.manager.services.CandidateService;
+import com.contact.manager.services.scheduler.ScheduleMeeting;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +95,29 @@ public class CandidateController {
 
     @PostMapping("/{candidateId}:convert-to-contact")
     public ContactModel convertToContact(@PathVariable Long candidateId) {
-        Contact contact =  candidateService.convertToContact(candidateId);
+        Contact contact = candidateService.convertToContact(candidateId);
         return ContactModel.fromContact(contact);
+    }
+
+
+    @PostMapping("/{candidateId}:assign-position")
+    public ResponseEntity<CandidateModel> assignPosition(@PathVariable Long candidateId, @RequestParam Long positionId) {
+        Candidate candidate = candidateService.assignPosition(candidateId, positionId);
+        return ResponseEntity.ok(CandidateModel.fromCandidate(candidate));
+    }
+
+    @PostMapping("/{candidateId}/note")
+    public ResponseEntity<CandidateModel> addCandidateNote(@PathVariable Long candidateId, @RequestBody AddNoteRequest request) {
+        Candidate candidate = candidateService.addCandidateNote(candidateId, request.getNote());
+        return ResponseEntity.ok(CandidateModel.fromCandidate(candidate));
+    }
+
+    @PostMapping("/{id}:scheduleInterview")
+    public ResponseEntity<MeetingResponse> scheduleInterview(@PathVariable Long id,
+                                                                   @RequestBody PersonalInterviewRequest request) {
+        ScheduleMeeting scheduleMeeting = candidateService.scheduleInterview(id, request.getSubject(), request.getTemplateName(), request);
+        MeetingResponse meetingResponse = MeetingResponse.createMeetingResponse(scheduleMeeting);
+        return ResponseEntity.ok(meetingResponse);
+
     }
 }

@@ -17,7 +17,14 @@ public class JsonConverters {
     public static class NoteSetJsonConverter extends SetJsonConverter<Note> {
     }
 
+    public static class NoteListJsonConverter extends ListJsonConverter<Note> {
+    }
+
     public static class AttachmentListJsonConverter extends ListJsonConverter<Attachment> {
     }
+
+    public static class StringListJsonConverter extends ListJsonConverter<String> {
+    }
+
 
 }

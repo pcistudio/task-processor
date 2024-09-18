@@ -18,6 +18,7 @@ public class Note {
     private Long id;
 
     @NotBlank
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     @CreatedDate

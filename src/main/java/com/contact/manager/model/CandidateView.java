@@ -10,6 +10,7 @@ public class CandidateView {
     private String jobTitle;
     private String email;
     private String phone;
+    private boolean markForInterview;
 
     public CandidateView(Candidate candidate) {
         Assert.notNull(candidate, "Candidate must not be null");
@@ -19,6 +20,7 @@ public class CandidateView {
         this.jobTitle = candidate.getJobTitle();
         this.email = candidate.getEmail();
         this.phone = candidate.getMobile() != null ? candidate.getMobile() : candidate.getOfficePhone();
+        this.markForInterview = candidate.isMarkForInterview();
     }
     public Long getId() {
         return id;
@@ -71,6 +73,15 @@ public class CandidateView {
 
     public CandidateView setFirstName(String firstName) {
         this.firstName = firstName;
+        return this;
+    }
+
+    public boolean isMarkForInterview() {
+        return markForInterview;
+    }
+
+    public CandidateView setMarkForInterview(boolean markForInterview) {
+        this.markForInterview = markForInterview;
         return this;
     }
 }

@@ -10,4 +10,8 @@ import java.util.List;
 @Repository
 public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     List<Candidate> findByFirstNameContainingOrLastNameContaining(String filter, String filter1);
+
+    List<Candidate> findByIdInAndPositionId(List<Long> candidates, Long positionId);
+
+    List<Candidate> findByMarkForInterviewAndPositionId(boolean markForInterview, Long positionId);
 }

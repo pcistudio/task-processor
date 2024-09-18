@@ -1,13 +1,17 @@
 // src/main/java/com/contact/manager/service/CandidateServiceImpl.java
 package com.contact.manager.services;
 
-import com.contact.manager.entities.Attachment;
-import com.contact.manager.entities.Candidate;
-import com.contact.manager.entities.Contact;
+import com.contact.manager.entities.*;
 import com.contact.manager.events.CandidateCreatedEvent;
 import com.contact.manager.model.AttachmentResource;
 import com.contact.manager.model.converter.CandidateToContactConverter;
 import com.contact.manager.repositories.CandidateRepository;
+import com.contact.manager.repositories.PositionRepository;
+import com.contact.manager.services.scheduler.LocalDateTimeRange;
+import com.contact.manager.services.scheduler.MeetingInfo;
+import com.contact.manager.services.scheduler.MeetingScheduler;
+import com.contact.manager.services.scheduler.ScheduleMeeting;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,7 +23,9 @@ import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -36,14 +42,19 @@ public class CandidateServiceImpl implements CandidateService {
 
     private final ApplicationEventPublisher eventPublisher;
 
+    private final PositionRepository positionRepository;
+
+    private final MeetingScheduler meetingScheduler;
 
 
-    public CandidateServiceImpl(CandidateRepository candidateRepository, AttachmentManager attachmentManager, CandidateToContactConverter candidateToContactConverter, ContactService contactService, ApplicationEventPublisher eventPublisher) {
+    public CandidateServiceImpl(CandidateRepository candidateRepository, AttachmentManager attachmentManager, CandidateToContactConverter candidateToContactConverter, ContactService contactService, ApplicationEventPublisher eventPublisher, PositionRepository positionRepository, MeetingScheduler meetingScheduler) {
         this.candidateRepository = candidateRepository;
         this.attachmentManager = attachmentManager;
         this.candidateToContactConverter = candidateToContactConverter;
         this.contactService = contactService;
         this.eventPublisher = eventPublisher;
+        this.positionRepository = positionRepository;
+        this.meetingScheduler = meetingScheduler;
     }
 
     @Override
@@ -72,7 +83,19 @@ public class CandidateServiceImpl implements CandidateService {
 
         candidate.setId(id);
         candidate.setAttachments(candidateStored.getAttachments());
+        candidate.setNotes(candidateStored.getNotes());
         return candidateRepository.save(candidate);
+    }
+
+    @Override
+    public Candidate addCandidateNote(Long candidateId, String note) {
+        Candidate candidate = getCandidateById(candidateId);
+        if (candidate != null) {
+            candidate.getNotes().add(new Note().setContent(note));
+            return candidateRepository.save(candidate);
+        } else {
+            throw new EntityNotFoundException("Candidate not found");
+        }
     }
 
     @Override
@@ -137,6 +160,33 @@ public class CandidateServiceImpl implements CandidateService {
         candidateRepository.deleteById(candidateId);
         log.info("Candidate {} converted to contact {}", candidateId, contact.getId());
         return contact;
+    }
+
+    @Override
+    public Candidate assignPosition(Long candidateId, Long positionId) {
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
+        Position position = positionRepository.findById(positionId)
+                .orElseThrow(() -> new IllegalArgumentException("Position not found"));
+        candidate.setPosition(position);
+        return candidateRepository.save(candidate);
+    }
+
+    @Override
+    public ScheduleMeeting scheduleInterview(Long candidateId, String subject, String templateName, LocalDateTimeRange range) {
+        // Existing logic to get candidates and mark them for interview
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new IllegalArgumentException("Position not found"));
+
+        // Create MeetingInfo
+        MeetingInfo.MeetingInfoBuilder meetingInfoBuilder = MeetingInfo.builder()
+                .persons(List.of(candidate))
+                .position(candidate.getPosition())
+                .subject(Objects.requireNonNullElseGet(subject, () -> candidate.getPosition().getTitle() + " Interview"))
+                .templateName(templateName)
+                ;
+
+        return meetingScheduler.scheduleMeeting(meetingInfoBuilder, range);
     }
 
 //

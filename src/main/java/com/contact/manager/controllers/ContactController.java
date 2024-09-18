@@ -144,5 +144,38 @@ public class ContactController {
         }
     }
 
+// TODO later
+//    @PostMapping("/{contactId}/convert-to-employee")
+//    public String convertToEmployee(@PathVariable Long contactId,
+//                                    @RequestParam BigDecimal salary,
+//                                    @RequestParam String paymentFrequency,
+//                                    @RequestParam LocalDate startedDate,
+//                                    @RequestParam(required = false) LocalDate endDate) {
+//        contactService.
+//        Contact contact = contactRepository.findById(contactId)
+//                .orElseThrow(() -> new IllegalArgumentException("Contact not found"));
+//
+//        Employee employee = new Employee();
+//        employee.setId(contact.getId());
+//        employee.setFirstName(contact.getFirstName());
+//        employee.setLastName(contact.getLastName());
+//        employee.setEmail(contact.getEmail());
+//        employee.setJobTitle(contact.getJobTitle());
+//        employee.setOfficePhone(contact.getOfficePhone());
+//        employee.setMobile(contact.getMobile());
+//        employee.setDescription(contact.getDescription());
+//        employee.setPrimaryAddress(contact.getPrimaryAddress());
+//        employee.setSecondaryAddress(contact.getSecondaryAddress());
+//        employee.setNotes(contact.getNotes());
+//        employee.setAttachments(contact.getAttachments());
+//        employee.setSalary(salary);
+//        employee.setPaymentFrequency(PaymentFrequency.valueOf(paymentFrequency));
+//        employee.setStartedDate(startedDate);
+//        employee.setEndDate(endDate);
+//
+//        employeeRepository.save(employee);
+
+//        return "Contact converted to Employee with ID: " + employee.getId();
+//    }
 
 }

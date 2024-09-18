@@ -5,12 +5,13 @@ import com.contact.manager.entities.Candidate;
 import com.contact.manager.events.CandidateCreatedEvent;
 import com.contact.manager.listeners.CandidateCreatedEmailNotification;
 import com.contact.manager.services.MailService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api/mail")
 public class MailController {
 
     private final MailService mailService;

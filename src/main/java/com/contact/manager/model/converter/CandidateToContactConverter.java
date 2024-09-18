@@ -5,6 +5,7 @@ import com.contact.manager.entities.Candidate;
 import com.contact.manager.entities.Contact;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 @Component
@@ -23,7 +24,7 @@ public class CandidateToContactConverter {
         contact.setPrimaryAddress(candidate.getPrimaryAddress());
         contact.setSecondaryAddress(candidate.getSecondaryAddress());
 
-        contact.setNotes(new HashSet<>(candidate.getNotes()));
+        contact.setNotes(new ArrayList<>(candidate.getNotes()));
         contact.setAttachments(new HashSet<>(candidate.getAttachments()));
         return contact;
     }

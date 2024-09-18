@@ -16,7 +16,7 @@ import java.util.*;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @AtLeastOneField(fields = {"officePhone", "mobile", "email"})
-public class Candidate {
+public class Candidate implements Person {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,6 +28,7 @@ public class Candidate {
     private String mobile;
     private String email;
     private String description;
+    private boolean markForInterview;
 
     @CreatedDate
     @Column(updatable = false)
@@ -44,13 +45,25 @@ public class Candidate {
     @Column(columnDefinition = "TEXT")
     private Address secondaryAddress;
 
-    @Convert(converter = JsonConverters.NoteSetJsonConverter.class)
+    @Convert(converter = JsonConverters.NoteListJsonConverter.class)
     @Column(columnDefinition = "TEXT")
-    private Set<Note> notes = new HashSet<>();
+    private List<Note> notes = new ArrayList<>();
 
     @Convert(converter = JsonConverters.AttachmentListJsonConverter.class)
     @Column(columnDefinition = "TEXT")
     private List<Attachment> attachments = new ArrayList<>();
+
+    @ManyToOne(optional = false)
+    private Position position;
+
+    public Position getPosition() {
+        return position;
+    }
+
+    public Candidate setPosition(Position position) {
+        this.position = position;
+        return this;
+    }
 
     public Long getId() {
         return id;
@@ -160,11 +173,11 @@ public class Candidate {
         return this;
     }
 
-    public Set<Note> getNotes() {
+    public List<Note> getNotes() {
         return notes;
     }
 
-    public Candidate setNotes(Set<Note> notes) {
+    public Candidate setNotes(List<Note> notes) {
         this.notes = notes;
         return this;
     }
@@ -175,6 +188,15 @@ public class Candidate {
 
     public Candidate setAttachments(List<Attachment> attachments) {
         this.attachments = attachments;
+        return this;
+    }
+
+    public boolean isMarkForInterview() {
+        return markForInterview;
+    }
+
+    public Candidate setMarkForInterview(boolean markForInterview) {
+        this.markForInterview = markForInterview;
         return this;
     }
 
