@@ -17,7 +17,6 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Slf4j
 public class AttachmentManagerImpl implements AttachmentManager {
 
     private static final Logger log = LoggerFactory.getLogger(AttachmentManagerImpl.class);
@@ -48,6 +47,13 @@ public class AttachmentManagerImpl implements AttachmentManager {
         Path filePath = directory.resolve(uniqueFileName);
         Files.copy(inputStream, filePath);
         return filePath;
+    }
+
+    @Override
+    public boolean canWrite() {
+        return attachmentDirectory
+                .toFile()
+                .canWrite();
     }
 
     private Path yearMonthDayDirectory() {

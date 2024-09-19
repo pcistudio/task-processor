@@ -10,6 +10,8 @@ import java.nio.file.Path;
 public interface AttachmentManager {
     Path storeAttachment(InputStream inputStream, String originalFileName) throws IOException;
 
+    boolean canWrite();
+
     Path storeAttachment(MultipartFile file);
 
     void deleteAttachment(Path fileName);

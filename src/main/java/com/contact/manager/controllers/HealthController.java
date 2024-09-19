@@ -4,23 +4,28 @@ package com.contact.manager.controllers;
 import com.contact.manager.entities.Candidate;
 import com.contact.manager.events.CandidateCreatedEvent;
 import com.contact.manager.listeners.CandidateCreatedEmailNotification;
+import com.contact.manager.services.AttachmentManager;
 import com.contact.manager.services.MailService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.file.Path;
 
 @RestController
-@RequestMapping("/api/mail")
-public class MailController {
+@RequestMapping("/api/health")
+public class HealthController {
 
     private final MailService mailService;
     private final CandidateCreatedEmailNotification candidateCreatedEmailNotification;
+    private final AttachmentManager attachmentManager;
 
 
-    public MailController(MailService mailService, CandidateCreatedEmailNotification candidateCreatedEmailNotification) {
+    public HealthController(MailService mailService, CandidateCreatedEmailNotification candidateCreatedEmailNotification, AttachmentManager attachmentManager) {
         this.mailService = mailService;
         this.candidateCreatedEmailNotification = candidateCreatedEmailNotification;
+        this.attachmentManager = attachmentManager;
     }
 
     @PostMapping("/send-test-email")
@@ -40,5 +45,16 @@ public class MailController {
         candidateCreatedEmailNotification.handleCandidateCreatedEvent(event);
 
         return "Candidate created email sent to " + to;
+    }
+
+    @GetMapping("/canUpload")
+    public ResponseEntity<Boolean> testUploadDirectory() {
+        return ResponseEntity.ok(attachmentManager.canWrite());
+    }
+
+    @PostMapping("/writeToUpload")
+    public ResponseEntity<String> testWriteUpload() throws IOException {
+        Path path = attachmentManager.storeAttachment(new ByteArrayInputStream("test".getBytes()), ".test");
+        return ResponseEntity.ok(path.toAbsolutePath().toString());
     }
 }
