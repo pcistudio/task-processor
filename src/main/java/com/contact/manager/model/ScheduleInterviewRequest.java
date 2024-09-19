@@ -22,7 +22,7 @@ public class ScheduleInterviewRequest {
     @NotNull
     private Integer interviewDurationMinutes;
     private int timeBetweenInterviews;
-    private boolean sendEmails;
+    private boolean sendEmails = true;
 
     // Getters and setters
     public String getSubject() {

@@ -2,8 +2,6 @@ package com.contact.manager.model;
 
 import com.contact.manager.entities.Attachment;
 import org.springframework.util.Assert;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 
 import java.util.Collection;
 import java.util.List;
@@ -12,10 +10,7 @@ public class AttachmentView {
     private Long id;
     private String fileName;
     private String fileType;
-    // Change this value for a fileURL instead of a physical path
-//    private String filePath; // New field to store file path
     private String url;
-//    private Long contactId;
 
     public AttachmentView(Attachment attachment) {
 
@@ -24,8 +19,6 @@ public class AttachmentView {
         this.id = attachment.getId();
         this.fileName = attachment.getFileName();
         this.fileType = attachment.getFileType();
-//        this.contactId = attachment.getContact().getId();
-//        this.url = buildUrl(attachment.getId());
 
     }
 
@@ -63,16 +56,6 @@ public class AttachmentView {
         return this;
     }
 
-//    public String getFilePath() {
-//        return filePath;
-//    }
-//
-//    public AttachmentView setFilePath(String filePath) {
-//        this.filePath = filePath;
-//        return this;
-//    }
-
-
     public String getUrl() {
         return url;
     }
@@ -81,13 +64,4 @@ public class AttachmentView {
         this.url = url;
         return this;
     }
-
-//    public Long getContactId() {
-//        return contactId;
-//    }
-//
-//    public AttachmentView setContactId(Long contactId) {
-//        this.contactId = contactId;
-//        return this;
-//    }
 }

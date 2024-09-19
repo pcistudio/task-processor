@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 public class PersonalInterviewRequest implements LocalDateTimeRange {
     @NotBlank
@@ -19,7 +18,7 @@ public class PersonalInterviewRequest implements LocalDateTimeRange {
     @NotNull
     private LocalDateTime endDateTime;
 
-    private boolean sendEmails;
+    private boolean sendEmails = true;
 
     public @NotBlank String getSubject() {
         return subject;

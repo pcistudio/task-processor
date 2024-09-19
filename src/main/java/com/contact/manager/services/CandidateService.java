@@ -6,10 +6,8 @@ import com.contact.manager.entities.Contact;
 import com.contact.manager.model.AttachmentResource;
 import com.contact.manager.services.scheduler.LocalDateTimeRange;
 import com.contact.manager.services.scheduler.ScheduleMeeting;
-import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface CandidateService {

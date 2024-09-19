@@ -4,9 +4,7 @@ package com.contact.manager.services.scheduler;
 import org.springframework.util.Assert;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Iterator;
 
 public class SchedulerContext {
     private LocalTime startTime;
@@ -69,23 +67,6 @@ public class SchedulerContext {
             return new SchedulerContext(this);
         }
     }
-
-//    private class LocalDateTimeRangeImpl implements LocalDateTimeRange {
-//
-//        @Override
-//        public LocalDateTime getStartDateTime() {
-//            return startDate.atTime(startTime);
-//        }
-//
-//        @Override
-//        public LocalDateTime getEndDateTime() {
-//            return startDate.atTime(endTime);
-//        }
-//    }
-//
-//    public LocalDateTimeRange toLocalDateTimeRange() {
-//        return new LocalDateTimeRangeImpl();
-//    }
 
     public LocalTime getStartTime() {
         return startTime;

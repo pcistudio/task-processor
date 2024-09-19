@@ -1,7 +1,6 @@
 package com.contact.manager.entities;
 
 import java.util.List;
-import java.util.Set;
 
 public interface Person {
     String getFirstName();

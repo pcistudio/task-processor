@@ -49,9 +49,8 @@ public class ContactModel {
     }
     private static void updateAttachmentUrl(Long contactId, List<AttachmentView> attachments) {
         if (attachments != null) {
-            attachments.forEach(attachment -> {
-                attachment.setUrl(buildUrl(contactId, attachment.getId()));
-            });
+            attachments
+                    .forEach(attachment -> attachment.setUrl(buildUrl(contactId, attachment.getId())));
         }
     }
 

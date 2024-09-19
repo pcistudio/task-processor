@@ -48,7 +48,7 @@ public class PositionServiceImpl implements PositionService {
 
     @Override
     public Position updatePosition(Long positionId, Position position) {
-        Position positionStored = positionRepository.findById(positionId)
+        positionRepository.findById(positionId)
                 .orElseThrow(() -> new IllegalArgumentException("Position not found"));
 
         position.setId(positionId);
@@ -93,10 +93,8 @@ public class PositionServiceImpl implements PositionService {
     }
 
     private List<Candidate> getCandidatesMarkForInterview(Long positionId) {
-
         //FIXME: This is not working. Posible solution is to use a custom query @Query
-        List<Candidate> candidates = candidateRepository.findByMarkForInterviewAndPositionId(true, positionId);
-        return candidates;
+        return candidateRepository.findByMarkForInterviewAndPositionId(true, positionId);
     }
 
     @Override

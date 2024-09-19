@@ -88,14 +88,6 @@ public class ContactController {
         return ResponseEntity.noContent().build();
     }
 
-//    // Update Attachment not allowed
-//    //TODO Add contactId and check if the attachment belongs to the contact
-//    @PutMapping("/{contactId}/attachments/{attachmentId}")
-//    public ResponseEntity<AttachmentView> updateAttachment(@PathVariable Long contactId, @PathVariable Long attachmentId, @RequestBody AttachmentRequest attachmentRequest) {
-//        Attachment updatedAttachment = attachmentService.updateAttachment(attachmentId, attachmentRequest);
-//        return ResponseEntity.ok(new AttachmentView(updatedAttachment));
-//    }
-
     // Delete Attachment
     @DeleteMapping("/{contactId}/attachments/{attachmentId}")
     public ResponseEntity<Void> deleteAttachment(@PathVariable Long contactId, @PathVariable Long attachmentId) {

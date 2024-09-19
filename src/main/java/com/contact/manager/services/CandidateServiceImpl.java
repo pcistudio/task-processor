@@ -23,7 +23,6 @@ import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,6 +31,7 @@ import java.util.Optional;
 public class CandidateServiceImpl implements CandidateService {
 
     private static final Logger log = LoggerFactory.getLogger(CandidateServiceImpl.class);
+    public static final String CANDIDATE_NOT_FOUND = "Candidate not found";
     private final CandidateRepository candidateRepository;
 
     private final AttachmentManager attachmentManager;
@@ -79,7 +79,7 @@ public class CandidateServiceImpl implements CandidateService {
     @Override
     public Candidate updateCandidate(Long id, Candidate candidate) {
         Candidate candidateStored = candidateRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
+                .orElseThrow(() -> new IllegalArgumentException(CANDIDATE_NOT_FOUND));
 
         candidate.setId(id);
         candidate.setAttachments(candidateStored.getAttachments());
@@ -94,7 +94,7 @@ public class CandidateServiceImpl implements CandidateService {
             candidate.getNotes().add(new Note().setContent(note));
             return candidateRepository.save(candidate);
         } else {
-            throw new EntityNotFoundException("Candidate not found");
+            throw new EntityNotFoundException(CANDIDATE_NOT_FOUND);
         }
     }
 
@@ -112,7 +112,7 @@ public class CandidateServiceImpl implements CandidateService {
     public Candidate addAttachment(Long candidateId, MultipartFile file) {
 
         Candidate candidate = candidateRepository.findById(candidateId)
-                .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
+                .orElseThrow(() -> new IllegalArgumentException(CANDIDATE_NOT_FOUND));
 
         Path path = attachmentManager.storeAttachment(file);
         try {
@@ -138,7 +138,7 @@ public class CandidateServiceImpl implements CandidateService {
     @Override
     public AttachmentResource loadAttachmentAsResource(long candidateId, int index) {
         Candidate candidate = candidateRepository.findById(candidateId)
-                .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
+                .orElseThrow(() -> new IllegalArgumentException(CANDIDATE_NOT_FOUND));
         if (index < 0 || index >= candidate.getAttachments().size()) {
             throw new IllegalArgumentException("Attachment not found");
         }
@@ -154,7 +154,7 @@ public class CandidateServiceImpl implements CandidateService {
     @Transactional(propagation = Propagation.REQUIRED)
     public Contact convertToContact(Long candidateId) {
         Candidate candidate = candidateRepository.findById(candidateId)
-                .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
+                .orElseThrow(() -> new IllegalArgumentException(CANDIDATE_NOT_FOUND));
         Contact contact = candidateToContactConverter.convert(candidate);
         contactService.saveContact(contact);
         candidateRepository.deleteById(candidateId);
@@ -165,7 +165,7 @@ public class CandidateServiceImpl implements CandidateService {
     @Override
     public Candidate assignPosition(Long candidateId, Long positionId) {
         Candidate candidate = candidateRepository.findById(candidateId)
-                .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
+                .orElseThrow(() -> new IllegalArgumentException(CANDIDATE_NOT_FOUND));
         Position position = positionRepository.findById(positionId)
                 .orElseThrow(() -> new IllegalArgumentException("Position not found"));
         candidate.setPosition(position);
@@ -188,26 +188,4 @@ public class CandidateServiceImpl implements CandidateService {
 
         return meetingScheduler.scheduleMeeting(meetingInfoBuilder, range);
     }
-
-//
-//    @Override
-//    public boolean deleteAttachment(Long candidateId, Long attachmentId) {
-//        Candidate candidate = candidateRepository.findById(candidateId)
-//                .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
-//
-//        Attachment attachment = candidate.getAttachments().stream()
-//                .filter(a -> a.getId().equals(attachmentId))
-//                .findFirst()
-//                .orElse(null);
-//
-//        if(attachment == null) {
-//            return false;
-//        }
-//
-//        candidate.getAttachments().remove(attachment);
-//        candidateRepository.save(candidate);
-//        attachmentManager.deleteAttachment(attachment.getFilePath());
-//
-//        return true;
-//    }
 }

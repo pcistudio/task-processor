@@ -57,4 +57,13 @@ public class Employee extends Contact {
         this.paymentFrequency = paymentFrequency;
         return this;
     }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public Employee setTitle(String title) {
+        this.title = title;
+        return this;
+    }
 }

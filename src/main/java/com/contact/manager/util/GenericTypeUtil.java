@@ -3,7 +3,6 @@ package com.contact.manager.util;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
-import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -13,8 +12,6 @@ import java.util.Map;
 
 @Slf4j
 public class GenericTypeUtil {
-
-    private static final ThreadLocal<BeanWrapper> beanWrapperThreadLocal = ThreadLocal.withInitial(() -> new BeanWrapperImpl());
 
 
     private GenericTypeUtil() {
@@ -62,7 +59,7 @@ public class GenericTypeUtil {
         for (Object object : objs) {
             if (object instanceof Map map) {
                 try {
-                    fieldMap.putAll((Map<String, Object>) map);
+                    fieldMap.putAll(map);
                 } catch (ClassCastException e) {
                     log.error("Error casting map to Map<String, Object>", e);
                 }

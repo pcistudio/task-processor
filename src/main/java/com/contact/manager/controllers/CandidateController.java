@@ -112,10 +112,10 @@ public class CandidateController {
         return ResponseEntity.ok(CandidateModel.fromCandidate(candidate));
     }
 
-    @PostMapping("/{id}:scheduleInterview")
-    public ResponseEntity<MeetingResponse> scheduleInterview(@PathVariable Long id,
+    @PostMapping("/{candidateId}:scheduleInterview")
+    public ResponseEntity<MeetingResponse> scheduleInterview(@PathVariable Long candidateId,
                                                                    @RequestBody PersonalInterviewRequest request) {
-        ScheduleMeeting scheduleMeeting = candidateService.scheduleInterview(id, request.getSubject(), request.getTemplateName(), request);
+        ScheduleMeeting scheduleMeeting = candidateService.scheduleInterview(candidateId, request.getSubject(), request.getTemplateName(), request);
         MeetingResponse meetingResponse = MeetingResponse.createMeetingResponse(scheduleMeeting);
         return ResponseEntity.ok(meetingResponse);
 

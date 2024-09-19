@@ -1,7 +1,6 @@
 // src/main/java/com/contact/manager/controllers/PositionController.java
 package com.contact.manager.controllers;
 
-import com.contact.manager.entities.Candidate;
 import com.contact.manager.entities.Position;
 import com.contact.manager.model.*;
 import com.contact.manager.services.PositionService;
@@ -11,10 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/positions")

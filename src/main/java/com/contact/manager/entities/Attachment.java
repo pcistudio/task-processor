@@ -102,7 +102,6 @@ public class Attachment {
             Files.deleteIfExists(path);
         } catch (Exception e) {
             log.error("Could not delete file: {}", filePath, e);
-//            throw new IllegalStateException("Could not delete file: " + filePath, e);
         }
     }
 

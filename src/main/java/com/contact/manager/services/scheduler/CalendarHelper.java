@@ -33,7 +33,6 @@ public class CalendarHelper {
 
         // Add organizer (optional)
         Organizer organizer = new Organizer(URI.create("mailto:" + scheduleMeeting.getOrganizer()));
-//        organizer.getParameters().add(new Cn("John Doe"));
         meeting.getProperties().add(organizer);
 
         // Add an attendee (optional)
