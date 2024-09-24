@@ -10,6 +10,7 @@ public class CandidateView {
     private String jobTitle;
     private String email;
     private String phone;
+    private String positionTitle;
     private boolean markForInterview;
 
     public CandidateView(Candidate candidate) {
@@ -21,6 +22,7 @@ public class CandidateView {
         this.email = candidate.getEmail();
         this.phone = candidate.getMobile() != null ? candidate.getMobile() : candidate.getOfficePhone();
         this.markForInterview = candidate.isMarkForInterview();
+        this.positionTitle = candidate.getPosition().getTitle();
     }
     public Long getId() {
         return id;
@@ -82,6 +84,15 @@ public class CandidateView {
 
     public CandidateView setMarkForInterview(boolean markForInterview) {
         this.markForInterview = markForInterview;
+        return this;
+    }
+
+    public String getPositionTitle() {
+        return positionTitle;
+    }
+
+    public CandidateView setPositionTitle(String positionTitle) {
+        this.positionTitle = positionTitle;
         return this;
     }
 }

@@ -1,39 +1,35 @@
 package com.contact.manager.model;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Set;
 
 public class ErrorResponse {
-    private LocalDateTime timestamp;
-    private String message;
-    private String details;
+    private final LocalDateTime timestamp;
+    private final String message;
+    private final Set<String> details;
 
     public ErrorResponse(LocalDateTime timestamp, String message, String details) {
         this.timestamp = timestamp;
         this.message = message;
-        this.details = details;
+        this.details = Set.of(details);
+    }
+
+    public ErrorResponse(LocalDateTime timestamp, String message, Set<String> details) {
+        this.timestamp = timestamp;
+        this.message = message;
+        this.details = Collections.unmodifiableSet(details);
     }
 
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
-
     public String getMessage() {
         return message;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public String getDetails() {
+    public Set<String> getDetails() {
         return details;
-    }
-
-    public void setDetails(String details) {
-        this.details = details;
     }
 }

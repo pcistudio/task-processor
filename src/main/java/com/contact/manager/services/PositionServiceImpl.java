@@ -9,6 +9,7 @@ import com.contact.manager.services.scheduler.MeetingScheduler;
 import com.contact.manager.services.scheduler.ScheduleMeeting;
 import com.contact.manager.services.scheduler.SchedulerContext;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -36,7 +37,7 @@ public class PositionServiceImpl implements PositionService {
     @Override
     public Position createPosition(Position position) {
         Assert.isNull(position.getId(), "Position id must be null");
-        return positionRepository.save(position);
+        return positionRepository.save(sanitizePosition(position));
 
     }
 
@@ -52,7 +53,18 @@ public class PositionServiceImpl implements PositionService {
                 .orElseThrow(() -> new IllegalArgumentException("Position not found"));
 
         position.setId(positionId);
-        return positionRepository.save(position);
+        return positionRepository.save(sanitizePosition(position));
+    }
+
+    //Create method to sanitize the requirements and responsibilities for empty values
+    private Position sanitizePosition(Position position) {
+        if (position.getRequirements() != null) {
+            position.getRequirements().removeIf(StringUtils::isBlank);
+        }
+        if (position.getResponsibilities() != null) {
+            position.getResponsibilities().removeIf(StringUtils::isBlank);
+        }
+        return position;
     }
 
     @Override

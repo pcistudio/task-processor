@@ -123,7 +123,9 @@ public class CandidateServiceImpl implements CandidateService {
             attachment.setFilePath(path.toAbsolutePath().toString());
             candidate.getAttachments().add(attachment);
             // Save file path to database
-            return candidateRepository.save(candidate);
+            Candidate saveCandidate = candidateRepository.save(candidate);
+            log.info("Attachment={} added to candidate={} ", attachment.getFilePath(), saveCandidate.getId());
+            return saveCandidate;
         } catch (Exception e) {
             attachmentManager.deleteAttachment(path);
             throw new IllegalArgumentException("Could not save attachment", e);
@@ -187,5 +189,10 @@ public class CandidateServiceImpl implements CandidateService {
                 ;
 
         return meetingScheduler.scheduleMeeting(meetingInfoBuilder, range);
+    }
+
+    @Override
+    public void markForInterview(Long candidateId, boolean markForInterview) {
+        candidateRepository.updateMarkForInterview(candidateId, markForInterview);
     }
 }

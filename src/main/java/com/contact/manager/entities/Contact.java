@@ -13,7 +13,7 @@ import java.util.*;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@AtLeastOneField(fields = {"officePhone", "mobile", "email"})
+@AtLeastOneField(fields = {"officePhone", "mobile", "email"}, message = "At least one of the fields=[officePhone, mobile, email] must be present")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "contact_type", discriminatorType = DiscriminatorType.STRING)
 @DiscriminatorValue("CONTACT")

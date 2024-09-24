@@ -1,14 +1,17 @@
 // src/main/java/com/contact/manager/model/AddNoteRequest.java
 package com.contact.manager.model;
 
-public class AddNoteRequest {
-    private String note;
+import jakarta.validation.constraints.NotBlank;
 
-    public String getNote() {
-        return note;
+public class AddNoteRequest {
+    @NotBlank
+    private String content;
+
+    public String getContent() {
+        return content;
     }
 
-    public void setNote(String note) {
-        this.note = note;
+    public void setContent(String content) {
+        this.content = content;
     }
 }

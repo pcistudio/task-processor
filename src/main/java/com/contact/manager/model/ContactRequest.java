@@ -5,7 +5,7 @@ import com.contact.manager.entities.contraints.AtLeastOneField;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
-@AtLeastOneField(fields = {"officePhone", "mobile", "email"})
+@AtLeastOneField(fields = {"officePhone", "mobile", "email"}, message = "At least one of the fields=[officePhone, mobile, email] must be present")
 public class ContactRequest {
     @NotBlank
     private String firstName;

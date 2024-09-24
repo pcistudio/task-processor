@@ -1,6 +1,5 @@
 package com.contact.manager.services;
 
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -46,6 +45,7 @@ public class AttachmentManagerImpl implements AttachmentManager {
         Files.createDirectories(directory);
         Path filePath = directory.resolve(uniqueFileName);
         Files.copy(inputStream, filePath);
+        log.debug("Stored attachment: {}", filePath);
         return filePath;
     }
 

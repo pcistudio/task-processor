@@ -6,6 +6,7 @@ import com.contact.manager.model.*;
 import com.contact.manager.services.PositionService;
 import com.contact.manager.services.scheduler.ScheduleMeeting;
 import com.contact.manager.services.scheduler.SchedulerContext;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +24,7 @@ public class PositionController {
     }
 
     @PostMapping
-    public ResponseEntity<PositionView> createPosition(@RequestBody Position position) {
+    public ResponseEntity<PositionView> createPosition(@Valid @RequestBody Position position) {
         Position createdPosition = positionService.createPosition(position);
         return ResponseEntity.ok(PositionView.from(createdPosition));
     }
@@ -39,7 +40,7 @@ public class PositionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PositionView> updatePosition(@PathVariable Long id, @RequestBody Position position) {
+    public ResponseEntity<PositionView> updatePosition(@PathVariable Long id, @Valid @RequestBody Position position) {
         try {
             Position updatedPosition = positionService.updatePosition(id, position);
             return ResponseEntity.ok(PositionView.from(updatedPosition));
@@ -60,7 +61,7 @@ public class PositionController {
 
     @PostMapping("/{id}:sendEmails")
     public ResponseEntity<Void> sendEmailsToCandidates(@PathVariable Long id,
-                                                       @RequestBody SendEmailsByPositionRequest request) {
+                                                       @Valid @RequestBody SendEmailsByPositionRequest request) {
         if (!request.getCandidates().isEmpty()) {
             positionService.sendEmailsToCandidates(id, request.getCandidates(), request.getSubject(), request.getTemplateName());
         } else if (request.getMarkForInterview() != null && request.getMarkForInterview()) {
@@ -74,7 +75,7 @@ public class PositionController {
 
     @PostMapping("/{id}:scheduleInterview")
     public ResponseEntity<List<MeetingResponse>> scheduleInterview(@PathVariable Long id,
-                                                                   @RequestBody ScheduleInterviewRequest request) {
+                                                                   @Valid @RequestBody ScheduleInterviewRequest request) {
         SchedulerContext context = new SchedulerContext.Builder()
 //                .startTime(LocalTime.parse(request.getStartTime()))
 //                .endTime(LocalTime.parse(request.getEndTime()))

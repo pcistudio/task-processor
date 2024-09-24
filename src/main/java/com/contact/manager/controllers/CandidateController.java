@@ -7,6 +7,7 @@ import com.contact.manager.model.*;
 import com.contact.manager.services.CandidateService;
 import com.contact.manager.services.scheduler.ScheduleMeeting;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -55,7 +56,7 @@ public class CandidateController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CandidateModel> updateCandidate(@PathVariable Long id, @RequestBody Candidate candidate) {
+    public ResponseEntity<CandidateModel> updateCandidate(@PathVariable Long id, @Valid @RequestBody Candidate candidate) {
         Candidate updatedCandidate = candidateService.updateCandidate(id, candidate);
         if (updatedCandidate != null) {
             return ResponseEntity.ok(CandidateModel.fromCandidate(updatedCandidate));
@@ -74,7 +75,7 @@ public class CandidateController {
     }
 
     @PostMapping("/{id}/attachments")
-    public ResponseEntity<CandidateModel> addAttachment(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<CandidateModel> addAttachment(@PathVariable Long id, @NotNull @RequestParam("file") MultipartFile file) {
         Candidate candidate = candidateService.addAttachment(id, file);
         return ResponseEntity.ok(CandidateModel.fromCandidate(candidate));
     }
@@ -106,18 +107,28 @@ public class CandidateController {
         return ResponseEntity.ok(CandidateModel.fromCandidate(candidate));
     }
 
-    @PostMapping("/{candidateId}/note")
-    public ResponseEntity<CandidateModel> addCandidateNote(@PathVariable Long candidateId, @RequestBody AddNoteRequest request) {
-        Candidate candidate = candidateService.addCandidateNote(candidateId, request.getNote());
+    @PostMapping("/{candidateId}/notes")
+    public ResponseEntity<CandidateModel> addCandidateNote(@PathVariable Long candidateId, @Valid @RequestBody AddNoteRequest request) {
+        Candidate candidate = candidateService.addCandidateNote(candidateId, request.getContent());
         return ResponseEntity.ok(CandidateModel.fromCandidate(candidate));
     }
 
     @PostMapping("/{candidateId}:scheduleInterview")
     public ResponseEntity<MeetingResponse> scheduleInterview(@PathVariable Long candidateId,
-                                                                   @RequestBody PersonalInterviewRequest request) {
+                                                             @Valid @RequestBody PersonalInterviewRequest request) {
+
         ScheduleMeeting scheduleMeeting = candidateService.scheduleInterview(candidateId, request.getSubject(), request.getTemplateName(), request);
         MeetingResponse meetingResponse = MeetingResponse.createMeetingResponse(scheduleMeeting);
         return ResponseEntity.ok(meetingResponse);
 
     }
+
+    @PostMapping("/{candidateId}:markForInterview")
+    public ResponseEntity<MeetingResponse> markForInterview(@PathVariable Long candidateId, @Valid @RequestBody MarkForInterviewRequest request) {
+        candidateService.markForInterview(candidateId, request.isMarkForInterview());
+        return ResponseEntity.noContent().build();
+
+    }
+
+
 }

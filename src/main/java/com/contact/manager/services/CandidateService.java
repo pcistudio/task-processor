@@ -34,4 +34,6 @@ public interface CandidateService {
     Candidate assignPosition(Long candidateId, Long positionId);
 
     ScheduleMeeting scheduleInterview(Long candidateId, String subject, String templateName, LocalDateTimeRange range);
+
+    void markForInterview(Long candidateId, boolean markForInterview);
 }

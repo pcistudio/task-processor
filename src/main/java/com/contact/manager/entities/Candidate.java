@@ -4,6 +4,7 @@ package com.contact.manager.entities;
 import com.contact.manager.entities.contraints.AtLeastOneField;
 import com.contact.manager.entities.converter.JsonConverters;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.data.annotation.CreatedDate;
@@ -15,7 +16,7 @@ import java.util.*;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@AtLeastOneField(fields = {"officePhone", "mobile", "email"})
+@AtLeastOneField(fields = {"officePhone", "mobile", "email"}, message = "At least one of the fields=[officePhone, mobile, email] must be present")
 public class Candidate implements Person {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,14 +40,17 @@ public class Candidate implements Person {
 
     @Convert(converter = JsonConverters.AddressJsonConverter.class)
     @Column(columnDefinition = "TEXT")
+    @Valid
     private Address primaryAddress;
 
     @Convert(converter = JsonConverters.AddressJsonConverter.class)
     @Column(columnDefinition = "TEXT")
+    @Valid
     private Address secondaryAddress;
 
     @Convert(converter = JsonConverters.NoteListJsonConverter.class)
     @Column(columnDefinition = "TEXT")
+    @Valid
     private List<Note> notes = new ArrayList<>();
 
     @Convert(converter = JsonConverters.AttachmentListJsonConverter.class)

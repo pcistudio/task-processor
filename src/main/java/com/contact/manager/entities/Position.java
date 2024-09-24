@@ -1,6 +1,7 @@
 package com.contact.manager.entities;
 
 
+import com.contact.manager.entities.contraints.NoEmptyValues;
 import com.contact.manager.entities.converter.JsonConverters;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

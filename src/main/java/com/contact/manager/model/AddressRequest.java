@@ -3,7 +3,7 @@ package com.contact.manager.model;
 
 import com.contact.manager.entities.contraints.AtLeastOneField;
 
-@AtLeastOneField(fields = {"street", "city", "state", "zipCode", "country"})
+@AtLeastOneField(fields = {"street", "city", "state", "zipCode", "country"}, message = "At least one of the fields=[street, city, state, zipCode, country] must be present")
 public class AddressRequest {
     private String street;
     private String city;

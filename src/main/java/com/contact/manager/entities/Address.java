@@ -13,7 +13,7 @@ import java.util.Objects;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@AtLeastOneField(fields = {"street", "city", "state", "zipCode", "country"})
+@AtLeastOneField(fields = {"street", "city", "state", "zipCode", "country"}, message = "At least one of the fields=[street, city, state, zipCode, country] must be present")
 public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
