@@ -1,5 +1,6 @@
 package com.contact.manager.services;
 
+import com.contact.manager.util.StringSanitizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -40,12 +41,13 @@ public class AttachmentManagerImpl implements AttachmentManager {
 
     @Override
     public Path storeAttachment(InputStream inputStream, String originalFileName) throws IOException {
-        String uniqueFileName = UUID.randomUUID().toString() + "_" + originalFileName;
+        String uniqueFileName = UUID.randomUUID().toString() + "_" + StringSanitizer.sanitize(originalFileName);
         Path directory = attachmentDirectory.resolve(yearMonthDayDirectory());
         Files.createDirectories(directory);
         Path filePath = directory.resolve(uniqueFileName);
+        log.debug("Storing attachment: {}", filePath);
         Files.copy(inputStream, filePath);
-        log.debug("Stored attachment: {}", filePath);
+        log.info("Stored attachment: {}", filePath);
         return filePath;
     }
 

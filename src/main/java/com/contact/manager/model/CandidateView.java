@@ -2,7 +2,7 @@ package com.contact.manager.model;
 
 import com.contact.manager.entities.Candidate;
 import org.springframework.util.Assert;
-
+//TODO ADD CACHEABLE ANNOTATION for all the GET methods
 public class CandidateView {
     private Long id;
     private String firstName;

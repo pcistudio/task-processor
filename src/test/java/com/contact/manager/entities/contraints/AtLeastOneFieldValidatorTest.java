@@ -48,6 +48,6 @@ class AtLeastOneFieldValidatorTest {
         assertEquals(1, violations.size());
 
         ConstraintViolation<Candidate> violation = violations.iterator().next();
-        assertEquals("At least one of the fields must be present", violation.getMessage());
+        assertEquals("At least one of the fields=[officePhone, mobile, email] must be present", violation.getMessage());
     }
 }
