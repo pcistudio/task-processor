@@ -1,0 +1,56 @@
+package com.contact.manager.model;
+
+import com.contact.manager.entities.Note;
+import jakarta.validation.constraints.Size;
+import org.springframework.util.Assert;
+
+import java.util.Collection;
+import java.util.List;
+
+public class NoteView {
+    private Long id;
+    @Size(max = 1024)
+    private String content;
+    private Long contactId;
+
+    public NoteView(Note note) {
+        Assert.notNull(note, "Note must not be null");
+        this.id = note.getId();
+        this.content = note.getContent();
+        this.contactId = note.getContact()!= null ? note.getContact().getId() : null;
+    }
+
+    public static List<NoteView> fromNotes(Collection<Note> notes) {
+        if (notes != null) {
+            return notes.stream().map(NoteView::new).toList();
+        }
+        return List.of();
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public NoteView setId(Long id) {
+        this.id = id;
+        return this;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public NoteView setContent(String content) {
+        this.content = content;
+        return this;
+    }
+
+    public Long getContactId() {
+        return contactId;
+    }
+
+    public NoteView setContactId(Long contactId) {
+        this.contactId = contactId;
+        return this;
+    }
+}

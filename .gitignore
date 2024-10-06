@@ -8,6 +8,7 @@ target/
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
+idea/
 *.iws
 *.iml
 *.ipr
@@ -36,5 +37,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
-mariadb_data/
-attachments/
+contact-manager-api/mariadb_data/
+contact-manager-api/attachments/
+contact-manager-api/cache/
