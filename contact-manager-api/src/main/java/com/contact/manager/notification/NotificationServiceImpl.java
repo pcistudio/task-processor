@@ -3,7 +3,6 @@ package com.contact.manager.notification;
 import com.contact.manager.model.batch.BatchInfoDefault;
 import com.pcistudio.task.procesor.TaskInfo;
 import com.pcistudio.task.procesor.writer.TaskWriter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafProperties;

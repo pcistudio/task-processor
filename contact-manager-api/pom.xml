@@ -105,7 +105,11 @@
         <!-- TaskProcessor -->
         <dependency>
             <groupId>com.pcistudio.task.procesor</groupId>
-            <artifactId>mysql-task-processor</artifactId>
+            <artifactId>task-processor-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pcistudio.task.procesor</groupId>
+            <artifactId>task-processor-spring-jdbc-mysql</artifactId>
         </dependency>
 
         <!-- Spring Test -->

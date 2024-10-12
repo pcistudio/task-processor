@@ -1,8 +1,8 @@
 package com.contact.manager.notification;
 
 import com.pcistudio.task.procesor.HandlerProperties;
-import com.pcistudio.task.procesor.config.TaskWriterConfiguration;
 import com.pcistudio.task.procesor.register.ProcessorRegisterImpl;
+import com.pcistudio.task.processor.config.TaskWriterConfiguration;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration

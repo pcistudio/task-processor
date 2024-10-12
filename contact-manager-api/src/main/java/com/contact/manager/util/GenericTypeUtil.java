@@ -1,6 +1,8 @@
 package com.contact.manager.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.bytecode.enhance.VersionMismatchException;
+import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 

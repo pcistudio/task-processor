@@ -8,11 +8,12 @@
     <name>ContactManager</name>
     <url>http://maven.apache.org</url>
     <modules>
-        <module>task-processor</module>
+        <module>task-processor-core</module>
         <module>contact-manager-api</module>
-        <module>task-processor-writer</module>
-        <module>task-processor-handler</module>
-        <module>mysql-task-processor</module>
+        <module>task-processor-common</module>
+        <module>task-processor-spring-jdbc</module>
+        <module>task-processor-spring-jdbc-mysql</module>
+        <module>task-processor-spring</module>
     </modules>
 
     <parent>
@@ -33,6 +34,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <!--Gson-->
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>2.10.1</version>
+            </dependency>
+
             <dependency>
                 <groupId>net.javacrumbs.shedlock</groupId>
                 <artifactId>shedlock-spring</artifactId>
@@ -45,22 +53,27 @@
             </dependency>
             <dependency>
                 <groupId>com.pcistudio.task.procesor</groupId>
-                <artifactId>task-processor</artifactId>
-                <version>1.0-SNAPSHOT</version>
-            </dependency>
-<!--            <dependency>-->
-<!--                <groupId>com.pcistudio.task.procesor</groupId>-->
-<!--                <artifactId>task-processor-writer</artifactId>-->
-<!--                <version>1.0-SNAPSHOT</version>-->
-<!--            </dependency>-->
-            <dependency>
-                <groupId>com.pcistudio.task.procesor</groupId>
-                <artifactId>mysql-task-processor</artifactId>
+                <artifactId>task-processor-core</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio.task.procesor</groupId>
-                <artifactId>task-processor-hadler</artifactId>
+                <artifactId>task-processor-common</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pcistudio.task.procesor</groupId>
+                <artifactId>task-processor-spring-jdbc-mysql</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pcistudio.task.procesor</groupId>
+                <artifactId>task-processor-spring</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pcistudio.task.procesor</groupId>
+                <artifactId>task-processor-spring-jdbc</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
         </dependencies>
