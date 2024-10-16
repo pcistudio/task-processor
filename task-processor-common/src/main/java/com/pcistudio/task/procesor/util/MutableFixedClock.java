@@ -6,24 +6,24 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A mutable clock that can be updated to simulate the passage of time.
- * should be used for testing purposes only. It was designed to avoid using Thread.sleep in tests.
- * It can be use for concurrency but since it is locking real world scenarios will not happen.
+ * should be used for testing purposes only. It was designed to avoid using Thread.sleep() in tests.
+ * It can be used for concurrency but since it is locking real world scenarios will not happen.
  * <p>
  * This class is thread-safe.
  */
 @Slf4j
 public final class MutableFixedClock extends Clock {
-    private Clock baseClock;
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Clock baseClock;
     private boolean debug = false;
+    private ClockIncreaseStrategy clockIncreaseStrategy = new FixedClockIncreaseStrategy();
 
     public MutableFixedClock(Clock baseClock) {
-        assertClock(baseClock);
+        Assert.notNull(baseClock, "baseClock cannot be null");
+        Assert.isFalse(baseClock instanceof MutableFixedClock, "baseClock can not be an instance of MutableFixedClock");
         this.baseClock = baseClock;
         log.info("Clock initialized with: {}", baseClock.instant());
     }
@@ -40,67 +40,78 @@ public final class MutableFixedClock extends Clock {
         this(Instant.now());
     }
 
-    public void updateClock(Clock baseClock) {
-        assertClock(baseClock);
-        try {
-            lock.writeLock().lock();
-            this.baseClock = baseClock;
-        } finally {
-            lock.writeLock().unlock();
-        }
-        if (debug) {
-            log.debug("Clock updated to: {}", baseClock.instant());
-        }
-    }
-
-    public void increaseTime(Duration duration) {
-        updateClock(Clock.offset(baseClock, duration));
-    }
-
-    private static void assertClock(Clock baseClock) {
-        Assert.notNull(baseClock, "baseClock cannot be null");
-        Assert.isFalse(baseClock instanceof MutableFixedClock, "baseClock can not be an instance of MutableFixedClock");
-    }
-
-    public MutableFixedClock debug() {
+    public MutableFixedClock withDebug() {
         debug = true;
         return this;
     }
 
-    @Override
-    public ZoneId getZone() {
-        try {
-            lock.readLock().lock();
-            return baseClock.getZone();
-        } finally {
-            lock.readLock().unlock();
-        }
+    public MutableFixedClock withRealTimeStrategy() {
+        withRealTimeStrategy(new RealTimeClockIncreaseStrategy());
+        return this;
     }
 
-    @Override
-    public Clock withZone(ZoneId zone) {
-        updateClock(baseClock.withZone(zone));
+    public MutableFixedClock withRealTimeStrategy(ClockIncreaseStrategy clockIncreaseStrategy) {
+        this.clockIncreaseStrategy = clockIncreaseStrategy;
         return this;
+    }
+
+    public void increaseTime(Duration duration) {
+        clockIncreaseStrategy.addTime(duration);
     }
 
     @Override
     public Instant instant() {
-        try {
-            lock.readLock().lock();
-            if (debug) {
-                log.debug("Current time: {}", baseClock.instant());
-            }
-            return baseClock.instant();
-        } finally {
-            lock.readLock().unlock();
+        Instant instant = clockIncreaseStrategy.currentInstant();
+        if (debug) {
+            log.debug("Current time: {}", instant);
         }
+        return instant;
     }
 
     @Override
     public long millis() {
+        long epochMilli = clockIncreaseStrategy.currentInstant().toEpochMilli();
         if (debug) {
-            log.debug("Current millis: {}", baseClock.millis());
+            log.debug("Current millis: {}", epochMilli);
         }
-        return baseClock.millis();
+        return epochMilli;
+    }
+
+    @Override
+    public ZoneId getZone() {
+        return baseClock.getZone();
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone) {
+        return baseClock.withZone(zone);
+    }
+
+    private class RealTimeClockIncreaseStrategy implements ClockIncreaseStrategy {
+        private final long startTime = System.currentTimeMillis();
+        private final AtomicLong timeAddedMillis = new AtomicLong(0);
+
+        @Override
+        public Instant currentInstant() {
+            long timePass = System.currentTimeMillis() - startTime;
+            return baseClock.instant().plusMillis(timePass + timeAddedMillis.get());
+        }
+
+        public void addTime(Duration duration) {
+            timeAddedMillis.addAndGet(duration.toMillis());
+        }
+    }
+
+    private class FixedClockIncreaseStrategy implements ClockIncreaseStrategy {
+        private final AtomicLong timeAddedMillis = new AtomicLong(0);
+
+        @Override
+        public Instant currentInstant() {
+            return baseClock.instant().plusMillis(timeAddedMillis.get());
+        }
+
+        public void addTime(Duration duration) {
+            timeAddedMillis.addAndGet(duration.toMillis());
+        }
     }
 }

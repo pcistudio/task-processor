@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.lang.reflect.InvocationTargetException;
+import java.time.Duration;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -67,6 +68,10 @@ public class HandlerPropertiesWrapper {
                     }
                 })
                 .collect(Collectors.toSet());
+    }
+
+    public Duration getProcessingExpire() {
+        return delegate.getProcessingExpire();
     }
 
 //    private Class<?> getPayloadType() {

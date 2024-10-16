@@ -2,7 +2,7 @@
 package com.contact.manager.services;
 
 import com.contact.manager.entities.Person;
-import com.contact.manager.util.GenericTypeUtil;
+import com.contact.manager.util.TemplateHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +26,7 @@ public interface MailService {
     }
 
     default void sendEmailWithTemplate(String to, String subject, String templateName, Object targetObject) {
-        sendEmailWithTemplate(to, subject, templateName, () -> GenericTypeUtil.getObjectFieldsAndValues(targetObject));
+        sendEmailWithTemplate(to, subject, templateName, () -> TemplateHelper.getObjectFieldsAndValues(targetObject));
     }
 
     default void sendEmailWithTemplate(Person person, String subject, String templateName, Supplier<Map<String, Object>> templateParamsSupplier) {
@@ -34,7 +34,7 @@ public interface MailService {
     }
 
     default void sendEmailWithTemplate(Person person, String subject, String templateName) {
-        sendEmailWithTemplate(person, subject, templateName, () -> GenericTypeUtil.getObjectFieldsAndValues(person));
+        sendEmailWithTemplate(person, subject, templateName, () -> TemplateHelper.getObjectFieldsAndValues(person));
     }
 
     default void sendEmailsToPersons(List<? extends Person> persons, String subject, String templateName) {

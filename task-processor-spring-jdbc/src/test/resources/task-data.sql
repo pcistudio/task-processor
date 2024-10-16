@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS task_table (
                    created_at TIMESTAMP NOT NULL,
                    updated_at TIMESTAMP NOT NULL,
                    execution_time TIMESTAMP NOT NULL,
-                   payload TEXT NOT NULL,
+                   payload BLOB NOT NULL,
                    retry_count INT NOT NULL,
                    partition VARCHAR(36),
                    handler_name VARCHAR(70) NOT NULL,

@@ -1,44 +1,18 @@
 package com.contact.manager.util;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.bytecode.enhance.VersionMismatchException;
-import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-public class GenericTypeUtil {
+public class TemplateHelper {
 
 
-    private GenericTypeUtil() {
-    }
-
-    public static Class<?> getGenericTypeFromSuperclass(Class<?> clazz) {
-        return getGenericTypeFromSuperclass(clazz, 0);
-    }
-
-    // This method extracts the generic type of the class that extends the superclass
-    public static Class<?> getGenericTypeFromSuperclass(Class<?> clazz, int index) {
-        Type genericSuperclass = clazz.getGenericSuperclass();
-        // Check if it's a parameterized type (i.e., a class with generics)
-        if (genericSuperclass instanceof ParameterizedType parameterizedType) {
-
-            // Get the actual type arguments (generics) of the superclass
-            Type[] typeArguments = parameterizedType.getActualTypeArguments();
-
-            if (index >= 0 && index < typeArguments.length) {
-                // Return the Class of the specified generic type
-                return (Class<?>) typeArguments[index];
-            }
-        }
-
-        throw new IllegalArgumentException("No generic type found at index: " + index);
+    private TemplateHelper() {
     }
 
     public static Map<String, Object> getObjectFieldsAndValues(Object obj) {
@@ -55,7 +29,7 @@ public class GenericTypeUtil {
         return fieldMap;
     }
 
-    public static Map<String, Object> convertToTemplateParams(Object ... objs) {
+    public static Map<String, Object> convertToTemplateParams(Object... objs) {
         Map<String, Object> fieldMap = new HashMap<>();
 
         for (Object object : objs) {

@@ -1,7 +1,8 @@
 package com.pcistudio.task.procesor.handler;
 
-import com.pcistudio.task.procesor.ProcessStatus;
-import com.pcistudio.task.procesor.TaskInfo;
+import com.pcistudio.task.procesor.task.ProcessStatus;
+import com.pcistudio.task.procesor.task.TaskInfo;
+import com.pcistudio.task.procesor.task.TaskInfoDecoder;
 import com.pcistudio.task.procesor.util.Assert;
 import lombok.extern.slf4j.Slf4j;
 
@@ -9,7 +10,7 @@ import java.time.Instant;
 
 
 @Slf4j
-public class TaskHandlerProxy implements TaskHandler {
+public class TaskHandlerProxy {
 
     private final TaskProcessingContext context;
 
@@ -18,16 +19,20 @@ public class TaskHandlerProxy implements TaskHandler {
     }
 
     //    @Transactional
-    public void process(TaskInfo<Object> task) {
+    public void process(TaskInfo task) {
         Assert.isTrue(task.getStatus().equals(ProcessStatus.PROCESSING), "Task is not in PROCESSING state");
         try {
-            processAndUpdateStatus(task);
+            processAndUpdateStatus(wrapForDecode(task));
         } catch (RuntimeException exception) { // library exception
             log.error("Error processing task", exception); // probably I don't need to do anything just rethrow it
         }
     }
 
-    private void processAndUpdateStatus(TaskInfo<Object> task) {
+    private TaskInfoDecoder wrapForDecode(TaskInfo task) {
+        return new TaskInfoDecoder(task, context.getMessageDecoding(), context.getTaskHandlerType());
+    }
+
+    private void processAndUpdateStatus(TaskInfoDecoder task) {
         try {
             doProcess(task);
             context.getTaskInfoService().markTaskCompleted(task);
@@ -42,10 +47,12 @@ public class TaskHandlerProxy implements TaskHandler {
         }
     }
 
-    private void doProcess(TaskInfo<Object> task) throws TaskHandlerException {
+    private void doProcess(TaskInfoDecoder task) throws TaskHandlerException {
         try {
-            context.getTaskHandler().process(task);
+
+            context.getTaskHandler().process(task.getPayload());
         } catch (RuntimeException exception) {
+            //TODO improve message
             throw new TaskHandlerException("Error processing task", exception);
         }
     }
@@ -55,4 +62,5 @@ public class TaskHandlerProxy implements TaskHandler {
         return context.getTransientExceptions().contains(exception) &&
                 context.getRetryManager().shouldRetry(retryCount);
     }
+
 }

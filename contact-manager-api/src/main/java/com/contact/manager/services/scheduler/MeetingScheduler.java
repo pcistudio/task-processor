@@ -9,7 +9,7 @@ import org.springframework.util.Assert;
 import java.util.List;
 import java.util.Map;
 
-import static com.contact.manager.util.GenericTypeUtil.convertToTemplateParams;
+import static com.contact.manager.util.TemplateHelper.convertToTemplateParams;
 
 @Slf4j
 @Component

@@ -2,8 +2,9 @@ package com.pcistudio.task.procesor.handler;
 
 
 import com.pcistudio.task.procesor.HandlerPropertiesWrapper;
-import com.pcistudio.task.procesor.TaskInfo;
+import com.pcistudio.task.procesor.task.TaskInfo;
 import com.pcistudio.task.procesor.util.DefaultThreadFactory;
+import com.pcistudio.task.procesor.util.decoder.MessageDecoding;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
@@ -14,20 +15,24 @@ import java.util.concurrent.*;
 public class TaskProcessor implements Closeable {
     private final TaskInfoService taskInfoService;
     private final HandlerPropertiesWrapper handlerPropertiesWrapper;
-    private final TaskHandler taskHandler;
+    private final TaskHandlerProxy taskHandlerProxy;
     private final ThreadPoolExecutor executorService;
     private final Semaphore semaphore;
+//    private final MessageDecoding messageDecoding;
 
-    public TaskProcessor(TaskInfoService taskInfoService, HandlerPropertiesWrapper handlerPropertiesWrapper, TaskHandler taskHandler) {
+    public TaskProcessor(TaskInfoService taskInfoService, HandlerPropertiesWrapper handlerPropertiesWrapper, TaskHandler taskHandlerProxy, MessageDecoding messageDecoding) {
         this.taskInfoService = taskInfoService;
         this.handlerPropertiesWrapper = handlerPropertiesWrapper;
-        this.taskHandler = new TaskHandlerProxy(
+        this.taskHandlerProxy = new TaskHandlerProxy(
                 TaskProcessingContext.builder()
                         .handlerProperties(handlerPropertiesWrapper)
-                        .taskHandler(taskHandler)
+                        .taskHandler(taskHandlerProxy)
                         .taskInfoService(taskInfoService)
                         .transientExceptions(handlerPropertiesWrapper.getTransientExceptions())
+                        //TODO This should go in the parameters
                         .retryManager(new FixRetryManager(handlerPropertiesWrapper.getRetryDelayMs(), handlerPropertiesWrapper.getMaxRetries()))
+                        // TODO This probably is not use here messageDecoding
+                        .messageDecoding(messageDecoding)
                         .build()
         );
         this.executorService = new ThreadPoolExecutor(Math.max(handlerPropertiesWrapper.getMaxParallelTasks() / 2, 1),
@@ -49,18 +54,18 @@ public class TaskProcessor implements Closeable {
 
 //ADD metrics
     public void processTasks() throws InterruptedException {
-        List<TaskInfo<Object>> tasks = taskInfoService.poll(handlerPropertiesWrapper.getHandlerName() ,handlerPropertiesWrapper.getMaxPoll());
+        List<TaskInfo> tasks = taskInfoService.poll(handlerPropertiesWrapper.getHandlerName() ,handlerPropertiesWrapper.getMaxPoll());
         while (!tasks.isEmpty()) {
             doProcessTasks(tasks);
             tasks = taskInfoService.poll(handlerPropertiesWrapper.getHandlerName(), handlerPropertiesWrapper.getMaxPoll());
         }
     }
 
-    private void doProcessTasks(List<TaskInfo<Object>> tasks) throws InterruptedException {
-        for (TaskInfo<Object> task : tasks) {
+    private void doProcessTasks(List<TaskInfo> tasks) throws InterruptedException {
+        for (TaskInfo task : tasks) {
             try {
                 semaphore.acquire();
-                Future<?> taskFuture = executorService.submit(() -> taskHandler.process(task));
+                Future<?> taskFuture = executorService.submit(() -> taskHandlerProxy.process(task));
                 taskFuture.get();
             }  catch (InterruptedException e) {
                 log.error("Interrupted processing taskId={}", task.getId(), e);

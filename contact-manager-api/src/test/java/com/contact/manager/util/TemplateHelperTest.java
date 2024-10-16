@@ -10,7 +10,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class GenericTypeUtilTest {
+class TemplateHelperTest {
 
     @Test
     void testConvertToTemplateParams() {
@@ -25,7 +25,7 @@ class GenericTypeUtilTest {
         candidate.setMarkForInterview(true);
 
         // Call the convertToTemplateParams method
-        Map<String, Object> result = GenericTypeUtil.convertToTemplateParams(candidate);
+        Map<String, Object> result = TemplateHelper.convertToTemplateParams(candidate);
 
         // Assert that the returned map contains the expected field names and values
         assertEquals(7, result.size());
@@ -53,7 +53,7 @@ class GenericTypeUtilTest {
         candidate.setMarkForInterview(true);
 
         // Call the convertToTemplateParams method
-        Map<String, Object> result = GenericTypeUtil.getObjectFieldsAndValues(candidate);
+        Map<String, Object> result = TemplateHelper.getObjectFieldsAndValues(candidate);
 
         // Assert that the returned map contains the expected field names and values
         assertEquals(7, result.size());

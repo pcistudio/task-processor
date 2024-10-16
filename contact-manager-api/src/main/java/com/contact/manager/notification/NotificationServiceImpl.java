@@ -1,7 +1,8 @@
 package com.contact.manager.notification;
 
 import com.contact.manager.model.batch.BatchInfoDefault;
-import com.pcistudio.task.procesor.TaskInfo;
+import com.pcistudio.task.procesor.task.TaskMetadata;
+import com.pcistudio.task.procesor.task.TaskParams;
 import com.pcistudio.task.procesor.writer.TaskWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,10 +31,10 @@ public class NotificationServiceImpl implements NotificationService {
     private final ThymeleafTemplateInfo thymeleafTemplateInfo;
     private final TaskWriter taskWriter;
 
-    public NotificationServiceImpl(NotificationRepository notificationRepository, ThymeleafTemplateInfo thymeleafTemplateInfo, @Qualifier("taskWriter") TaskWriter taskWriter) {
+    public NotificationServiceImpl(NotificationRepository notificationRepository, ThymeleafTemplateInfo thymeleafTemplateInfo, @Qualifier("taskWriter") TaskWriter taskInfoWriter) {
         this.notificationRepository = notificationRepository;
         this.thymeleafTemplateInfo = thymeleafTemplateInfo;
-        this.taskWriter = taskWriter;
+        this.taskWriter = taskInfoWriter;
     }
 
     @Override
@@ -59,7 +60,12 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setBatchId(batchId);
 
         Notification save = notificationRepository.save(notification);
-        TaskInfo<Object> taskInfo = taskWriter.writeTasks("email", notification);
+        TaskMetadata taskInfo = taskWriter.writeTasks(
+                TaskParams.builder()
+                        .handlerName("email")
+                        .payload(notification)
+                        .build()
+        );
         log.info("{}", taskInfo);
         log.info("Notification batch {} saved", batchId);
         return save;

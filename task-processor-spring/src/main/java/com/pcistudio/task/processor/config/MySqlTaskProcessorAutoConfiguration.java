@@ -3,7 +3,9 @@ package com.pcistudio.task.processor.config;
 import com.pcistudio.task.procesor.StorageResolver;
 import com.pcistudio.task.procesor.register.MysqlTaskStorageSetup;
 import com.pcistudio.task.procesor.register.TaskStorageSetup;
-import com.pcistudio.task.procesor.writer.MysqlTaskWriter;
+import com.pcistudio.task.procesor.util.encoder.MessageEncoding;
+import com.pcistudio.task.procesor.writer.MysqlTaskInfoWriter;
+import com.pcistudio.task.procesor.writer.TaskInfoWriter;
 import com.pcistudio.task.procesor.writer.TaskWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -26,7 +28,12 @@ public class MySqlTaskProcessorAutoConfiguration {
     }
 
     @Bean
-    TaskWriter taskWriter(StorageResolver storageResolver) {///this in the builder
-        return new MysqlTaskWriter(jdbcTemplate, storageResolver);
+    TaskInfoWriter taskInfoWriter(StorageResolver storageResolver, MessageEncoding messageEncoding) {///this in the builder
+        return new MysqlTaskInfoWriter(jdbcTemplate, storageResolver);
+    }
+
+    @Bean
+    TaskWriter taskWriter(TaskInfoWriter taskInfoWriter, MessageEncoding messageEncoding) {///this in the builder
+        return new TaskWriter(taskInfoWriter, messageEncoding);
     }
 }

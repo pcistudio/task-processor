@@ -1,38 +1,25 @@
 package com.pcistudio.task.procesor.writer;
 
-import com.pcistudio.task.procesor.ProcessStatus;
 import com.pcistudio.task.procesor.StorageResolver;
-import com.pcistudio.task.procesor.TaskInfo;
-import com.pcistudio.task.procesor.util.JsonUtil;
+import com.pcistudio.task.procesor.task.TaskInfo;
+import com.pcistudio.task.procesor.task.TaskMetadata;
+import com.pcistudio.task.procesor.util.encoder.MessageEncoding;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 @RequiredArgsConstructor
-public class MysqlTaskWriter implements DelayTaskWriter {
+public class MysqlTaskInfoWriter implements TaskInfoWriter {
     private final JdbcTemplate jdbcTemplate;
     private final StorageResolver storageResolver;
 
     @Override
-    public TaskInfo<Object> writeTasks(String handlerName, Object payload, Instant executionTime) {
-        String tableName = storageResolver.resolveStorageName(handlerName);
-        var taskInfo = TaskInfo.builder()
-                .handlerName(handlerName)
-                .payload(payload)
-                .version(1L)
-                .batchId(UUID.randomUUID())
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
-                .executionTime(executionTime)
-                .retryCount(0)
-                .status(ProcessStatus.PENDING)
-                .objectType(payload.getClass().getCanonicalName())
-                .build();
+    public TaskMetadata writeTasks(TaskInfo taskInfo) {
+        String tableName = storageResolver.resolveStorageName(taskInfo.getHandlerName());
+
         jdbcTemplate.update("""
                 INSERT INTO %s (
                 batch_id,
@@ -54,7 +41,7 @@ public class MysqlTaskWriter implements DelayTaskWriter {
                 taskInfo.getCreatedAt(),
                 taskInfo.getUpdatedAt(),
                 taskInfo.getExecutionTime(),
-                JsonUtil.toJson(taskInfo.getPayload()),
+                taskInfo.getPayloadBytes(),
                 taskInfo.getRetryCount(),
                 taskInfo.getHandlerName(),
                 taskInfo.getObjectType());
@@ -67,9 +54,9 @@ public class MysqlTaskWriter implements DelayTaskWriter {
 
     @Override
     @Transactional
-    public List<TaskInfo<Object>> writeTasks(String handlerName, Collection<Object> payloadList, Instant executionTime) {
-        return payloadList.stream()
-                .map(payload -> writeTasks(handlerName, payload, executionTime))
+    public List<TaskMetadata> writeTasks(Collection<TaskInfo> taskInfoList) {
+        return taskInfoList.stream()
+                .map(this::writeTasks)
                 .toList();
     }
 }

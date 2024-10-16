@@ -11,4 +11,8 @@ public class HandlerWriteProperties {
     private String handlerName = "default";
     @Builder.Default
     private String tableName = "default";
+    @Builder.Default
+    private boolean encrypt = false;
+
+
 }

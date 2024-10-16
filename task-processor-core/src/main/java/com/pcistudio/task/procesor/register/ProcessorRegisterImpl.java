@@ -14,6 +14,9 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Slf4j
+//TODO Centralize processor registration to avoid name collisions
+// where handler tablename and application name should be unique
+// the central registry should fail if `spring.application.name` is not set or unique
 public class ProcessorRegisterImpl implements ProcessorRegister, ProcessorRegisterLookup {
     private final Map<String, HandlerPropertiesWrapper> handlerPropertiesMap = new HashMap<>();
 

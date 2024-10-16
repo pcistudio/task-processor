@@ -1,29 +1,37 @@
-package com.pcistudio.task.procesor;
+package com.pcistudio.task.procesor.task;
 
 
 import com.pcistudio.task.procesor.util.Assert;
-import com.pcistudio.task.procesor.util.ExceptionUtils;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * TaskInfo class
+ * You don't suppose to use this class directly, use TaskInfoReader and TaskInfoWriter instead
+ */
 @Getter
 @Builder
-public class TaskInfo<T> {
+public class TaskInfo implements TaskInfoOperations {
     private Long id;
     private UUID batchId;
     private ProcessStatus status;
+    private Instant executionTime;
+
+    //    private Object payload;
+    private byte[] payloadBytes;
+
+    private String handlerName;
+    private String partitionId;
+    private String objectType;
+
+    // no exposed to the user
     private Long version;
     private Instant createdAt;
     private Instant updatedAt;
-    private Instant executionTime;
-    private T payload;
     private int retryCount;
-    private String handlerName;
-    private String partition;
-    private String objectType;
 
     public void incrementRetryCount() {
         retryCount++;
@@ -59,7 +67,7 @@ public class TaskInfo<T> {
                 ", version=" + version +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
-                ", payload=" + payload +
+//                ", payload=" + payload +
                 ", retryCount=" + retryCount +
                 ", handlerName='" + handlerName + '\'' +
                 ", objectType='" + objectType + '\'' +
@@ -79,18 +87,5 @@ public class TaskInfo<T> {
     public void failed() {
         version = version + 1;
         updateStatus(ProcessStatus.FAILED);
-    }
-
-    public TaskInfoError createError(String errorMessage) {
-        return TaskInfoError.builder()
-                .taskId(id)
-                .partition(partition)
-                .errorMessage(errorMessage)
-                .handlerName(handlerName)
-                .build();
-    }
-
-    public TaskInfoError createError(Exception exception) {
-        return createError(ExceptionUtils.getMostSpecificCause(exception).getMessage());
     }
 }

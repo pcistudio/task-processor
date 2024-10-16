@@ -1,9 +1,9 @@
 package com.contact.manager.entities.converter;
 
-import com.contact.manager.util.GenericTypeUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pcistudio.task.procesor.util.GenericTypeUtil;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
@@ -34,7 +34,7 @@ public abstract class ListJsonConverter<T> implements AttributeConverter<List<T>
             Class<T> classParameterType = (Class<T>) GenericTypeUtil.getGenericTypeFromSuperclass(this.getClass());
             JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, classParameterType);
             // Convert JSON string back to List<Object>
-            return Objects.requireNonNullElseGet(objectMapper.readValue(dbData, listType), ArrayList::new) ;
+            return Objects.requireNonNullElseGet(objectMapper.readValue(dbData, listType), ArrayList::new);
         } catch (IOException e) {
             throw new IllegalArgumentException("Error converting JSON to list: " + e.getMessage(), e);
         }

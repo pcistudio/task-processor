@@ -13,6 +13,6 @@ public class JdbcConfig {
 
     @Bean
     JdbcTemplate jdbcTemplate(DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
+        return new LoggingJdbcTemplate(dataSource);
     }
 }

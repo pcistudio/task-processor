@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,5 +25,6 @@ public class HandlerProperties extends HandlerWriteProperties {
     @Builder.Default
     private Set<String> transientExceptions = new HashSet<>();
     private String payloadType;
-
+    @Builder.Default
+    private Duration processingExpire = Duration.ofMinutes(5);
 }
