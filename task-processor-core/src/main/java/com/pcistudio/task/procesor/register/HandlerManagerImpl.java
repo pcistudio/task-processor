@@ -12,12 +12,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RequiredArgsConstructor
-@Slf4j
 //TODO Centralize processor registration to avoid name collisions
 // where handler tablename and application name should be unique
 // the central registry should fail if `spring.application.name` is not set or unique
-public class ProcessorRegisterImpl implements ProcessorRegister, ProcessorRegisterLookup {
+@Slf4j
+@RequiredArgsConstructor
+public class HandlerManagerImpl implements HandlerManager {
     private final Map<String, HandlerPropertiesWrapper> handlerPropertiesMap = new HashMap<>();
 
     private final Map<String, List<HandlerPropertiesWrapper>> handlersByTable = new HashMap<>();
@@ -40,6 +40,10 @@ public class ProcessorRegisterImpl implements ProcessorRegister, ProcessorRegist
         log.info("Handler registered successfully for handler {}", handlerPropertiesWrapper.getHandlerName());
     }
 
+    public HandlerPropertiesWrapper getProperties(String handlerName) {
+        return handlerPropertiesMap.get(handlerName);
+    }
+
     private void validateHandlerProperties(HandlerProperties handlerProperties) {
         if (handlerProperties.getHandlerName() == null || handlerProperties.getHandlerName().isBlank()) {
             throw new IllegalArgumentException("Handler name cannot be null or empty");
@@ -47,10 +51,6 @@ public class ProcessorRegisterImpl implements ProcessorRegister, ProcessorRegist
         if (handlerProperties.getTableName() == null || handlerProperties.getTableName().isBlank()) {
             throw new IllegalArgumentException("Table name cannot be null or empty");
         }
-    }
-
-    public HandlerPropertiesWrapper getProperties(String handlerName) {
-        return handlerPropertiesMap.get(handlerName);
     }
 
     public static class Builder {
@@ -67,13 +67,14 @@ public class ProcessorRegisterImpl implements ProcessorRegister, ProcessorRegist
             return this;
         }
 
-        public ProcessorRegisterImpl build() {
+        public HandlerManagerImpl build() {
             Assert.notNull(taskTableSetup, "TaskTableSetup cannot be null");
             Assert.notEmpty(handlerPropertiesList, "HandlerProperties cannot be empty");
 
-            ProcessorRegisterImpl processorRegister = new ProcessorRegisterImpl(taskTableSetup);
-            handlerPropertiesList.forEach(processorRegister::registerHandler);
-            return processorRegister;
+            HandlerManagerImpl handlerManager = new HandlerManagerImpl(taskTableSetup);
+            handlerPropertiesList.forEach(handlerManager::registerHandler);
+            return handlerManager;
         }
     }
+
 }

@@ -3,7 +3,7 @@ package com.pcistudio.task.processor.config;
 import com.pcistudio.task.procesor.JdbcTaskInfoService;
 import com.pcistudio.task.procesor.StorageResolver;
 import com.pcistudio.task.procesor.handler.TaskInfoService;
-import com.pcistudio.task.procesor.register.ProcessorRegisterLookup;
+import com.pcistudio.task.procesor.register.HandlerLookup;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -25,8 +25,8 @@ public class JdbcTaskInfoServiceAutoConfiguration {
     private String partitionId;
 
     @Bean
-    TaskInfoService taskInfoService(StorageResolver storageResolver, JdbcTemplate jdbcTemplate, Clock clock, ProcessorRegisterLookup processorRegisterLookup) {
-        return new JdbcTaskInfoService(storageResolver, partitionId, jdbcTemplate, clock, processorRegisterLookup);
+    TaskInfoService taskInfoService(StorageResolver storageResolver, JdbcTemplate jdbcTemplate, Clock clock, HandlerLookup handlerLookup) {
+        return new JdbcTaskInfoService(storageResolver, partitionId, jdbcTemplate, clock, handlerLookup);
     }
 
     @ConditionalOnMissingBean(value = Clock.class)

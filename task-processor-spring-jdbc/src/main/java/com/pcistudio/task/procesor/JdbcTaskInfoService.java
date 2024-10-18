@@ -3,7 +3,7 @@ package com.pcistudio.task.procesor;
 import com.pcistudio.task.procesor.handler.TaskInfoService;
 import com.pcistudio.task.procesor.page.Pageable;
 import com.pcistudio.task.procesor.page.Sort;
-import com.pcistudio.task.procesor.register.ProcessorRegisterLookup;
+import com.pcistudio.task.procesor.register.HandlerLookup;
 import com.pcistudio.task.procesor.task.ProcessStatus;
 import com.pcistudio.task.procesor.task.TaskInfo;
 import com.pcistudio.task.procesor.task.TaskInfoError;
@@ -24,15 +24,15 @@ import java.util.UUID;
 public class JdbcTaskInfoService implements TaskInfoService {
 
     private final StorageResolver storageResolver;
-    private final ProcessorRegisterLookup processorRegisterLookup;
+    private final HandlerLookup handlerLookup;
     private final TaskInfoRepository taskInfoRepository;
     private final TaskInfoErrorRepository taskInfoErrorRepository;
 
-    public JdbcTaskInfoService(StorageResolver storageResolver, String partitionId, JdbcTemplate jdbcTemplate, Clock clock, ProcessorRegisterLookup processorRegisterLookup) {
+    public JdbcTaskInfoService(StorageResolver storageResolver, String partitionId, JdbcTemplate jdbcTemplate, Clock clock, HandlerLookup handlerLookup) {
         this.storageResolver = storageResolver;
         this.taskInfoRepository = new TaskInfoRepository(jdbcTemplate, clock, partitionId);
         this.taskInfoErrorRepository = new TaskInfoErrorRepository(jdbcTemplate, clock);
-        this.processorRegisterLookup = processorRegisterLookup;
+        this.handlerLookup = handlerLookup;
     }
 
     /**
@@ -58,7 +58,7 @@ public class JdbcTaskInfoService implements TaskInfoService {
             log.info("No tasks to process in tableName={}, handlerName={}", tableName, handlerName);
             return Collections.emptyList();
         }
-        Duration processingExpire = processorRegisterLookup.getProperties(handlerName).getProcessingExpire();
+        Duration processingExpire = handlerLookup.getProperties(handlerName).getProcessingExpire();
         List<TaskInfo> taskToProcess = taskInfoRepository.getTaskToProcess(tableName, handlerName, readToken, processingExpire);
 
         if (updated != taskToProcess.size()) {
@@ -122,8 +122,8 @@ public class JdbcTaskInfoService implements TaskInfoService {
 
     @Override
     public List<TaskInfo> retrieveProcessingTimeoutTasks(String handlerName) {
-        Duration processingExpire = processorRegisterLookup.getProperties(handlerName).getProcessingExpire();
-        Duration processingGracePeriod = processorRegisterLookup.getProperties(handlerName).getProcessingGracePeriod();
+        Duration processingExpire = handlerLookup.getProperties(handlerName).getProcessingExpire();
+        Duration processingGracePeriod = handlerLookup.getProperties(handlerName).getProcessingGracePeriod();
 
         String tableName = storageResolver.resolveStorageName(handlerName);
         return taskInfoRepository.retrieveProcessingTimeoutTasks(tableName, handlerName, processingExpire.plus(processingGracePeriod));
@@ -131,7 +131,7 @@ public class JdbcTaskInfoService implements TaskInfoService {
 
     @Override
     public void requeueTimeoutTask(String handlerName) {
-        Duration processingExpire = processorRegisterLookup.getProperties(handlerName).getProcessingExpire();
+        Duration processingExpire = handlerLookup.getProperties(handlerName).getProcessingExpire();
         String tableName = storageResolver.resolveStorageName(handlerName);
         UUID batchId = taskInfoRepository.requeueProcessingTimeoutTask(tableName, handlerName, processingExpire);
         if (batchId == null) {

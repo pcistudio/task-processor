@@ -2,7 +2,7 @@ package com.pcistudio.task.procesor;
 
 import com.pcistudio.task.procesor.page.Pageable;
 import com.pcistudio.task.procesor.page.Sort;
-import com.pcistudio.task.procesor.register.ProcessorRegisterLookup;
+import com.pcistudio.task.procesor.register.HandlerLookup;
 import com.pcistudio.task.procesor.task.ProcessStatus;
 import com.pcistudio.task.procesor.task.TaskInfo;
 import com.pcistudio.task.procesor.task.TaskInfoError;
@@ -33,7 +33,7 @@ class JdbcTaskInfoServiceTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private ProcessorRegisterLookup processorRegisterLookup = handlerName -> new HandlerPropertiesWrapper(HandlerProperties.builder()
+    private HandlerLookup handlerLookup = handlerName -> new HandlerPropertiesWrapper(HandlerProperties.builder()
             .handlerName(handlerName)
             .tableName("task_table")
             .processingExpire(Duration.ofSeconds(3))
@@ -47,7 +47,7 @@ class JdbcTaskInfoServiceTest {
     void test() {
         MutableFixedClock clock = new MutableFixedClock();
 
-        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, processorRegisterLookup);
+        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, handlerLookup);
 
         List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 10);
         assertEquals(10, taskTable.size());
@@ -72,7 +72,7 @@ class JdbcTaskInfoServiceTest {
     void testMarkTaskToRetry() {
         MutableFixedClock clock = new MutableFixedClock().withRealTimeStrategy();
 
-        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, processorRegisterLookup);
+        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, handlerLookup);
         StopWatch stopWatch = new StopWatch();
         stopWatch.start("polling 10 tasks");
         //TODO keep the order
@@ -124,7 +124,7 @@ class JdbcTaskInfoServiceTest {
     void testMarkTaskFailed() {
         MutableFixedClock clock = new MutableFixedClock();
 
-        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, processorRegisterLookup);
+        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, handlerLookup);
         List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 10);
         assertEquals(10, taskTable.size());
 
@@ -146,7 +146,7 @@ class JdbcTaskInfoServiceTest {
     void testStoreError() {
         MutableFixedClock clock = new MutableFixedClock();
 
-        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, processorRegisterLookup);
+        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, handlerLookup);
         List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 1);
         TaskInfoError errorMessage = taskTable.get(0)
                 .createError(new RuntimeException("error message"));
@@ -169,7 +169,7 @@ class JdbcTaskInfoServiceTest {
     void testProcessingExpiration() {
         MutableFixedClock clock = new MutableFixedClock();
 
-        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, processorRegisterLookup);
+        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, handlerLookup);
 
         List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 6);
         assertEquals(6, taskTable.size());
@@ -192,7 +192,7 @@ class JdbcTaskInfoServiceTest {
     void testProcessingWhenNoUpdate() {
         MutableFixedClock clock = new MutableFixedClock();
 
-        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, processorRegisterLookup);
+        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, handlerLookup);
 
         List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 12);
         assertEquals(12, taskTable.size());
@@ -210,7 +210,7 @@ class JdbcTaskInfoServiceTest {
     void testRetrieveProcessingTimeoutTasks() {
         MutableFixedClock clock = new MutableFixedClock();
 
-        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, processorRegisterLookup);
+        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, handlerLookup);
 
         List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 10);
         assertEquals(10, taskTable.size());
@@ -236,7 +236,7 @@ class JdbcTaskInfoServiceTest {
     void testRequeueTimeoutTask() {
         MutableFixedClock clock = new MutableFixedClock();
 
-        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, processorRegisterLookup);
+        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, handlerLookup);
 
         List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 20);
         assertEquals(12, taskTable.size());

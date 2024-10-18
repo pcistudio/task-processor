@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultStorageResolver implements StorageResolver {
 
-    private final ProcessorRegisterLookup processorRegister;
+    private final HandlerLookup handlerLookup;
 
     @Override
     public String resolveStorageName(String handlerName) {
-        HandlerPropertiesWrapper properties = processorRegister.getProperties(handlerName);
+        HandlerPropertiesWrapper properties = handlerLookup.getProperties(handlerName);
         if (properties == null) {
             throw new IllegalArgumentException("Handler not found: " + handlerName);
         }

@@ -2,7 +2,7 @@ package com.pcistudio.task.processor.config;
 
 import com.pcistudio.task.procesor.StorageResolver;
 import com.pcistudio.task.procesor.register.DefaultStorageResolver;
-import com.pcistudio.task.procesor.register.ProcessorRegisterImpl;
+import com.pcistudio.task.procesor.register.HandlerManagerImpl;
 import com.pcistudio.task.procesor.register.TaskStorageSetup;
 import com.pcistudio.task.procesor.util.encoder.JsonMessageEncoding;
 import com.pcistudio.task.procesor.util.encoder.MessageEncoding;
@@ -16,18 +16,18 @@ import org.springframework.util.Assert;
 public abstract class TaskWriterConfiguration {
 
     @Bean
-    ProcessorRegisterImpl processorRegister(TaskStorageSetup taskStorageSetup) {
-        ProcessorRegisterImpl.Builder builder = new ProcessorRegisterImpl.Builder();
+    HandlerManagerImpl processorRegister(TaskStorageSetup taskStorageSetup) {
+        HandlerManagerImpl.Builder builder = new HandlerManagerImpl.Builder();
         builder.taskTableSetup(taskStorageSetup);
         addTask(builder);
         return builder.build();
     }
 
     @Bean
-    StorageResolver storageResolver(ProcessorRegisterImpl processorRegister) {
+    StorageResolver storageResolver(HandlerManagerImpl handlerManager) {
 
-        Assert.notNull(processorRegister, "processorRegister is required");
-        return new DefaultStorageResolver(processorRegister);
+        Assert.notNull(handlerManager, "handlerManager is required");
+        return new DefaultStorageResolver(handlerManager);
     }
 
     @Bean("jsonMessageEncoding")
@@ -36,5 +36,5 @@ public abstract class TaskWriterConfiguration {
         return new JsonMessageEncoding();
     }
 
-    protected abstract void addTask(ProcessorRegisterImpl.Builder builder);
+    protected abstract void addTask(HandlerManagerImpl.Builder builder);
 }
