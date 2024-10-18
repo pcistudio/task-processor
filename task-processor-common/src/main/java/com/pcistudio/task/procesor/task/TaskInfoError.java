@@ -13,11 +13,18 @@ public class TaskInfoError {
     @Builder.Default
     private UUID id = UUID.randomUUID();
     private final Long taskId; // TODO could use a direct reference to TaskInfo
+
+    /**
+     * The partition id of the task. This is used to group tasks together. by the server that is processing them
+     * whene an error happens we keep that record in the error
+     * if the record is completed then the partitionId in the task will have the value of the server that processed the task
+     */
     private String partitionId;
     private final String errorMessage;
     private String handlerName;
     @Builder.Default
     private final Instant createdAt = Instant.now();
+
     public static final TaskInfoError EMPTY = TaskInfoError.builder().taskId(0L).errorMessage("").build();
 
     @Override

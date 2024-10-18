@@ -6,12 +6,16 @@ import com.pcistudio.task.procesor.page.Pageable;
 import com.pcistudio.task.procesor.page.Sort;
 import com.pcistudio.task.procesor.task.ProcessStatus;
 import com.pcistudio.task.procesor.task.TaskInfo;
+import com.pcistudio.task.procesor.task.TaskInfoError;
 import com.pcistudio.task.procesor.task.TaskInfoOperations;
+import com.pcistudio.task.procesor.util.Assert;
 import com.pcistudio.task.procesor.util.decoder.MessageDecoding;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -97,9 +101,9 @@ class TaskInfoRepository {
                 """
                         update %s
                         SET status=?, version=version+1, updated_at=?, retry_count=?, execution_time=?, partition_id=null
-                        where id=? and status = ? and version=?
+                        where id=? and status = ? and version=? and handler_name=?
                         """.formatted(tableName),
-                newStatus.name(), now, task.getRetryCount(), nextRetryTime, task.getId(), oldStatus.name(), task.getVersion()
+                newStatus.name(), now, task.getRetryCount(), nextRetryTime, task.getId(), oldStatus.name(), task.getVersion(), task.getHandlerName()
         );
 
         if (updated == 0) {
@@ -114,9 +118,9 @@ class TaskInfoRepository {
                 """
                         update %s
                         SET status=?, version=version+1, updated_at=?
-                        where id=? and status = ? and version=?
+                        where id=? and status = ? and version=? and handler_name=?
                         """.formatted(tableName),
-                ProcessStatus.FAILED.name(), now, task.getId(), ProcessStatus.PROCESSING.name(), task.getVersion()
+                ProcessStatus.FAILED.name(), now, task.getId(), ProcessStatus.PROCESSING.name(), task.getVersion(), task.getHandlerName()
         );
 
         if (updated == 0) {
@@ -129,9 +133,9 @@ class TaskInfoRepository {
         Cursor<Instant> instantCursor = taskInfoCursorPageableFactory.decodeCursor(pageToken);
         List<TaskInfo> tasks;
         if (sort == Sort.ASC) {
-            tasks=  getOldestTasks(tableName, processStatus, instantCursor, limit);
+            tasks = getOldestTasks(tableName, processStatus, instantCursor, limit);
         } else {
-            tasks= getLatestTasks(tableName, processStatus, instantCursor, limit);
+            tasks = getLatestTasks(tableName, processStatus, instantCursor, limit);
         }
         return taskInfoCursorPageableFactory.createPageable(tasks, limit);
     }
@@ -178,5 +182,50 @@ class TaskInfoRepository {
                     limit
             );
         }
+    }
+
+    @Nullable
+    public UUID requeueProcessingTimeoutTask(String tableName, String handlerName, Duration processingExpire) {
+        Instant now = Instant.now(clock);
+        UUID batchId = UUID.randomUUID();
+        int updated = jdbcTemplate.update(
+                """
+                        update %s
+                        SET status=?, version=version+1, updated_at=?, batch_id=?, partition_id=null
+                        where status=? and updated_at<? and handler_name=?
+                        """.formatted(tableName),
+                ProcessStatus.PENDING.name(), now, batchId.toString(), ProcessStatus.PROCESSING.name(), now.minus(processingExpire), handlerName
+        );
+        if (updated == 0) {
+            return null;
+        }
+        log.info("Requeue {} tasks in tableName={}, handlerName={}", updated, tableName, handlerName);
+
+        return batchId;
+    }
+
+    public List<TaskInfoError> createBatchTaskInfoError(String tableName, String handlerName, UUID batchId, String errorMessage) {
+        Assert.notNull(errorMessage, "errorMessage must not be null");
+        RowMapper<TaskInfoError> rowMapper = (rs, rowNum) -> TaskInfoError.builder()
+                .handlerName(handlerName)
+                .taskId(rs.getLong("id"))
+                .partitionId(rs.getString("partition_id"))
+                .errorMessage(errorMessage)
+                .build();
+        return jdbcTemplate.query(
+                "SELECT id,partition_id FROM %s where batch_id=?".formatted(tableName),
+                rowMapper,
+                batchId.toString()
+        );
+    }
+
+    public List<TaskInfo> retrieveProcessingTimeoutTasks(String tableName, String handlerName, Duration processingExpire) {
+        return jdbcTemplate.query(
+                "SELECT * FROM %s where status=? and updated_at<? and handler_name=?".formatted(tableName),
+                simpleMapper,
+                ProcessStatus.PROCESSING.name(),
+                Instant.now(clock).minus(processingExpire),
+                handlerName
+        );
     }
 }

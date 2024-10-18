@@ -27,4 +27,6 @@ public class HandlerProperties extends HandlerWriteProperties {
     private String payloadType;
     @Builder.Default
     private Duration processingExpire = Duration.ofMinutes(5);
+    @Builder.Default
+    private Duration processingGracePeriod = Duration.ofMinutes(0);
 }

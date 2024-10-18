@@ -201,4 +201,59 @@ class JdbcTaskInfoServiceTest {
         assertEquals(0, taskTable3.size());
 
     }
+
+    @Test
+    @DisplayName("""
+            Polling 10 tasks then try to poll 10 more tasks
+            but only 2 tasks are available then wait for 10 seconds
+            All the tasks 12 should be expired """)
+    void testRetrieveProcessingTimeoutTasks() {
+        MutableFixedClock clock = new MutableFixedClock();
+
+        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, processorRegisterLookup);
+
+        List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 10);
+        assertEquals(10, taskTable.size());
+
+        List<TaskInfo> taskTable2 = jdbcTaskInfoService.poll("task_table", 10);
+        assertEquals(2, taskTable2.size());
+
+        clock.increaseTime(Duration.ofSeconds(10));
+        List<TaskInfo> taskTable3 = jdbcTaskInfoService.retrieveProcessingTimeoutTasks("task_table");
+        assertEquals(12, taskTable3.size());
+    }
+
+    @Test
+    @DisplayName("""
+            Polling 12 tasks then try to poll 20 more tasks
+            but there is nothing to poll 
+            then wait for 10 seconds
+            then poll 20 tasks and the last 5 are availables
+            then wait for 10 seconds
+            Now check that nothing can be polled
+            Now All the tasks 17 should be expired ,
+            then requeue the timeout tasks""")
+    void testRequeueTimeoutTask() {
+        MutableFixedClock clock = new MutableFixedClock();
+
+        JdbcTaskInfoService jdbcTaskInfoService = new JdbcTaskInfoService(StorageResolver.IDENTITY, "partitionId", jdbcTemplate, clock, processorRegisterLookup);
+
+        List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 20);
+        assertEquals(12, taskTable.size());
+        List<TaskInfo> taskTable2 = jdbcTaskInfoService.poll("task_table", 20);
+        assertEquals(0, taskTable2.size());
+
+        clock.increaseTime(Duration.ofSeconds(10));
+        List<TaskInfo> taskTable3 = jdbcTaskInfoService.poll("task_table", 20);
+        assertEquals(5, taskTable3.size());
+        clock.increaseTime(Duration.ofSeconds(10));
+
+        List<TaskInfo> taskTable4 = jdbcTaskInfoService.poll("task_table", 20);
+        assertEquals(0, taskTable4.size());
+
+        jdbcTaskInfoService.requeueTimeoutTask("task_table");
+
+        List<TaskInfo> taskTable5 = jdbcTaskInfoService.poll("task_table", 20);
+        assertEquals(17, taskTable5.size());
+    }
 }

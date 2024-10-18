@@ -74,6 +74,10 @@ public class HandlerPropertiesWrapper {
         return delegate.getProcessingExpire();
     }
 
+    public Duration getProcessingGracePeriod() {
+        return delegate.getProcessingGracePeriod();
+    }
+
 //    private Class<?> getPayloadType() {
 //        try {
 //            return Class.forName(delegate.getPayloadType());

@@ -18,7 +18,6 @@ public class TaskProcessor implements Closeable {
     private final TaskHandlerProxy taskHandlerProxy;
     private final ThreadPoolExecutor executorService;
     private final Semaphore semaphore;
-//    private final MessageDecoding messageDecoding;
 
     public TaskProcessor(TaskInfoService taskInfoService, HandlerPropertiesWrapper handlerPropertiesWrapper, TaskHandler taskHandlerProxy, MessageDecoding messageDecoding) {
         this.taskInfoService = taskInfoService;

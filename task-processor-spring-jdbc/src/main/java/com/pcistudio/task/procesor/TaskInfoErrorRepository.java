@@ -44,4 +44,23 @@ class TaskInfoErrorRepository {
                 taskId
         );
     }
+
+    public void saveErrors(String tableName, List<TaskInfoError> timeoutTaskInfoError) {
+        Instant now = Instant.now(clock);
+        jdbcTemplate.batchUpdate(
+                """
+                        insert into %s (id, task_id, error_message, created_at, partition_id)
+                        values (?, ?, ?, ?, ?)
+                        """.formatted(tableName),
+                timeoutTaskInfoError,
+                timeoutTaskInfoError.size(),
+                (ps, taskInfoError) -> {
+                    ps.setObject(1, taskInfoError.getId());
+                    ps.setLong(2, taskInfoError.getTaskId());
+                    ps.setString(3, taskInfoError.getErrorMessage().substring(0, Math.min(taskInfoError.getErrorMessage().length(), 512)));
+                    ps.setObject(4, now);
+                    ps.setString(5, taskInfoError.getPartitionId());
+                }
+        );
+    }
 }

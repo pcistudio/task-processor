@@ -25,9 +25,9 @@ public interface TaskInfoService {
 
     Pageable<TaskInfo> getTasks(String handlerName, ProcessStatus processStatus, String pageToken, int limit, Sort sort);
 
-    List<TaskInfo> pollProcessingTimeout(String handlerName);
+    List<TaskInfo> retrieveProcessingTimeoutTasks(String handlerName);
 
-//    List<TaskInfo> pollProcessingTimeout(String handlerName);
+    void requeueTimeoutTask(String handlerName);
 
     void storeError(TaskInfoError taskError);
 
