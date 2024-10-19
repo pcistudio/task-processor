@@ -36,7 +36,10 @@ public class HandlerManagerImpl implements HandlerManager {
             }
             return v;
         });
+
+
         taskTableSetupImpl.createStorage(handlerPropertiesWrapper.getTableName());
+
         log.info("Handler registered successfully for handler {}", handlerPropertiesWrapper.getHandlerName());
     }
 

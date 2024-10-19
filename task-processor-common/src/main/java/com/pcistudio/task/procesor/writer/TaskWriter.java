@@ -22,7 +22,7 @@ public class TaskWriter {
         return taskInfoWriter.writeTasks(taskInfo);
     }
 
-    List<TaskMetadata> writeTasks(Collection<TaskParams> taskParamsCollection) {
+    public List<TaskMetadata> writeTasks(Collection<TaskParams> taskParamsCollection) {
         UUID batchId = UUID.randomUUID();
 
         List<TaskInfo> taskInfos = taskParamsCollection.stream()

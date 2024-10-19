@@ -1,9 +1,7 @@
 package com.pcistudio.task.processor.config;
 
 import com.pcistudio.task.procesor.StorageResolver;
-import com.pcistudio.task.procesor.register.DefaultStorageResolver;
-import com.pcistudio.task.procesor.register.HandlerManagerImpl;
-import com.pcistudio.task.procesor.register.TaskStorageSetup;
+import com.pcistudio.task.procesor.register.*;
 import com.pcistudio.task.procesor.util.encoder.JsonMessageEncoding;
 import com.pcistudio.task.procesor.util.encoder.MessageEncoding;
 import lombok.RequiredArgsConstructor;
@@ -13,9 +11,10 @@ import org.springframework.util.Assert;
 
 
 @RequiredArgsConstructor
-public abstract class TaskWriterConfiguration {
+public abstract class AbstractHandlersConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean(HandlerManager.class)
     HandlerManagerImpl processorRegister(TaskStorageSetup taskStorageSetup) {
         HandlerManagerImpl.Builder builder = new HandlerManagerImpl.Builder();
         builder.taskTableSetup(taskStorageSetup);
@@ -24,6 +23,7 @@ public abstract class TaskWriterConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean(StorageResolver.class)
     StorageResolver storageResolver(HandlerManagerImpl handlerManager) {
 
         Assert.notNull(handlerManager, "handlerManager is required");

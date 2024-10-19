@@ -1,1 +1,2 @@
-com.pcistudio.task.processor.config.MySqlTaskProcessorAutoConfiguration
+com.pcistudio.task.processor.config.TaskWriterAutoConfiguration
+com.pcistudio.task.processor.config.JdbcTaskInfoServiceAutoConfiguration

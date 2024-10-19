@@ -118,6 +118,10 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.pcistudio.task.procesor</groupId>
+            <artifactId>task-processor-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

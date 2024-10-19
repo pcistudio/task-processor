@@ -19,13 +19,13 @@ public class TaskProcessor implements Closeable {
     private final ThreadPoolExecutor executorService;
     private final Semaphore semaphore;
 
-    public TaskProcessor(TaskInfoService taskInfoService, HandlerPropertiesWrapper handlerPropertiesWrapper, TaskHandler taskHandlerProxy, MessageDecoding messageDecoding) {
+    public TaskProcessor(TaskInfoService taskInfoService, HandlerPropertiesWrapper handlerPropertiesWrapper, TaskHandler taskHandler, MessageDecoding messageDecoding) {
         this.taskInfoService = taskInfoService;
         this.handlerPropertiesWrapper = handlerPropertiesWrapper;
         this.taskHandlerProxy = new TaskHandlerProxy(
                 TaskProcessingContext.builder()
                         .handlerProperties(handlerPropertiesWrapper)
-                        .taskHandler(taskHandlerProxy)
+                        .taskHandler(taskHandler)
                         .taskInfoService(taskInfoService)
                         .transientExceptions(handlerPropertiesWrapper.getTransientExceptions())
                         //TODO This should go in the parameters
