@@ -1,5 +1,6 @@
 package com.pcistudio.task.procesor;
 
+import com.pcistudio.task.procesor.handler.TaskHandler;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,14 +21,14 @@ public class HandlerPropertiesWrapper {
     public String getHandlerName() {
         return delegate.getHandlerName();
     }
-
-    public String getHandlerClass() {
-        return delegate.getHandlerClass();
-    }
-
-    public String getHandlerMethod() {
-        return delegate.getHandlerMethod();
-    }
+//
+//    public String getHandlerClass() {
+//        return delegate.getHandlerClass();
+//    }
+//
+//    public String getHandlerMethod() {
+//        return delegate.getHandlerMethod();
+//    }
 
     public int getMaxRetries() {
         return delegate.getMaxRetries();
@@ -78,6 +79,9 @@ public class HandlerPropertiesWrapper {
         return delegate.getProcessingGracePeriod();
     }
 
+    public TaskHandler getTaskHandler() {
+        return delegate.getTaskHandler();
+    }
 //    private Class<?> getPayloadType() {
 //        try {
 //            return Class.forName(delegate.getPayloadType());

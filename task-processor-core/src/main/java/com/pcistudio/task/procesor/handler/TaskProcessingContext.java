@@ -15,12 +15,13 @@ public class TaskProcessingContext {
     private TaskHandler taskHandler;
     private TaskInfoService taskInfoService;
     //TODO This should go in the properties
-    private Set<RuntimeException> transientExceptions;
+//    private Set<RuntimeException> transientExceptions;
     private RetryManager retryManager;
     private MessageDecoding messageDecoding;
 
     public Class getTaskHandlerType() {
         return GenericTypeUtil.getGenericTypeFromSuperclass(taskHandler.getClass());
     }
+
 
 }

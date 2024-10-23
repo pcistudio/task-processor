@@ -51,6 +51,16 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.pcistudio.task.procesor</groupId>
+            <artifactId>task-processor-spring-jdbc-mariadb</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.pcistudio.task.procesor</groupId>
+            <artifactId>task-processor-spring-jdbc-h2</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
             <scope>provided</scope>
@@ -66,6 +76,10 @@
             <artifactId>h2</artifactId>
             <scope>provided</scope>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.pcistudio.task.procesor</groupId>-->
+<!--            <artifactId>task-processor-spring-jdbc-mysql</artifactId>-->
+<!--        </dependency>-->
 
     </dependencies>
 </project>

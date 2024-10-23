@@ -2,8 +2,10 @@ package com.pcistudio.task.processor.config;
 
 import com.pcistudio.task.procesor.JdbcTaskInfoService;
 import com.pcistudio.task.procesor.StorageResolver;
-import com.pcistudio.task.procesor.handler.TaskInfoService;
+import com.pcistudio.task.procesor.handler.*;
 import com.pcistudio.task.procesor.register.HandlerLookup;
+import com.pcistudio.task.procesor.util.decoder.MessageDecoding;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -29,14 +31,30 @@ public class JdbcTaskInfoServiceAutoConfiguration {
         return new JdbcTaskInfoService(storageResolver, partitionId, jdbcTemplate, clock, handlerLookup);
     }
 
-//    @Bean
-//    TaskProcessor taskProcessor(TaskInfoService taskInfoService, TaskWriter taskWriter) {
-//        return new TaskProcessor(taskInfoService, taskWriter);
-//    }
-
     @ConditionalOnMissingBean(value = Clock.class)
     @Bean
     Clock clock() {
         return Clock.systemUTC();
+    }
+
+    @Bean
+    public TaskProcessorManager taskProcessorManager(HandlerLookup handlerLookup, TaskInfoService taskInfoService, MessageDecoding messageDecoding) throws BeansException {
+        TaskProcessorManager taskProcessorManager = new TaskProcessorManager();
+        handlerLookup.getIterator().forEachRemaining(properties -> {
+            TaskProcessingContext context = TaskProcessingContext.builder()
+                    .handlerProperties(properties)
+                    .taskInfoService(taskInfoService)
+                    .retryManager(
+                            properties.isExponentialBackoff()
+                                    ? new ExponentialRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries())
+                                    : new FixRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries())
+                    )
+                    .messageDecoding(messageDecoding)
+                    .taskHandler(properties.getTaskHandler())
+                    .build();
+            taskProcessorManager.createTaskProcessor(context);
+        });
+
+        return taskProcessorManager;
     }
 }

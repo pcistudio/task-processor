@@ -7,10 +7,7 @@ import com.pcistudio.task.procesor.util.Assert;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 //TODO Centralize processor registration to avoid name collisions
 // where handler tablename and application name should be unique
@@ -45,6 +42,11 @@ public class HandlerManagerImpl implements HandlerManager {
 
     public HandlerPropertiesWrapper getProperties(String handlerName) {
         return handlerPropertiesMap.get(handlerName);
+    }
+
+    @Override
+    public Iterator<HandlerPropertiesWrapper> getIterator() {
+        return Collections.unmodifiableMap(handlerPropertiesMap).values().iterator();
     }
 
     private void validateHandlerProperties(HandlerProperties handlerProperties) {

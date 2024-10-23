@@ -1,5 +1,6 @@
 package com.pcistudio.task.procesor.handler;
 
+import com.pcistudio.task.procesor.HandlerPropertiesWrapper;
 import com.pcistudio.task.procesor.task.ProcessStatus;
 import com.pcistudio.task.procesor.task.TaskInfo;
 import com.pcistudio.task.procesor.task.TaskInfoDecoder;
@@ -7,6 +8,7 @@ import com.pcistudio.task.procesor.util.Assert;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
+import java.util.List;
 
 
 @Slf4j
@@ -16,6 +18,11 @@ public class TaskHandlerProxy {
 
     public TaskHandlerProxy(TaskProcessingContext taskProcessingContext) {
         this.context = taskProcessingContext;
+    }
+
+    public List<TaskInfo> poll() {
+        HandlerPropertiesWrapper properties = context.getHandlerProperties();
+        return context.getTaskInfoService().poll(properties.getHandlerName(), properties.getMaxPoll());
     }
 
     //    @Transactional
@@ -59,7 +66,7 @@ public class TaskHandlerProxy {
 
     private boolean shouldRetry(Throwable exception, int retryCount) {
         // TODO AL this int eh RetryObject on the context
-        return context.getTransientExceptions().contains(exception) &&
+        return context.getHandlerProperties().getTransientExceptions().contains(exception) &&
                 context.getRetryManager().shouldRetry(retryCount);
     }
 

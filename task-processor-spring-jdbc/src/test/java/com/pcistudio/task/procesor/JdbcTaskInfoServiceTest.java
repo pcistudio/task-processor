@@ -33,12 +33,20 @@ class JdbcTaskInfoServiceTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private HandlerLookup handlerLookup = handlerName -> new HandlerPropertiesWrapper(HandlerProperties.builder()
-            .handlerName(handlerName)
-            .tableName("task_table")
-            .processingExpire(Duration.ofSeconds(3))
-            .build()
-    );
+    private HandlerLookup handlerLookup = new HandlerLookup() {
+        public HandlerPropertiesWrapper getProperties(String handlerName) {
+            return new HandlerPropertiesWrapper(HandlerProperties.builder()
+                    .handlerName(handlerName)
+                    .tableName("task_table")
+                    .processingExpire(Duration.ofSeconds(3))
+                    .build()
+            );
+        }
+
+        public java.util.Iterator<HandlerPropertiesWrapper> getIterator() {
+            return null;
+        }
+    };
     @Test
     @DisplayName("""
             Polling 10 tasks then try to poll 10 more tasks
