@@ -9,7 +9,7 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @TestPropertySource(properties = {"debug=true", "spring.task.processor.writer.enabled=true"})
-class MainTest {
+class TaskWriterTest {
 
     @Autowired
     private TaskWriter taskWriter;

@@ -1,0 +1,2 @@
+com.pcistudio.processor.test.writer.TestTaskWriterAutoConfiguration
+com.pcistudio.task.processor.config.TaskWriterAutoConfiguration

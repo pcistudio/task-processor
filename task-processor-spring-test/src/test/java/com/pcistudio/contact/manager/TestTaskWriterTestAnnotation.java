@@ -1,6 +1,6 @@
 package com.pcistudio.contact.manager;
 
-import com.pcistudio.processor.test.config.TaskWriterTest;
+import com.pcistudio.processor.test.writer.TaskWriterTest;
 import com.pcistudio.task.procesor.HandlerProperties;
 import com.pcistudio.task.procesor.register.HandlerManagerImpl;
 import com.pcistudio.task.procesor.task.TaskParams;
@@ -13,7 +13,7 @@ import org.springframework.test.context.TestPropertySource;
 
 @TaskWriterTest
 @TestPropertySource(properties = {"debug=true"})
-class TestTaskWriterTest {
+class TestTaskWriterTestAnnotation {
     @Configuration
     static class TestHandlerConfiguration extends AbstractHandlersConfiguration {
         @Override

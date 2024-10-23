@@ -1,4 +1,4 @@
-package com.pcistudio.processor.test.config;
+package com.pcistudio.processor.test.writer;
 
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.properties.PropertyMapping;

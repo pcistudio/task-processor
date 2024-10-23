@@ -1,4 +1,4 @@
-package com.pcistudio.processor.test.config;
+package com.pcistudio.processor.test.writer;
 
 import com.pcistudio.task.procesor.StorageResolver;
 import com.pcistudio.task.procesor.register.H2TaskStorageSetup;
