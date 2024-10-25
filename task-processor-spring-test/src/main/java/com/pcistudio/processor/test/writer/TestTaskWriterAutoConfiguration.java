@@ -26,10 +26,4 @@ public class TestTaskWriterAutoConfiguration {
     TaskInfoWriter taskInfoWriter(StorageResolver storageResolver) {
         return new H2TaskInfoWriter(jdbcTemplate, storageResolver);
     }
-
-    @Bean
-    @ConditionalOnMissingBean
-    TaskStorageSetup taskStorageSetup() {
-        return new H2TaskStorageSetup(jdbcTemplate);
-    }
 }

@@ -36,10 +36,10 @@ public class TaskWriterAutoConfiguration {
             return new H2TaskInfoWriter(jdbcTemplate, storageResolver);
         }
 
-        @Bean
-        TaskStorageSetup taskStorageSetup() {
-            return new H2TaskStorageSetup(jdbcTemplate);
-        }
+//        @Bean
+//        TaskStorageSetup taskStorageSetup() {
+//            return new H2TaskStorageSetup(jdbcTemplate);
+//        }
     }
 
     @AutoConfiguration
@@ -56,10 +56,10 @@ public class TaskWriterAutoConfiguration {
             return new MariadbTaskInfoWriter(jdbcTemplate, storageResolver);
         }
 
-        @Bean
-        TaskStorageSetup taskStorageSetup() {
-            return new MariadbTaskStorageSetup(jdbcTemplate);
-        }
+//        @Bean
+//        TaskStorageSetup taskStorageSetup() {
+//            return new MariadbTaskStorageSetup(jdbcTemplate);
+//        }
     }
 
     @AutoConfiguration
@@ -77,10 +77,10 @@ public class TaskWriterAutoConfiguration {
             return new MysqlTaskInfoWriter(jdbcTemplate, storageResolver);
         }
 
-        @Bean
-        TaskStorageSetup mysqlTaskStorageSetup() {
-            return new MysqlTaskStorageSetup(jdbcTemplate);
-        }
+//        @Bean
+//        TaskStorageSetup mysqlTaskStorageSetup() {
+//            return new MysqlTaskStorageSetup(jdbcTemplate);
+//        }
     }
 
     @Bean

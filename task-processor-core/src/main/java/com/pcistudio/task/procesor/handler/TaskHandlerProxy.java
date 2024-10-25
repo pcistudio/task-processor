@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Instant;
 import java.util.List;
 
-
 @Slf4j
 public class TaskHandlerProxy {
 
@@ -22,7 +21,16 @@ public class TaskHandlerProxy {
 
     public List<TaskInfo> poll() {
         HandlerPropertiesWrapper properties = context.getHandlerProperties();
-        return context.getTaskInfoService().poll(properties.getHandlerName(), properties.getMaxPoll());
+        try {
+            return context.getTaskInfoService().poll(properties.getHandlerName(), properties.getMaxPoll());
+        } catch (RuntimeException exception) {
+            log.error("Error polling tasks", exception);
+            if (context.isTransient(exception)) {
+                return List.of();
+            }
+            throw exception;
+        }
+
     }
 
     //    @Transactional
@@ -41,6 +49,7 @@ public class TaskHandlerProxy {
 
     private void processAndUpdateStatus(TaskInfoDecoder task) {
         try {
+            log.debug("Processing task={} from handler={}", task.getId(), task.getHandlerName());
             doProcess(task);
             context.getTaskInfoService().markTaskCompleted(task);
         } catch (TaskHandlerException exception) {// handler exception
@@ -56,7 +65,6 @@ public class TaskHandlerProxy {
 
     private void doProcess(TaskInfoDecoder task) throws TaskHandlerException {
         try {
-
             context.getTaskHandler().process(task.getPayload());
         } catch (RuntimeException exception) {
             //TODO improve message
@@ -66,7 +74,7 @@ public class TaskHandlerProxy {
 
     private boolean shouldRetry(Throwable exception, int retryCount) {
         // TODO AL this int eh RetryObject on the context
-        return context.getHandlerProperties().getTransientExceptions().contains(exception) &&
+        return context.isTransient((RuntimeException) exception) &&
                 context.getRetryManager().shouldRetry(retryCount);
     }
 

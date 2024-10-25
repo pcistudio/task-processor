@@ -21,7 +21,7 @@ import java.time.Clock;
 @Configuration
 @Import(DecodingConfiguration.class)
 @ConditionalOnProperty(prefix = "spring.task.handlers", name = "enabled", havingValue = "true")
-public class JdbcTaskInfoServiceAutoConfiguration {
+public class TaskProcessorManagerAutoConfiguration {
 
     @Value("${task.processor.partitionId:#{T(java.util.UUID).randomUUID().toString()}}")
     private String partitionId;
@@ -38,7 +38,7 @@ public class JdbcTaskInfoServiceAutoConfiguration {
     }
 
     @Bean
-    public TaskProcessorManager taskProcessorManager(HandlerLookup handlerLookup, TaskInfoService taskInfoService, MessageDecoding messageDecoding) throws BeansException {
+    public TaskProcessorLifecycleManager taskProcessorManager(HandlerLookup handlerLookup, TaskInfoService taskInfoService, MessageDecoding messageDecoding) throws BeansException {
         TaskProcessorManager taskProcessorManager = new TaskProcessorManager();
         handlerLookup.getIterator().forEachRemaining(properties -> {
             TaskProcessingContext context = TaskProcessingContext.builder()

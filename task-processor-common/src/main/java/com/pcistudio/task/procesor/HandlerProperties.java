@@ -28,7 +28,7 @@ public class HandlerProperties extends HandlerWriteProperties {
     @Builder.Default
     private int maxParallelTasks = 1;
     @Builder.Default
-    private Set<String> transientExceptions = new HashSet<>();
+    private Set<Class<? extends RuntimeException>> transientExceptions = new HashSet<>();
 //    private String payloadType;/
     @Builder.Default
     private Duration processingExpire = Duration.ofMinutes(5);

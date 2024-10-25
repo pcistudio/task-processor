@@ -54,21 +54,21 @@ public class HandlerPropertiesWrapper {
         return "task_info_" + delegate.getTableName().trim();
     }
 
-    public Set<RuntimeException> getTransientExceptions() {
-
-        return delegate.getTransientExceptions()
-                .stream()
-                .map(exName -> {
-                    try {
-                        return (RuntimeException) Class.forName(exName)
-                                .getConstructor()
-                                .newInstance();
-                    } catch (NoSuchMethodException | ClassNotFoundException | InstantiationException |
-                             IllegalAccessException | InvocationTargetException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .collect(Collectors.toSet());
+    public Set<Class<? extends RuntimeException>> getTransientExceptions() {
+        return delegate.getTransientExceptions();
+//        return delegate.getTransientExceptions()
+//                .stream()
+//                .map(exName -> {
+//                    try {
+//                        return (RuntimeException) Class.forName(exName)
+//                                .getConstructor()
+//                                .newInstance();
+//                    } catch (NoSuchMethodException | ClassNotFoundException | InstantiationException |
+//                             IllegalAccessException | InvocationTargetException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                })
+//                .collect(Collectors.toSet());
     }
 
     public Duration getProcessingExpire() {

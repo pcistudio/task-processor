@@ -1,6 +1,9 @@
 package com.pcistudio.processor.test.config;
 
+import com.pcistudio.task.procesor.register.H2TaskStorageSetup;
+import com.pcistudio.task.procesor.register.TaskStorageSetup;
 import com.pcistudio.task.processor.config.TaskProcessorJdbcTemplateAutoConfiguration;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -22,4 +25,9 @@ public class TestTaskProcessorJdbcTemplateAutoConfiguration {
         return new JdbcTemplate(db);
     }
 
+    @Bean
+    @ConditionalOnMissingBean
+    TaskStorageSetup taskStorageSetup(@Qualifier("taskProcessorJdbcTemplate") JdbcTemplate jdbcTemplate) {
+        return new H2TaskStorageSetup(jdbcTemplate);
+    }
 }

@@ -24,6 +24,10 @@
         </dependency>
         <dependency>
             <groupId>com.pcistudio.task.procesor</groupId>
+            <artifactId>task-processor-spring-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pcistudio.task.procesor</groupId>
             <artifactId>task-processor-spring-jdbc-h2</artifactId>
         </dependency>
         <dependency>
