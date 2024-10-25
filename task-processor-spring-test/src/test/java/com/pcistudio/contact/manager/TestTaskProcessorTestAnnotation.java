@@ -39,7 +39,7 @@ class TestTaskProcessorTestAnnotation {
     @Test
     void writeHelloWorld() {
         taskProcessorManager.start();
-        park();
+//        park();//
     }
 }
 
