@@ -17,6 +17,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.time.Clock;
+
 @Configuration
 @ConditionalOnProperty(prefix = "spring.task.processor.writer", name = "enabled", havingValue = "true")
 @ConditionalOnBean(name = "taskProcessorJdbcTemplate")
@@ -84,7 +86,7 @@ public class TaskWriterAutoConfiguration {
     }
 
     @Bean
-    TaskWriter taskWriter(TaskInfoWriter taskInfoWriter, MessageEncoding messageEncoding) {///this in the builder
-        return new TaskWriter(taskInfoWriter, messageEncoding);
+    TaskWriter taskWriter(TaskInfoWriter taskInfoWriter, MessageEncoding messageEncoding, Clock clock) {///this in the builder
+        return new TaskWriter(taskInfoWriter, messageEncoding, clock);
     }
 }

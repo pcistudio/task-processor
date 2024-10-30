@@ -1,4 +1,4 @@
-package com.pcistudio.task.procesor;
+package com.pcistudio.task.procesor.template;
 
 import com.pcistudio.task.procesor.util.Assert;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +9,7 @@ import org.springframework.util.ReflectionUtils;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
+import java.time.Instant;
 import java.util.List;
 
 @Slf4j
@@ -53,7 +54,11 @@ public class LoggingJdbcTemplate extends JdbcTemplate {
             log.debug("Parameters: ");
             for (Object arg : args) {
                 Assert.notNull(arg, "Argument must not be null");
-                log.debug(arg.toString());
+                if (arg instanceof Instant instant) {
+                    log.debug("millis: {}", instant.toEpochMilli());
+                } else {
+                    log.debug(arg.toString());
+                }
             }
         }
         log.debug("---------------------------------------------");

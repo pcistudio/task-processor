@@ -1,6 +1,7 @@
 package com.pcistudio.task.procesor;
 
 import com.pcistudio.task.procesor.mapper.SimpleTaskInfoMapper;
+import com.pcistudio.task.procesor.mapper.TaskInfoMapper;
 import com.pcistudio.task.procesor.page.Cursor;
 import com.pcistudio.task.procesor.page.Pageable;
 import com.pcistudio.task.procesor.page.Sort;
@@ -9,8 +10,6 @@ import com.pcistudio.task.procesor.task.TaskInfo;
 import com.pcistudio.task.procesor.task.TaskInfoError;
 import com.pcistudio.task.procesor.task.TaskInfoOperations;
 import com.pcistudio.task.procesor.util.Assert;
-import com.pcistudio.task.procesor.util.decoder.MessageDecoding;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,11 +17,13 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.*;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 class TaskInfoRepository {
@@ -31,12 +32,15 @@ class TaskInfoRepository {
     private final String partitionId;
     private final SimpleTaskInfoMapper simpleMapper;
     private final TaskInfoCursorPageableFactory taskInfoCursorPageableFactory = new TaskInfoCursorPageableFactory();
+    private final ProcessStatusCountRowMapper processStatusCountRowMapper;
+    private final TaskInfoMapper taskInfoMapper = new TaskInfoMapper();
 
     public TaskInfoRepository(JdbcTemplate jdbcTemplate, Clock clock, String partitionId) {
         this.jdbcTemplate = jdbcTemplate;
         this.clock = clock;
         this.partitionId = partitionId;
         this.simpleMapper = new SimpleTaskInfoMapper(partitionId);
+        this.processStatusCountRowMapper = new ProcessStatusCountRowMapper();
     }
 
     @Transactional
@@ -144,7 +148,7 @@ class TaskInfoRepository {
         if (pageToken == null) {
             return jdbcTemplate.query(
                     "SELECT * FROM %s where status=? order by execution_time desc,id desc limit ?".formatted(tableName),
-                    simpleMapper,
+                    taskInfoMapper,
                     processStatus.name(),
                     limit
             );
@@ -152,7 +156,7 @@ class TaskInfoRepository {
             Instant executionTimeOffset = pageToken.offset();
             return jdbcTemplate.query(
                     "SELECT * FROM %s where status=? and (execution_time<? or (execution_time=? and id<?)) order by execution_time desc, id desc limit ?".formatted(tableName),
-                    simpleMapper,
+                    taskInfoMapper,
                     processStatus.name(),
                     executionTimeOffset,
                     executionTimeOffset,
@@ -166,7 +170,7 @@ class TaskInfoRepository {
         if (pageToken == null) {
             return jdbcTemplate.query(
                     "SELECT * FROM %s where status=? order by execution_time asc,id asc limit ?".formatted(tableName),
-                    simpleMapper,
+                    taskInfoMapper,
                     processStatus.name(),
                     limit
             );
@@ -174,7 +178,7 @@ class TaskInfoRepository {
             Instant executionTimeOffset = pageToken.offset();
             return jdbcTemplate.query(
                     "SELECT * FROM %s where status=? and (execution_time>? or (execution_time=? and id>?)) order by execution_time asc, id asc limit ?".formatted(tableName),
-                    simpleMapper,
+                    taskInfoMapper,
                     processStatus.name(),
                     executionTimeOffset,
                     executionTimeOffset,
@@ -183,6 +187,7 @@ class TaskInfoRepository {
             );
         }
     }
+
 
     @Nullable
     public UUID requeueProcessingTimeoutTask(String tableName, String handlerName, Duration processingExpire) {
@@ -196,12 +201,32 @@ class TaskInfoRepository {
                         """.formatted(tableName),
                 ProcessStatus.PENDING.name(), now, batchId.toString(), ProcessStatus.PROCESSING.name(), now.minus(processingExpire), handlerName
         );
+        log.info("Requeue {} tasks in tableName={}, handlerName={}", updated, tableName, handlerName);
         if (updated == 0) {
             return null;
         }
-        log.info("Requeue {} tasks in tableName={}, handlerName={}", updated, tableName, handlerName);
-
         return batchId;
+    }
+
+    // TODO Expose this in an endpoint
+    /**
+     * This method will give you the tasks in PROCESSING state that will be ready for requeue at the specified date
+     * @param tableName
+     * @param handlerName
+     * @param processingExpire
+     * @param date
+     * @return
+     */
+    @Nullable
+    public List<TaskInfo> retrieveRequeueForecast(String tableName, String handlerName, Duration processingExpire, Instant date) {
+        return jdbcTemplate.query(
+                """
+                        select * from %s
+                        where status=? and updated_at<? and handler_name=? limit 100 sort by execution_time asc
+                        """.formatted(tableName),
+                taskInfoMapper,
+                ProcessStatus.PROCESSING.name(), date.minus(processingExpire), handlerName
+        );
     }
 
     public List<TaskInfoError> createBatchTaskInfoError(String tableName, String handlerName, UUID batchId, String errorMessage) {
@@ -211,6 +236,7 @@ class TaskInfoRepository {
                 .taskId(rs.getLong("id"))
                 .partitionId(rs.getString("partition_id"))
                 .errorMessage(errorMessage)
+                .createdAt(Instant.now(clock))
                 .build();
         return jdbcTemplate.query(
                 "SELECT id,partition_id FROM %s where batch_id=?".formatted(tableName),
@@ -227,5 +253,42 @@ class TaskInfoRepository {
                 Instant.now(clock).minus(processingExpire),
                 handlerName
         );
+    }
+
+    public Map<ProcessStatus, Integer> getStats(String tableName, LocalDate date) {
+        Instant now = Instant.now(clock);
+
+        Instant startTime = date.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endTime =date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        endTime = endTime.isAfter(now) ? now : endTime;
+
+        List<ProcessStatusCount> processStatusCounts = jdbcTemplate.query("""
+                        select status, count(*) as ct
+                        from %s
+                        where execution_time between ? and ?
+                        group by status
+                        """.formatted(tableName),
+                processStatusCountRowMapper,
+                startTime,
+                endTime
+        );
+
+        return processStatusCounts.stream()
+                .collect(Collectors.toMap(
+                                processStatusCount -> ProcessStatus.valueOf(processStatusCount.status()),
+                                ProcessStatusCount::count
+                        )
+                );
+    }
+
+    record ProcessStatusCount(String status, int count) {
+    }
+
+    private static class ProcessStatusCountRowMapper implements RowMapper<ProcessStatusCount> {
+
+        @Override
+        public ProcessStatusCount mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return new ProcessStatusCount(rs.getString("status"), rs.getInt("ct"));
+        }
     }
 }

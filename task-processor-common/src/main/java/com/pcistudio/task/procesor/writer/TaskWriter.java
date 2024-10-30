@@ -7,6 +7,7 @@ import com.pcistudio.task.procesor.task.TaskParams;
 import com.pcistudio.task.procesor.util.encoder.MessageEncoding;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.UUID;
 public class TaskWriter {
     private final TaskInfoWriter taskInfoWriter;
     private final MessageEncoding messageEncoding;
+    private final Clock clock;
 
     public TaskMetadata writeTasks(TaskParams taskParams) {
         TaskInfo taskInfo = createTaskInfo(UUID.randomUUID(), taskParams);
@@ -34,7 +36,7 @@ public class TaskWriter {
     private TaskInfo createTaskInfo(UUID batchId, TaskParams taskParams) {
         Instant executionTime = taskParams.getExecutionTime();
         if (executionTime == null) {
-            executionTime = Instant.now();
+            executionTime = Instant.now(clock);
         }
         if (taskParams.getDelay() != null) {
             executionTime = executionTime.plus(taskParams.getDelay());
@@ -48,8 +50,8 @@ public class TaskWriter {
                 .batchId(batchId)
 
                 .version(1L)
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(Instant.now(clock))
+                .updatedAt(Instant.now(clock))
                 .retryCount(0)
                 .status(ProcessStatus.PENDING)
                 .build();

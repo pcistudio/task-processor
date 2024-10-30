@@ -26,6 +26,10 @@ public class HandlerProperties extends HandlerWriteProperties {
     @Builder.Default
     private int maxPoll = 16;
     @Builder.Default
+    private int pollInterval = 60000;
+    @Builder.Default
+    private int requeueInterval = 300000;
+    @Builder.Default
     private int maxParallelTasks = 1;
     @Builder.Default
     private Set<Class<? extends RuntimeException>> transientExceptions = new HashSet<>();

@@ -7,8 +7,13 @@ import com.pcistudio.task.procesor.util.DefaultThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
+import java.nio.channels.ClosedByInterruptException;
+import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -25,10 +30,9 @@ public class TaskProcessor implements Closeable, Runnable {
                 properties.getMaxParallelTasks(),
                 1000L,
                 TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(properties.getMaxParallelTasks() * 2),
+                new LinkedBlockingQueue<>(Math.max(properties.getMaxParallelTasks(), properties.getMaxPoll()) * 2),
                 new DefaultThreadFactory("task-handler-" + properties.getHandlerName()));
 
-//        this.semaphore = new Semaphore(properties.getMaxParallelTasks() * 2);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 close();
@@ -43,17 +47,17 @@ public class TaskProcessor implements Closeable, Runnable {
         changeCurrentState(TaskProcessorState.RUNNING);
 
         while (isRunning()) {
-            List<TaskInfo> tasks = taskHandlerProxy.poll();
-            if (tasks.isEmpty()) {
-                log.debug("Waiting for tasks for processor={}", properties.getHandlerName());
-                Thread.sleep(60000);
-            }
-            doProcessTasks(tasks);
+            doProcessTasks(taskHandlerProxy.iterator());
+
+            log.debug("Waiting for tasks for processor={}", properties.getHandlerName());
+            Thread.sleep(properties.getPollInterval());
         }
     }
 
     private void changeCurrentState(TaskProcessorState nextState) {
         if (state.get() == TaskProcessorState.CREATED && nextState == TaskProcessorState.RUNNING) {
+            state.compareAndSet(TaskProcessorState.CREATED, nextState);
+        } else  if (state.get() == TaskProcessorState.CREATED && nextState == TaskProcessorState.SHUTTING_DOWN) {
             state.compareAndSet(TaskProcessorState.CREATED, nextState);
         } else if (state.get() == TaskProcessorState.RUNNING && nextState == TaskProcessorState.SHUTTING_DOWN) {
             state.compareAndSet(TaskProcessorState.RUNNING, nextState);
@@ -74,9 +78,10 @@ public class TaskProcessor implements Closeable, Runnable {
         return state.get() == TaskProcessorState.RUNNING;
     }
 
-    private void doProcessTasks(List<TaskInfo> tasks) throws InterruptedException, TaskProcessorClosingException {
+    private void doProcessTasks(Iterator<TaskInfo> tasks) throws InterruptedException, TaskProcessorClosingException {
 
-        for (TaskInfo task : tasks) {
+        while (tasks.hasNext()) {
+            TaskInfo task = tasks.next();
             if (isShuttingDown()) {
                 log.warn("Task processor={} is shutdown, skipping task={}", properties.getHandlerName(), task.getId());
                 throw new TaskProcessorClosingException("Task processor=" + properties.getHandlerName() + " is shutting down");
@@ -93,10 +98,14 @@ public class TaskProcessor implements Closeable, Runnable {
 
     @Override
     public void close() {
+        close(10, TimeUnit.SECONDS);
+    }
+
+    private void close(long timeout, TimeUnit unit) {
         changeCurrentState(TaskProcessorState.SHUTTING_DOWN);
         executorService.shutdown();
         try {
-            boolean b = executorService.awaitTermination(10, TimeUnit.SECONDS);
+            boolean b = executorService.awaitTermination(timeout, unit);
             if (!b) {
                 log.warn("Task processor={} not terminated!", properties.getHandlerName());
                 executorService.shutdownNow();
@@ -126,7 +135,7 @@ public class TaskProcessor implements Closeable, Runnable {
     @Override
     public void run() {
         try {
-             processTasks();
+            processTasks();
         } catch (TaskProcessorClosingException e) {
             log.warn("Task processor={} closing", properties.getHandlerName(), e);
         } catch (Exception e) {

@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.Clock;
+import java.util.List;
 
 @ConditionalOnClass(name = "com.pcistudio.task.procesor.JdbcTaskInfoService")
 @Configuration
@@ -38,17 +39,28 @@ public class TaskProcessorManagerAutoConfiguration {
     }
 
     @Bean
-    public TaskProcessorLifecycleManager taskProcessorManager(HandlerLookup handlerLookup, TaskInfoService taskInfoService, MessageDecoding messageDecoding) throws BeansException {
+    public TaskProcessorLifecycleManager taskProcessorManager(
+            HandlerLookup handlerLookup,
+            TaskInfoService taskInfoService,
+            MessageDecoding messageDecoding,
+            List<RequeueListener> requeueListeners) throws BeansException {
+
         TaskProcessorManager taskProcessorManager = new TaskProcessorManager();
+
+        // Error if I going to put this listener to every body then the handler name dont make sence
+        // the ither thing is how the event is propagated to new added task handlers
         handlerLookup.getIterator().forEachRemaining(properties -> {
             TaskProcessingContext context = TaskProcessingContext.builder()
                     .handlerProperties(properties)
                     .taskInfoService(taskInfoService)
+//                    .listeners(requeueListeners.getIfAvailable(ArrayList::new))
+                    .listeners(requeueListeners)
                     .retryManager(
                             properties.isExponentialBackoff()
-                                    ? new ExponentialRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries())
-                                    : new FixRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries())
+                                    ? new ExponentialRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries(), clock())
+                                    : new FixRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries(), clock())
                     )
+                    .clock(clock())
                     .messageDecoding(messageDecoding)
                     .taskHandler(properties.getTaskHandler())
                     .build();

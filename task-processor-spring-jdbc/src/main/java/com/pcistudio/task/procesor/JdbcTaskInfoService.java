@@ -16,8 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -163,6 +165,12 @@ public class JdbcTaskInfoService implements TaskInfoService {
         List<TaskInfoError> taskErrors = taskInfoErrorRepository.getTaskErrors(tableName, taskId);
         log.info("{} error found for task={}", taskErrors.size(), taskId);
         return taskErrors;
+    }
+
+    @Override
+    public Map<ProcessStatus, Integer> stats(String handlerName, LocalDate date) {
+        String tableName = storageResolver.resolveStorageName(handlerName);
+        return taskInfoRepository.getStats(tableName, date);
     }
 
 

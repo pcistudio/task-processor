@@ -1,5 +1,6 @@
 package com.pcistudio.task.procesor;
 
+import com.pcistudio.task.procesor.template.LoggingJdbcTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,5 +1,6 @@
 package com.contact.manager;
 
+import com.pcistudio.task.procesor.handler.TaskProcessorLifecycleManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -12,6 +13,8 @@ public class Application implements ApplicationRunner {
 
     @Autowired
     private StandardEnvironment env;
+    @Autowired
+    private TaskProcessorLifecycleManager taskProcessorManager;
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -20,7 +23,7 @@ public class Application implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-
+        taskProcessorManager.start();
 //       env.getPropertySources().forEach(propertySource -> {
 //           System.out.println(propertySource.getName());
 //           System.out.println(propertySource.getSource());

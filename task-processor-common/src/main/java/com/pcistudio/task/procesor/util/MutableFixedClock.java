@@ -12,16 +12,15 @@ import java.util.concurrent.atomic.AtomicLong;
  * A mutable clock that can be updated to simulate the passage of time.
  * should be used for testing purposes only. It was designed to avoid using Thread.sleep() in tests.
  * It can be used for concurrency but since it is locking real world scenarios will not happen.
- * <p>
- * This class is thread-safe.
  */
 @Slf4j
 public final class MutableFixedClock extends Clock {
     private final Clock baseClock;
     private boolean debug = false;
     private ClockIncreaseStrategy clockIncreaseStrategy = new FixedClockIncreaseStrategy();
+    private short speed;
 
-    public MutableFixedClock(Clock baseClock) {
+    private MutableFixedClock(Clock baseClock) {
         Assert.notNull(baseClock, "baseClock cannot be null");
         Assert.isFalse(baseClock instanceof MutableFixedClock, "baseClock can not be an instance of MutableFixedClock");
         this.baseClock = baseClock;
@@ -47,6 +46,11 @@ public final class MutableFixedClock extends Clock {
 
     public MutableFixedClock withRealTimeStrategy() {
         withRealTimeStrategy(new RealTimeClockIncreaseStrategy());
+        return this;
+    }
+
+    public MutableFixedClock withSpeed(short speed) {
+        this.speed = speed;
         return this;
     }
 
@@ -94,7 +98,7 @@ public final class MutableFixedClock extends Clock {
         @Override
         public Instant currentInstant() {
             long timePass = System.currentTimeMillis() - startTime;
-            return baseClock.instant().plusMillis(timePass + timeAddedMillis.get());
+            return baseClock.instant().plusMillis(speed * (timePass + timeAddedMillis.get()));
         }
 
         public void addTime(Duration duration) {

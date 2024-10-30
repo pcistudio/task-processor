@@ -9,9 +9,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-public class TaskInfoMapper implements RowMapper<TaskMetadata> {
+public class TaskInfoMapper implements RowMapper<TaskInfo> {
     @Override
-    public TaskMetadata mapRow(ResultSet rs, int rowNum) throws SQLException {
+    public TaskInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
         return TaskInfo.builder()
                 .id(rs.getLong("id"))
                 .batchId(UUID.fromString(rs.getString("batch_id")))

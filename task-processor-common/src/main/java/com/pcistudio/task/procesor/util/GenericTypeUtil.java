@@ -21,16 +21,44 @@ public class GenericTypeUtil {
         Type genericSuperclass = clazz.getGenericSuperclass();
         // Check if it's a parameterized type (i.e., a class with generics)
         if (genericSuperclass instanceof ParameterizedType parameterizedType) {
-
+            return (Class<?>) parameterizedType.getActualTypeArguments()[index];
             // Get the actual type arguments (generics) of the superclass
-            Type[] typeArguments = parameterizedType.getActualTypeArguments();
-
-            if (index >= 0 && index < typeArguments.length) {
-                // Return the Class of the specified generic type
-                return (Class<?>) typeArguments[index];
-            }
+//            Type[] typeArguments = parameterizedType.getActualTypeArguments();
+//
+//            if (index >= 0 && index < typeArguments.length) {
+//                // Return the Class of the specified generic type
+//                return (Class<?>) typeArguments[index];
+//            }
         }
 
+        throw new IllegalArgumentException("No generic type found at index: " + index);
+    }
+
+    public static Class<?> getGenericTypeFromInterface(Class<?> clazz, Class<?> type) {
+        return getGenericTypeFromInterface(clazz, type, 0);
+    }
+
+    // This method extracts the generic type of the class that extends the superclass
+    public static Class<?> getGenericTypeFromInterface(Class<?> clazz, Class<?> type, int index) {
+        Type[] genericInterfaces = clazz.getGenericInterfaces();
+        // Check if it's a parameterized type (i.e., a class with generics)
+        for (Type genericInterface : genericInterfaces) {
+            if (genericInterface instanceof ParameterizedType parameterizedType) {
+                if (type == parameterizedType.getRawType()) {
+                    return (Class<?>) parameterizedType.getActualTypeArguments()[index];
+                }
+//                if (type == parameterizedType.getRawType()) {
+//
+//                    // Get the actual type arguments (generics) of the superclass
+//                    Type[] typeArguments = parameterizedType.getActualTypeArguments();
+//
+//                    if (index >= 0 && index < typeArguments.length) {
+//                        // Return the Class of the specified generic type
+//                        return (Class<?>) typeArguments[index];
+//                    }
+//                }
+            }
+        }
         throw new IllegalArgumentException("No generic type found at index: " + index);
     }
 }

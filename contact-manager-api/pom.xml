@@ -111,6 +111,10 @@
             <groupId>com.pcistudio.task.procesor</groupId>
             <artifactId>task-processor-spring-jdbc-mariadb</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.pcistudio.task.procesor</groupId>
+            <artifactId>task-processor-spring-jdbc</artifactId>
+        </dependency>
 
         <!-- Spring Test -->
         <dependency>

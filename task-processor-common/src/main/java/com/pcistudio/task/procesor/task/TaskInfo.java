@@ -21,7 +21,7 @@ public class TaskInfo implements TaskInfoOperations {
     private Instant executionTime;
 
     //    private Object payload;
-    private byte[] payloadBytes;
+    private transient byte[] payloadBytes;
 
     private String handlerName;
     private String partitionId;

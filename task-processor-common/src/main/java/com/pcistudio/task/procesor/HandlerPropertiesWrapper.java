@@ -4,10 +4,8 @@ import com.pcistudio.task.procesor.handler.TaskHandler;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -49,6 +47,15 @@ public class HandlerPropertiesWrapper {
     public int getMaxPoll() {
         return delegate.getMaxPoll();
     }
+
+    public long getPollInterval() {
+        return delegate.getPollInterval();
+    }
+
+    public long getRequeueIntervalMs() {
+        return delegate.getRequeueInterval();
+    }
+
 
     public String getTableName() {
         return "task_info_" + delegate.getTableName().trim();

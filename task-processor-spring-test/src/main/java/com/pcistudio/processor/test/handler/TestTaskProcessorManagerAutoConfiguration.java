@@ -7,4 +7,5 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 })
 public class TestTaskProcessorManagerAutoConfiguration {
 
+
 }

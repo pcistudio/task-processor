@@ -4,10 +4,11 @@ import com.pcistudio.task.procesor.HandlerPropertiesWrapper;
 import com.pcistudio.task.procesor.util.Assert;
 import com.pcistudio.task.procesor.util.GenericTypeUtil;
 import com.pcistudio.task.procesor.util.decoder.MessageDecoding;
-import lombok.Builder;
 import lombok.Getter;
 
+import java.time.Clock;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -21,8 +22,12 @@ public class TaskProcessingContext {
     private Set<Class<? extends RuntimeException>> transientExceptions;
     private RetryManager retryManager;
     private MessageDecoding messageDecoding;
+    private List<RequeueListener> requeueListeners = List.of();
+    private Clock clock;
+    private Class<?> taskHandlerType;
 
     private TaskProcessingContext() {
+        taskHandlerType = GenericTypeUtil.getGenericTypeFromInterface(taskHandler.getClass(), TaskHandler.class);
     }
 
     public static Builder builder() {
@@ -30,7 +35,7 @@ public class TaskProcessingContext {
     }
 
     public Class getTaskHandlerType() {
-        return GenericTypeUtil.getGenericTypeFromSuperclass(taskHandler.getClass());
+        return taskHandlerType;
     }
 
 
@@ -41,7 +46,7 @@ public class TaskProcessingContext {
 
         for (Class<? extends RuntimeException> transientExceptionClass : transientExceptions) {
             if (transientExceptionClass.isInstance(exception)) {
-                transientExceptions.add((Class<RuntimeException>)exception.getClass());
+                transientExceptions.add((Class<RuntimeException>) exception.getClass());
                 return true;
             }
         }
@@ -54,6 +59,8 @@ public class TaskProcessingContext {
         private TaskInfoService taskInfoService;
         private RetryManager retryManager;
         private MessageDecoding messageDecoding;
+        private List<RequeueListener> requeueListeners;
+        private Clock clock;
 
         public Builder handlerProperties(HandlerPropertiesWrapper handlerProperties) {
             this.handlerProperties = handlerProperties;
@@ -80,6 +87,17 @@ public class TaskProcessingContext {
             return this;
         }
 
+        public Builder listeners(RequeueListener... listeners) {
+            return listeners(List.of(listeners));
+        }
+
+        public Builder listeners(List<RequeueListener> listeners) {
+            if (listeners != null) {
+                this.requeueListeners = listeners;
+            }
+            return this;
+        }
+
         public TaskProcessingContext build() {
             TaskProcessingContext context = new TaskProcessingContext();
             Assert.notNull(handlerProperties, "Handler properties cannot be null");
@@ -91,7 +109,14 @@ public class TaskProcessingContext {
             context.transientExceptions = new HashSet<>(handlerProperties.getTransientExceptions());
             context.retryManager = retryManager;
             context.messageDecoding = messageDecoding;
+            context.requeueListeners = requeueListeners;
+            context.clock = clock;
             return context;
+        }
+
+        public Builder clock(Clock clock) {
+            this.clock = clock;
+            return this;
         }
     }
 }

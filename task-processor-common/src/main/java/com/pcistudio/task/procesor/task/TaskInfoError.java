@@ -22,8 +22,7 @@ public class TaskInfoError {
     private String partitionId;
     private final String errorMessage;
     private String handlerName;
-    @Builder.Default
-    private final Instant createdAt = Instant.now();
+    private final Instant createdAt;
 
     public static final TaskInfoError EMPTY = TaskInfoError.builder().taskId(0L).errorMessage("").build();
 

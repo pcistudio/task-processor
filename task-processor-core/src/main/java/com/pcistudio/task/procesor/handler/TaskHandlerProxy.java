@@ -8,10 +8,11 @@ import com.pcistudio.task.procesor.util.Assert;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
+import java.util.Iterator;
 import java.util.List;
 
 @Slf4j
-public class TaskHandlerProxy {
+public class TaskHandlerProxy implements Iterable<TaskInfo> {
 
     private final TaskProcessingContext context;
 
@@ -30,7 +31,31 @@ public class TaskHandlerProxy {
             }
             throw exception;
         }
+    }
 
+    @Override
+    public Iterator<TaskInfo> iterator() {
+        return new Iterator<TaskInfo>() {
+            List<TaskInfo> tasks = poll();
+            Iterator<TaskInfo> tasksTempIterator = tasks.iterator();
+
+            @Override
+            public boolean hasNext() {
+                if (tasksTempIterator.hasNext())
+                    return true;
+                if (tasks.size() < context.getHandlerProperties().getMaxPoll()) {
+                    return false;
+                }
+                tasks = poll();
+                tasksTempIterator = tasks.iterator();
+                return tasksTempIterator.hasNext();
+            }
+
+            @Override
+            public TaskInfo next() {
+                return tasksTempIterator.next();
+            }
+        };
     }
 
     //    @Transactional
@@ -51,6 +76,10 @@ public class TaskHandlerProxy {
         try {
             log.debug("Processing task={} from handler={}", task.getId(), task.getHandlerName());
             doProcess(task);
+            //TODO stop when the error is not related to the handler
+            // like the error with the getting the handler type
+            // or the
+
             context.getTaskInfoService().markTaskCompleted(task);
         } catch (TaskHandlerException exception) {// handler exception
             context.getTaskInfoService().storeError(task.createError(exception));

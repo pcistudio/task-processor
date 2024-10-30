@@ -17,6 +17,8 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.time.Clock;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -49,7 +51,7 @@ class MysqlTaskInfoWriterTest {
     @Test
     void writeTasks() {
         TaskInfoWriter mysqlTaskInfoWriter = new MysqlTaskInfoWriter(jdbcTemplate, StorageResolver.IDENTITY);
-        TaskWriter taskWriter = new TaskWriter(mysqlTaskInfoWriter, new JsonMessageEncoding());
+        TaskWriter taskWriter = new TaskWriter(mysqlTaskInfoWriter, new JsonMessageEncoding(), Clock.systemUTC());
         taskWriter.writeTasks(
                 TaskParams.builder()
                         .handlerName("test_table")
