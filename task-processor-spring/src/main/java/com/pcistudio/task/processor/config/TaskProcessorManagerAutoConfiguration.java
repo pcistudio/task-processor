@@ -6,6 +6,7 @@ import com.pcistudio.task.procesor.handler.*;
 import com.pcistudio.task.procesor.register.HandlerLookup;
 import com.pcistudio.task.procesor.util.decoder.MessageDecoding;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -16,7 +17,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.Clock;
-import java.util.List;
 
 @ConditionalOnClass(name = "com.pcistudio.task.procesor.JdbcTaskInfoService")
 @Configuration
@@ -28,45 +28,46 @@ public class TaskProcessorManagerAutoConfiguration {
     private String partitionId;
 
     @Bean
+    @ConditionalOnMissingBean
     TaskInfoService taskInfoService(StorageResolver storageResolver, JdbcTemplate jdbcTemplate, Clock clock, HandlerLookup handlerLookup) {
         return new JdbcTaskInfoService(storageResolver, partitionId, jdbcTemplate, clock, handlerLookup);
     }
 
-    @ConditionalOnMissingBean(value = Clock.class)
     @Bean
-    Clock clock() {
-        return Clock.systemUTC();
-    }
-
-    @Bean
-    public TaskProcessorLifecycleManager taskProcessorManager(
+    @ConditionalOnMissingBean
+    TaskProcessorLifecycleManager taskProcessorManager(
             HandlerLookup handlerLookup,
             TaskInfoService taskInfoService,
             MessageDecoding messageDecoding,
-            List<RequeueListener> requeueListeners) throws BeansException {
+            Clock clock,
+            ObjectProvider<CircuitBreakerDecorator> circuitBreakerDecoratorProvider,
+            ObjectProvider<TaskProcessorManagerCustomizer> taskProcessorManagerCustomizerProvider
+    ) throws BeansException {
 
         TaskProcessorManager taskProcessorManager = new TaskProcessorManager();
 
         // Error if I going to put this listener to every body then the handler name dont make sence
-        // the ither thing is how the event is propagated to new added task handlers
+        // the eather thing is how the event is propagated to new added task handlers
         handlerLookup.getIterator().forEachRemaining(properties -> {
             TaskProcessingContext context = TaskProcessingContext.builder()
                     .handlerProperties(properties)
                     .taskInfoService(taskInfoService)
+
 //                    .listeners(requeueListeners.getIfAvailable(ArrayList::new))
-                    .listeners(requeueListeners)
                     .retryManager(
                             properties.isExponentialBackoff()
-                                    ? new ExponentialRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries(), clock())
-                                    : new FixRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries(), clock())
+                                    ? new ExponentialRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries(), clock)
+                                    : new FixRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries(), clock)
                     )
-                    .clock(clock())
+                    .clock(clock)
                     .messageDecoding(messageDecoding)
                     .taskHandler(properties.getTaskHandler())
+                    .circuitBreakerDecorator(circuitBreakerDecoratorProvider.getIfAvailable())
                     .build();
             taskProcessorManager.createTaskProcessor(context);
         });
-
+        taskProcessorManagerCustomizerProvider
+                .ifAvailable(taskProcessorManagerCustomizer -> taskProcessorManagerCustomizer.customize(taskProcessorManager));
         return taskProcessorManager;
     }
 }

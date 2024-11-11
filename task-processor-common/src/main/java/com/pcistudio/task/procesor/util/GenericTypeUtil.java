@@ -45,18 +45,9 @@ public class GenericTypeUtil {
         for (Type genericInterface : genericInterfaces) {
             if (genericInterface instanceof ParameterizedType parameterizedType) {
                 if (type == parameterizedType.getRawType()) {
-                    return (Class<?>) parameterizedType.getActualTypeArguments()[index];
+                    Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                    return (Class<?>) actualTypeArguments[index];
                 }
-//                if (type == parameterizedType.getRawType()) {
-//
-//                    // Get the actual type arguments (generics) of the superclass
-//                    Type[] typeArguments = parameterizedType.getActualTypeArguments();
-//
-//                    if (index >= 0 && index < typeArguments.length) {
-//                        // Return the Class of the specified generic type
-//                        return (Class<?>) typeArguments[index];
-//                    }
-//                }
             }
         }
         throw new IllegalArgumentException("No generic type found at index: " + index);

@@ -75,7 +75,7 @@ class JdbcTaskInfoServiceTest {
     }
 
     @Test
-    @DisplayName("Polling 10 task markTaskToRetry  in 60 seconds then poll 2 more tasks and call markTaskCompleted " +
+    @DisplayName("Polling 10 task markTaskToRetry in 60 seconds then poll 2 more tasks and call markTaskCompleted " +
             "then there is not more task, so wait 60 seconds and it will retry the first 10 tasks and the other 5 that should be available")
     void testMarkTaskToRetry() {
         MutableFixedClock clock = new MutableFixedClock().withRealTimeStrategy();
@@ -86,6 +86,7 @@ class JdbcTaskInfoServiceTest {
         //TODO keep the order
         List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 10);
         stopWatch.stop();
+        printTasks(taskTable);
         assertEquals(10, taskTable.size());
         stopWatch.start("mark 10 tasks for retry in 60 seconds");
         Instant retryTime = Instant.now(clock).plusSeconds(60);
@@ -96,7 +97,7 @@ class JdbcTaskInfoServiceTest {
         stopWatch.start("polling 2 tasks");
         List<TaskInfo> taskTable2 = jdbcTaskInfoService.poll("task_table", 10);
         stopWatch.stop();
-        assertEquals(2, taskTable2.size());
+        assertEquals(2, taskTable2.size());  // try to poll 10 but there are only 2 ready
 //        log.debug("--------------------------------------------------------------------");
         stopWatch.start("mark 2 tasks completed");
         taskTable2.forEach(taskInfo -> jdbcTaskInfoService.markTaskCompleted(taskInfo));
@@ -109,6 +110,10 @@ class JdbcTaskInfoServiceTest {
         clock.increaseTime(Duration.ofSeconds(61)); // Increase time to make the tasks available
 
         stopWatch.start("polling 10 tasks");
+        log.info("-------------------ERRROR--------------------------------");
+        Pageable<TaskInfo> tasks = jdbcTaskInfoService.getTasks("task_table", ProcessStatus.PENDING, null, 30, Sort.ASC);
+        assertNull(tasks.nextPageToken());
+        printTasks(tasks);
         List<TaskInfo> taskTable4 = jdbcTaskInfoService.poll("task_table", 10);
         stopWatch.stop();
         log.info(stopWatch.prettyPrint());
@@ -124,6 +129,17 @@ class JdbcTaskInfoServiceTest {
         stopWatch.stop();
         log.info(stopWatch.prettyPrint());
         assertEquals(5, taskTable5.size());
+    }
+
+    private void printTasks(Pageable<TaskInfo> tasks) {
+        printTasks(tasks.results());
+    }
+
+    private void printTasks(List<TaskInfo> tasks) {
+        tasks.forEach(taskInfo -> {
+                    log.info("{}\t|{}\t|{}", taskInfo.getId(), taskInfo.getHandlerName(), taskInfo.getExecutionTime().toEpochMilli());
+                }
+        );
     }
 
     @Test

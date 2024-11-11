@@ -19,14 +19,6 @@ public class HandlerPropertiesWrapper {
     public String getHandlerName() {
         return delegate.getHandlerName();
     }
-//
-//    public String getHandlerClass() {
-//        return delegate.getHandlerClass();
-//    }
-//
-//    public String getHandlerMethod() {
-//        return delegate.getHandlerMethod();
-//    }
 
     public int getMaxRetries() {
         return delegate.getMaxRetries();
@@ -54,6 +46,10 @@ public class HandlerPropertiesWrapper {
 
     public long getRequeueIntervalMs() {
         return delegate.getRequeueInterval();
+    }
+
+    public long getTaskExecutionTimeout() {
+        return delegate.getTaskExecutionTimeout();
     }
 
 
@@ -89,11 +85,8 @@ public class HandlerPropertiesWrapper {
     public TaskHandler getTaskHandler() {
         return delegate.getTaskHandler();
     }
-//    private Class<?> getPayloadType() {
-//        try {
-//            return Class.forName(delegate.getPayloadType());
-//        } catch (ClassNotFoundException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
+
+    public Class<?> getTaskHandlerType() {
+        return delegate.getTaskHandlerType();
+    }
 }

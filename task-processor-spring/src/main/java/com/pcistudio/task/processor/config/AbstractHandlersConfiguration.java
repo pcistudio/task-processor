@@ -12,6 +12,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.util.Assert;
 
+import java.time.Clock;
+
 @Slf4j
 public abstract class AbstractHandlersConfiguration {
 
@@ -44,4 +46,9 @@ public abstract class AbstractHandlersConfiguration {
     }
 
 
+    @ConditionalOnMissingBean(value = Clock.class)
+    @Bean
+    Clock clock() {
+        return Clock.systemUTC();
+    }
 }

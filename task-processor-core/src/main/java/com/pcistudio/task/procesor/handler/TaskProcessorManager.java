@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -65,16 +64,21 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
         processorMap.get(handlerName).close();
     }
 
-//    public void pause(String handlerName) {
-//        processorMap.get(handlerName).pause();
-//    }
 
     public void start(String handlerName) {
         processorMap.get(handlerName).start();
     }
 
+    public Map<ProcessStatus, Integer> stats(String handlerName) {
+        return processorMap.get(handlerName).stats();
+    }
+
     public void restart(String handlerName) {
         processorMap.get(handlerName).restart();
+    }
+
+    public TaskProcessor.EventPublisher getEventPublisher(String handlerName) {
+        return processorMap.get(handlerName).getEventPublisher();
     }
 
     // TODO fix the for and use the same idea than start
@@ -108,10 +112,6 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
             thread.start();
         }
 
-//        public void pause() {
-//            taskProcessor.pause();
-//        }
-
         public void close() {
             try {
                 taskProcessor.close();
@@ -140,33 +140,29 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
         public void requeueTimeoutTask() {
             try {
                 log.info("Requeue timeout task started");
-                taskProcessingContext.getTaskInfoService().requeueTimeoutTask(getHandlerName());
-                notifyRequeueListener(getHandlerName(), true);
+                TaskInfoService.RequeueResult requeueResult = taskProcessingContext.getTaskInfoService().requeueTimeoutTask(getHandlerName());
+                notifyRequeueListener(getHandlerName(), requeueResult.updateCount(), true);
                 log.info("handlerName={}, stats={}", getHandlerName(), JsonUtil.toJson(stats()));
             } catch (RuntimeException ex) {
                 log.error("Requeue failing for handlerName={}", getHandlerName(), ex);
-                notifyRequeueListener(getHandlerName(), false);
+                notifyRequeueListener(getHandlerName(), 0, false);
             }
         }
 
         public Map<ProcessStatus, Integer> stats() {
-            return taskProcessingContext.getTaskInfoService().stats(getHandlerName(), LocalDate.now(taskProcessingContext.getClock()));
+            return taskProcessingContext.getTaskInfoService()
+                    .stats(getHandlerName(), LocalDate.now(taskProcessingContext.getClock()));
         }
 
-        private List<RequeueListener> getRequeueListeners() {
-            return taskProcessingContext.getRequeueListeners();
+        public TaskProcessor.EventPublisher getEventPublisher() {
+            return taskProcessor.getEventManager();
         }
 
-        private void notifyRequeueListener(String handlerName, boolean success) {
-            getRequeueListeners()
-                    .forEach(requeueListener -> {
-                                try {
-                                    requeueListener.requeued(handlerName, success);
-                                } catch (RuntimeException ex) {
-                                    log.error("Error notifing handlerName={}", handlerName, ex);
-                                }
-                            }
-                    );
+        public void notifyRequeueListener(String handlerName, int requeueCount, boolean success) {
+            TaskProcessor.RequeueEndedEvent requeueEndedEvent =
+                    new TaskProcessor.RequeueEndedEvent(handlerName, requeueCount, success);
+            taskProcessor.getEventManager().notifyListeners(requeueEndedEvent);
         }
     }
+
 }

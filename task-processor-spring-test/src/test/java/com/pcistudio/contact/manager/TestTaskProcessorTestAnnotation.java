@@ -2,10 +2,11 @@ package com.pcistudio.contact.manager;
 
 import com.pcistudio.processor.test.handler.TaskProcessorTest;
 import com.pcistudio.task.procesor.HandlerProperties;
-import com.pcistudio.task.procesor.handler.RequeueListener;
 import com.pcistudio.task.procesor.handler.TaskProcessorLifecycleManager;
+import com.pcistudio.task.procesor.handler.TaskProcessorManager;
 import com.pcistudio.task.procesor.register.HandlerManagerImpl;
 import com.pcistudio.task.processor.config.AbstractHandlersConfiguration;
+import com.pcistudio.task.processor.config.TaskProcessorManagerCustomizer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,6 @@ import java.util.Set;
 
 @TaskProcessorTest
 @TestPropertySource(properties = {"debug=true"})
-//@ComponentScan
 class TestTaskProcessorTestAnnotation {
     @Configuration
     static class TestHandlerConfiguration extends AbstractHandlersConfiguration {
@@ -31,36 +31,35 @@ class TestTaskProcessorTestAnnotation {
                     .taskHandler(payload -> {
                         System.out.println("test");
                     })
+                    .requeueInterval(30000)
+                    .taskHandlerType(Object.class)
                     .build());
         }
 
         @Bean
-        TestListener testListener() {
-            return new TestListener();
+        TaskProcessorManagerCustomizer taskProcessorManagerCustomizer() {
+            return new TaskProcessorManagerCustomizerImpl();
         }
+    }
+
+    @Slf4j
+    static class TaskProcessorManagerCustomizerImpl implements TaskProcessorManagerCustomizer {
+        public void customize(TaskProcessorManager taskProcessorManager) {
+            taskProcessorManager.getEventPublisher("test")
+                    .onRequeueEnded(requeueEndedEvent -> log.info("Requeue handlerName={}, success={}, count={}",
+                            requeueEndedEvent.handlerName(), requeueEndedEvent.success(), requeueEndedEvent.requeueCount()));
+        }
+
     }
 
     @Autowired
     private TaskProcessorLifecycleManager taskProcessorManager;
 
     @Test
-    void writeHelloWorld() {
+    void writeHelloWorld()  {
 
         taskProcessorManager.start();
 //        park();
-    }
-
-    @Slf4j
-    static class TestListener implements RequeueListener {
-
-        public TestListener() {
-            log.info("Creating TestListener");
-        }
-
-        @Override
-        public void requeued(RequeueEvent requeueEvent) {
-            log.info("RequeueEvent");
-        }
     }
 }
 

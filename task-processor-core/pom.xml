@@ -8,7 +8,7 @@
     </parent>
     <groupId>com.pcistudio.task.procesor</groupId>
     <artifactId>task-processor-core</artifactId>
-    <name>task-processor</name>
+    <name>task-processor-core</name>
 
     <dependencies>
         <dependency>
@@ -20,6 +20,10 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
     </dependencies>
 </project>

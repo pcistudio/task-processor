@@ -1,5 +1,6 @@
 package com.pcistudio.task.procesor;
 
+import com.pcistudio.task.procesor.handler.TaskInfoService;
 import com.pcistudio.task.procesor.mapper.SimpleTaskInfoMapper;
 import com.pcistudio.task.procesor.mapper.TaskInfoMapper;
 import com.pcistudio.task.procesor.page.Cursor;
@@ -189,8 +190,7 @@ class TaskInfoRepository {
     }
 
 
-    @Nullable
-    public UUID requeueProcessingTimeoutTask(String tableName, String handlerName, Duration processingExpire) {
+    public TaskInfoService.RequeueResult requeueProcessingTimeoutTask(String tableName, String handlerName, Duration processingExpire) {
         Instant now = Instant.now(clock);
         UUID batchId = UUID.randomUUID();
         int updated = jdbcTemplate.update(
@@ -203,9 +203,10 @@ class TaskInfoRepository {
         );
         log.info("Requeue {} tasks in tableName={}, handlerName={}", updated, tableName, handlerName);
         if (updated == 0) {
-            return null;
+            log.info("No timeout task found for handlerName={}, tableName={}", handlerName, tableName);
+            return TaskInfoService.RequeueResult.EMPTY;
         }
-        return batchId;
+        return new TaskInfoService.RequeueResult(batchId, updated);
     }
 
     // TODO Expose this in an endpoint
@@ -258,8 +259,9 @@ class TaskInfoRepository {
     public Map<ProcessStatus, Integer> getStats(String tableName, LocalDate date) {
         Instant now = Instant.now(clock);
 
-        Instant startTime = date.atStartOfDay(ZoneId.systemDefault()).toInstant();
-        Instant endTime =date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant startTime = date.atStartOfDay(clock.getZone()).toInstant();
+        Instant endTime =date.plusDays(1).atStartOfDay(clock.getZone()).toInstant();
+
         endTime = endTime.isAfter(now) ? now : endTime;
 
         List<ProcessStatusCount> processStatusCounts = jdbcTemplate.query("""

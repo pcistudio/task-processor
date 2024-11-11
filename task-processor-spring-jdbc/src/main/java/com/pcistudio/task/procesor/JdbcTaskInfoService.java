@@ -132,19 +132,19 @@ public class JdbcTaskInfoService implements TaskInfoService {
     }
 
     @Override
-    public void requeueTimeoutTask(String handlerName) {
+    public RequeueResult requeueTimeoutTask(String handlerName) {
         Duration processingExpire = handlerLookup.getProperties(handlerName).getProcessingExpire();
         String tableName = storageResolver.resolveStorageName(handlerName);
-        UUID batchId = taskInfoRepository.requeueProcessingTimeoutTask(tableName, handlerName, processingExpire);
-        if (batchId == null) {
-            log.info("No timeout task found for handlerName={}, tableName={}", handlerName, tableName);
-            return;
+        RequeueResult requeueResult = taskInfoRepository.requeueProcessingTimeoutTask(tableName, handlerName, processingExpire);
+
+        if (!requeueResult.isEmpty()) {
+            List<TaskInfoError> timeoutTaskInfoError = taskInfoRepository.createBatchTaskInfoError(tableName, handlerName, requeueResult.batchId(), "Processing timeout");
+            log.info("Timeout task found for handlerName={}, tableName={}, batchId={}, errors={}", handlerName, tableName, requeueResult.batchId(), timeoutTaskInfoError.size());
+            String errorTableName = storageResolver.resolveErrorStorageName(handlerName);
+            taskInfoErrorRepository.saveErrors(errorTableName, timeoutTaskInfoError);
         }
 
-        List<TaskInfoError> timeoutTaskInfoError = taskInfoRepository.createBatchTaskInfoError(tableName, handlerName, batchId, "Processing timeout");
-        log.info("Timeout task found for handlerName={}, tableName={}, batchId={}, errors={}", handlerName, tableName, batchId, timeoutTaskInfoError.size());
-        String errorTableName = storageResolver.resolveErrorStorageName(handlerName);
-        taskInfoErrorRepository.saveErrors(errorTableName, timeoutTaskInfoError);
+        return requeueResult;
     }
 
     @Override

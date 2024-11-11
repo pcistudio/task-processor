@@ -4,7 +4,6 @@ import com.pcistudio.task.procesor.register.H2TaskStorageSetup;
 import com.pcistudio.task.procesor.register.TaskStorageSetup;
 import com.pcistudio.task.procesor.template.LoggingJdbcTemplate;
 import com.pcistudio.task.processor.config.TaskProcessorJdbcTemplateAutoConfiguration;
-import com.pcistudio.task.processor.util.TaskProcessorDataSourceHelper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -16,7 +15,7 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
-import javax.sql.DataSource;
+import java.time.Clock;
 
 @AutoConfiguration(before = TaskProcessorJdbcTemplateAutoConfiguration.class)
 public class TestTaskProcessorJdbcTemplateAutoConfiguration {
@@ -52,5 +51,11 @@ public class TestTaskProcessorJdbcTemplateAutoConfiguration {
     @ConditionalOnMissingBean
     TaskStorageSetup taskStorageSetup(@Qualifier("taskProcessorJdbcTemplate") JdbcTemplate jdbcTemplate) {
         return new H2TaskStorageSetup(jdbcTemplate);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    Clock clock() {
+        return Clock.systemUTC();
     }
 }

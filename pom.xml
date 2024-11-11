@@ -26,6 +26,11 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
+    <properties>
+        <resilience4jVersion>2.2.0</resilience4jVersion>
+<!--        <resilience4jVersion>2.1.0</resilience4jVersion>-->
+    </properties>
+
     <dependencies>
         <!-- Lombok (Optional, for reducing boilerplate code) -->
         <dependency>
@@ -94,7 +99,14 @@
                 <artifactId>task-processor-spring-test</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+                <version>${resilience4jVersion}</version>
+            </dependency>
         </dependencies>
+
+
 
     </dependencyManagement>
 

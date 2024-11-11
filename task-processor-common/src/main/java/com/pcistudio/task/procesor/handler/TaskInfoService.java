@@ -6,6 +6,7 @@ import com.pcistudio.task.procesor.task.TaskInfoOperations;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 public interface TaskInfoService extends TaskInfoVisibilityService {
     //when they get polled they should be marked as processing and executionTime should be in the pass
@@ -22,10 +23,20 @@ public interface TaskInfoService extends TaskInfoVisibilityService {
 
     List<TaskInfo> retrieveProcessingTimeoutTasks(String handlerName);
 
-    void requeueTimeoutTask(String handlerName);
+    RequeueResult requeueTimeoutTask(String handlerName);
 
     void storeError(TaskInfoError taskError);
 
     List<TaskInfoError> getTaskErrors(String handlerName, Long taskId);
+
+
+    record RequeueResult(UUID batchId, int updateCount) {
+        public static RequeueResult EMPTY = new RequeueResult(null, 0);
+
+        public boolean isEmpty() {
+            return this != RequeueResult.EMPTY || updateCount == 0;
+        }
+    }
+
 
 }

@@ -18,7 +18,7 @@ public final class MutableFixedClock extends Clock {
     private final Clock baseClock;
     private boolean debug = false;
     private ClockIncreaseStrategy clockIncreaseStrategy = new FixedClockIncreaseStrategy();
-    private short speed;
+    private short speed = 1;
 
     private MutableFixedClock(Clock baseClock) {
         Assert.notNull(baseClock, "baseClock cannot be null");

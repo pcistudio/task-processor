@@ -30,14 +30,16 @@ public class HandlerProperties extends HandlerWriteProperties {
     @Builder.Default
     private int requeueInterval = 300000;
     @Builder.Default
+    private int taskExecutionTimeout = 180000;
+    @Builder.Default
     private int maxParallelTasks = 1;
     @Builder.Default
     private Set<Class<? extends RuntimeException>> transientExceptions = new HashSet<>();
-//    private String payloadType;/
     @Builder.Default
     private Duration processingExpire = Duration.ofMinutes(5);
     @Builder.Default
     private Duration processingGracePeriod = Duration.ofMinutes(0);
     private TaskHandler taskHandler;
+    private Class<?> taskHandlerType;
 
 }

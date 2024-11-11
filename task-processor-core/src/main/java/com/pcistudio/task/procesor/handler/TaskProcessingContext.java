@@ -8,7 +8,7 @@ import lombok.Getter;
 
 import java.time.Clock;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -22,12 +22,15 @@ public class TaskProcessingContext {
     private Set<Class<? extends RuntimeException>> transientExceptions;
     private RetryManager retryManager;
     private MessageDecoding messageDecoding;
-    private List<RequeueListener> requeueListeners = List.of();
+//    private List<RequeueListener> requeueListeners = List.of();
+    /**
+     * IF CircuitBreakerDecorator is not set a DefaultCircuitBreakerDecorator will be use
+     */
+    private CircuitBreakerDecorator circuitBreakerDecorator;
     private Clock clock;
     private Class<?> taskHandlerType;
 
     private TaskProcessingContext() {
-        taskHandlerType = GenericTypeUtil.getGenericTypeFromInterface(taskHandler.getClass(), TaskHandler.class);
     }
 
     public static Builder builder() {
@@ -38,7 +41,6 @@ public class TaskProcessingContext {
         return taskHandlerType;
     }
 
-
     public boolean isTransient(RuntimeException exception) {
         if (transientExceptions.contains(exception.getClass())) {
             return true;
@@ -46,7 +48,7 @@ public class TaskProcessingContext {
 
         for (Class<? extends RuntimeException> transientExceptionClass : transientExceptions) {
             if (transientExceptionClass.isInstance(exception)) {
-                transientExceptions.add((Class<RuntimeException>) exception.getClass());
+                transientExceptions.add(exception.getClass());
                 return true;
             }
         }
@@ -59,7 +61,8 @@ public class TaskProcessingContext {
         private TaskInfoService taskInfoService;
         private RetryManager retryManager;
         private MessageDecoding messageDecoding;
-        private List<RequeueListener> requeueListeners;
+        //        private List<RequeueListener> requeueListeners;
+        private CircuitBreakerDecorator circuitBreakerDecorator;
         private Clock clock;
 
         public Builder handlerProperties(HandlerPropertiesWrapper handlerProperties) {
@@ -87,30 +90,54 @@ public class TaskProcessingContext {
             return this;
         }
 
-        public Builder listeners(RequeueListener... listeners) {
-            return listeners(List.of(listeners));
-        }
+//        public Builder listeners(RequeueListener... listeners) {
+//            return listeners(List.of(listeners));
+//        }
+//
+//        public Builder listeners(List<RequeueListener> listeners) {
+//            if (listeners != null) {
+//                this.requeueListeners = listeners;
+//            }
+//            return this;
+//        }
 
-        public Builder listeners(List<RequeueListener> listeners) {
-            if (listeners != null) {
-                this.requeueListeners = listeners;
+        public Builder circuitBreakerDecorator(CircuitBreakerDecorator circuitBreakerDecorator) {
+            if (circuitBreakerDecorator != null) {
+                this.circuitBreakerDecorator = circuitBreakerDecorator;
             }
             return this;
+        }
+
+        private Class<?> discoverTaskHandlerType() {
+            try {
+                return GenericTypeUtil.getGenericTypeFromInterface(taskHandler.getClass(), TaskHandler.class);
+            } catch (RuntimeException ex) {
+                Assert.notNull(handlerProperties.getTaskHandlerType(), "TaskHandlerType cannot be discover");
+                return handlerProperties.getTaskHandlerType();
+            }
         }
 
         public TaskProcessingContext build() {
             TaskProcessingContext context = new TaskProcessingContext();
             Assert.notNull(handlerProperties, "Handler properties cannot be null");
             Assert.notNull(handlerProperties.getTransientExceptions(), "Transient exceptions cannot be null");
+            Assert.notNull(taskHandler, "taskHandler cannot be null");
 
             context.handlerProperties = handlerProperties;
+
             context.taskHandler = taskHandler;
+            context.taskHandlerType = discoverTaskHandlerType();
+
             context.taskInfoService = taskInfoService;
+
             context.transientExceptions = new HashSet<>(handlerProperties.getTransientExceptions());
+            context.transientExceptions.add(TaskHandlerTransientException.class);
+
             context.retryManager = retryManager;
             context.messageDecoding = messageDecoding;
-            context.requeueListeners = requeueListeners;
+//            context.requeueListeners = requeueListeners;
             context.clock = clock;
+            context.circuitBreakerDecorator = Objects.requireNonNullElseGet(circuitBreakerDecorator, DefaultCircuitBreakerDecorator::new);
             return context;
         }
 
