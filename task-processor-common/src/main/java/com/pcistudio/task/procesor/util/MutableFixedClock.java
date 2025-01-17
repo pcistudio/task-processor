@@ -24,11 +24,14 @@ public final class MutableFixedClock extends Clock {
         Assert.notNull(baseClock, "baseClock cannot be null");
         Assert.isFalse(baseClock instanceof MutableFixedClock, "baseClock can not be an instance of MutableFixedClock");
         this.baseClock = baseClock;
-        log.info("Clock initialized with: {}", baseClock.instant());
+
+        if (log.isInfoEnabled()) {
+            log.info("Clock initialized with: {}", baseClock.instant());
+        }
     }
 
     public MutableFixedClock(Instant instant, ZoneId zone) {
-        this(Clock.fixed(instant, zone));
+        this(fixed(instant, zone));
     }
 
     public MutableFixedClock(Instant instant) {
@@ -91,7 +94,7 @@ public final class MutableFixedClock extends Clock {
         return baseClock.withZone(zone);
     }
 
-    private class RealTimeClockIncreaseStrategy implements ClockIncreaseStrategy {
+    private final class RealTimeClockIncreaseStrategy implements ClockIncreaseStrategy {
         private final long startTime = System.currentTimeMillis();
         private final AtomicLong timeAddedMillis = new AtomicLong(0);
 
@@ -101,12 +104,13 @@ public final class MutableFixedClock extends Clock {
             return baseClock.instant().plusMillis(speed * (timePass + timeAddedMillis.get()));
         }
 
+        @Override
         public void addTime(Duration duration) {
             timeAddedMillis.addAndGet(duration.toMillis());
         }
     }
 
-    private class FixedClockIncreaseStrategy implements ClockIncreaseStrategy {
+    private final class FixedClockIncreaseStrategy implements ClockIncreaseStrategy {
         private final AtomicLong timeAddedMillis = new AtomicLong(0);
 
         @Override
@@ -114,6 +118,7 @@ public final class MutableFixedClock extends Clock {
             return baseClock.instant().plusMillis(timeAddedMillis.get());
         }
 
+        @Override
         public void addTime(Duration duration) {
             timeAddedMillis.addAndGet(duration.toMillis());
         }

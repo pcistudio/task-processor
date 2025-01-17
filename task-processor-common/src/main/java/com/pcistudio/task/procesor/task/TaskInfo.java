@@ -26,7 +26,6 @@ public class TaskInfo implements TaskInfoOperations {
     private ProcessStatus status;
     private Instant executionTime;
 
-    //    private Object payload;
     private transient byte[] payloadBytes;
 
     private String handlerName;
@@ -69,27 +68,28 @@ public class TaskInfo implements TaskInfoOperations {
                 "id=" + id +
                 ", batchId=" + batchId +
                 ", status=" + status +
-//                ", lastErrorMessage='" + lastErrorMessage + '\'' +
                 ", version=" + version +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
-//                ", payload=" + payload +
                 ", retryCount=" + retryCount +
                 ", handlerName='" + handlerName + '\'' +
                 ", objectType='" + objectType + '\'' +
                 '}';
     }
 
+    @Override
     public void completed() {
         version = version + 1;
         updateStatus(ProcessStatus.COMPLETED);
     }
 
+    @Override
     public void markForRetry() {
         version = version + 1;
         updateStatus(ProcessStatus.PENDING);
     }
 
+    @Override
     public void failed() {
         version = version + 1;
         updateStatus(ProcessStatus.FAILED);

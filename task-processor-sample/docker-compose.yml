@@ -1,0 +1,57 @@
+
+services:
+#  TODO when the DB server is stop and comes back the processor is down
+  # turn down the DB to reproduce the issue
+  mariadb:
+    image: docker.io/bitnami/mariadb:11.4
+    container_name: mariadb
+    ports:
+      - '3308:3306'
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - MARIADB_USER=task_processor
+      - MARIADB_DATABASE=taskdb
+      - MARIADB_PASSWORD=taskdb123
+    volumes:
+      - './mariadb_data:/bitnami/mariadb'
+    healthcheck:
+      # test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: [ "CMD", "mysqladmin", "ping", "-u", "root" ]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - './docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - prometheus_data:/prometheus
+  task-processor-sample:
+    image: com.pcistudio/task-processor-sample:1.0-SNAPSHOT
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/taskdb
+    ports:
+      - '8080:8080'
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    volumes:
+      - './logs:/bitnami/mariadb'
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+
+networks:
+  contact-manager-network:
+
+volumes:
+  prometheus_data:
+    driver: local

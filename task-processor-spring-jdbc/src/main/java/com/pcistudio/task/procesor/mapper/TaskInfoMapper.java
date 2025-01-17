@@ -2,7 +2,6 @@ package com.pcistudio.task.procesor.mapper;
 
 import com.pcistudio.task.procesor.task.ProcessStatus;
 import com.pcistudio.task.procesor.task.TaskInfo;
-import com.pcistudio.task.procesor.task.TaskMetadata;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
@@ -15,7 +14,7 @@ public class TaskInfoMapper implements RowMapper<TaskInfo> {
         return TaskInfo.builder()
                 .id(rs.getLong("id"))
                 .batchId(UUID.fromString(rs.getString("batch_id")))
-                .status(ProcessStatus.valueOf(rs.getString("status")))
+                .status(ProcessStatus.from(rs.getString("status")))
                 .version(rs.getLong("version"))
                 .createdAt(rs.getTimestamp("created_at").toInstant())
                 .updatedAt(rs.getTimestamp("updated_at").toInstant())

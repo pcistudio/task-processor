@@ -1,1 +1,2 @@
 com.pcistudio.task.processor.config.TaskProcessorManagerAutoConfiguration
+com.pcistudio.processor.test.handler.TestTaskProcessorManagerAutoConfiguration

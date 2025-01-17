@@ -20,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.*;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -79,7 +82,6 @@ class TaskInfoRepository {
         return taskToProcess;
     }
 
-
     public void completeTask(String tableName, TaskInfoOperations taskInfo) {
         Instant now = Instant.now(clock);
         int updated = jdbcTemplate.update(
@@ -108,7 +110,7 @@ class TaskInfoRepository {
                         SET status=?, version=version+1, updated_at=?, retry_count=?, execution_time=?, partition_id=null
                         where id=? and status = ? and version=? and handler_name=?
                         """.formatted(tableName),
-                newStatus.name(), now, task.getRetryCount(), nextRetryTime, task.getId(), oldStatus.name(), task.getVersion(), task.getHandlerName()
+                newStatus.name(), now, task.getRetryCount() + 1, nextRetryTime, task.getId(), oldStatus.name(), task.getVersion(), task.getHandlerName()
         );
 
         if (updated == 0) {
@@ -134,31 +136,74 @@ class TaskInfoRepository {
         task.failed();
     }
 
-    public Pageable<TaskInfo> getTasks(String tableName, ProcessStatus processStatus, String pageToken, int limit, Sort sort) {
+    public void markCorruptTask(String tableName, TaskInfoOperations task) {
+        Instant now = Instant.now(clock);
+        int updated = jdbcTemplate.update(
+                """
+                        update %s
+                        SET status=?, version=version+1, updated_at=?
+                        where id=? and version=? and handler_name=?
+                        """.formatted(tableName),
+                ProcessStatus.CORRUPT_RECORD.name(), now, task.getId(), task.getVersion(), task.getHandlerName()
+        );
+
+        if (updated == 0) {
+            throw new OptimisticLockingFailureException("Task was not updated, task=" + task.getId() + " from status=" + task.getStatus().name() + " to status=" + ProcessStatus.CORRUPT_RECORD);
+        }
+    }
+
+    public Pageable<TaskInfo> getTasksRetried(String tableName, String handlerName, String pageToken, int limit) {
+        List<TaskInfo> retriedTasks;
+        if (pageToken == null) {
+            retriedTasks = jdbcTemplate.query(
+                    "SELECT * FROM %s WHERE retry_count>0 and handler_name=? limit ?".formatted(tableName),
+                    taskInfoMapper,
+                    handlerName,
+                    limit
+            );
+        } else {
+            Cursor<Instant> curs = taskInfoCursorPageableFactory.decodeCursor(pageToken);
+            retriedTasks = jdbcTemplate.query(
+                    "SELECT * FROM %s WHERE retry_count>0 and handler_name=? and (execution_time>? or (execution_time=? and id>?)) order by execution_time asc, id asc limit ?".formatted(tableName),
+                    taskInfoMapper,
+                    handlerName,
+                    curs.offset(),
+                    curs.offset(),
+                    curs.id(),
+                    limit
+            );
+        }
+        log.trace("Read {} retried records tableName={}, handlerName={}", retriedTasks.size(), tableName, handlerName);
+        return taskInfoCursorPageableFactory.createPageable(retriedTasks, limit);
+    }
+
+    public Pageable<TaskInfo> getTasks(String tableName, String handlerName, ProcessStatus processStatus, String pageToken, int limit, Sort sort) {
         Cursor<Instant> instantCursor = taskInfoCursorPageableFactory.decodeCursor(pageToken);
         List<TaskInfo> tasks;
         if (sort == Sort.ASC) {
-            tasks = getOldestTasks(tableName, processStatus, instantCursor, limit);
+            tasks = getOldestTasks(tableName, handlerName, processStatus, instantCursor, limit);
         } else {
-            tasks = getLatestTasks(tableName, processStatus, instantCursor, limit);
+            tasks = getLatestTasks(tableName, handlerName, processStatus, instantCursor, limit);
         }
         return taskInfoCursorPageableFactory.createPageable(tasks, limit);
     }
 
-    private List<TaskInfo> getLatestTasks(String tableName, ProcessStatus processStatus, Cursor<Instant> pageToken, int limit) {
+    private List<TaskInfo> getLatestTasks(String tableName, String handlerName, ProcessStatus processStatus, Cursor<Instant> pageToken, int limit) {
         if (pageToken == null) {
             return jdbcTemplate.query(
-                    "SELECT * FROM %s where status=? order by execution_time desc,id desc limit ?".formatted(tableName),
+                    "SELECT * FROM %s where status=? and handler_name=? order by execution_time desc,id desc limit ?".formatted(tableName),
                     taskInfoMapper,
                     processStatus.name(),
+                    handlerName,
                     limit
             );
         } else {
             Instant executionTimeOffset = pageToken.offset();
             return jdbcTemplate.query(
-                    "SELECT * FROM %s where status=? and (execution_time<? or (execution_time=? and id<?)) order by execution_time desc, id desc limit ?".formatted(tableName),
+                    "SELECT * FROM %s where status=? and handler_name=? and (execution_time<? or (execution_time=? and id<?)) order by execution_time desc, id desc limit ?".formatted(tableName),
                     taskInfoMapper,
                     processStatus.name(),
+                    handlerName,
                     executionTimeOffset,
                     executionTimeOffset,
                     pageToken.id(),
@@ -167,20 +212,22 @@ class TaskInfoRepository {
         }
     }
 
-    public List<TaskInfo> getOldestTasks(String tableName, ProcessStatus processStatus, Cursor<Instant> pageToken, int limit) {
+    public List<TaskInfo> getOldestTasks(String tableName, String handlerName, ProcessStatus processStatus, Cursor<Instant> pageToken, int limit) {
         if (pageToken == null) {
             return jdbcTemplate.query(
-                    "SELECT * FROM %s where status=? order by execution_time asc,id asc limit ?".formatted(tableName),
+                    "SELECT * FROM %s where status=? and handler_name=? order by execution_time asc,id asc limit ?".formatted(tableName),
                     taskInfoMapper,
                     processStatus.name(),
+                    handlerName,
                     limit
             );
         } else {
             Instant executionTimeOffset = pageToken.offset();
             return jdbcTemplate.query(
-                    "SELECT * FROM %s where status=? and (execution_time>? or (execution_time=? and id>?)) order by execution_time asc, id asc limit ?".formatted(tableName),
+                    "SELECT * FROM %s where status=? and handler_name=? and (execution_time>? or (execution_time=? and id>?)) order by execution_time asc, id asc limit ?".formatted(tableName),
                     taskInfoMapper,
                     processStatus.name(),
+                    handlerName,
                     executionTimeOffset,
                     executionTimeOffset,
                     pageToken.id(),
@@ -188,7 +235,6 @@ class TaskInfoRepository {
             );
         }
     }
-
 
     public TaskInfoService.RequeueResult requeueProcessingTimeoutTask(String tableName, String handlerName, Duration processingExpire) {
         Instant now = Instant.now(clock);
@@ -210,8 +256,10 @@ class TaskInfoRepository {
     }
 
     // TODO Expose this in an endpoint
+
     /**
      * This method will give you the tasks in PROCESSING state that will be ready for requeue at the specified date
+     *
      * @param tableName
      * @param handlerName
      * @param processingExpire
@@ -256,31 +304,48 @@ class TaskInfoRepository {
         );
     }
 
-    public Map<ProcessStatus, Integer> getStats(String tableName, LocalDate date) {
-        Instant now = Instant.now(clock);
-
+    public Map<String, Integer> getStats(String tableName, LocalDate date) {
         Instant startTime = date.atStartOfDay(clock.getZone()).toInstant();
-        Instant endTime =date.plusDays(1).atStartOfDay(clock.getZone()).toInstant();
-
-        endTime = endTime.isAfter(now) ? now : endTime;
+        Instant endTime = date.plusDays(1).atStartOfDay(clock.getZone()).toInstant();
 
         List<ProcessStatusCount> processStatusCounts = jdbcTemplate.query("""
                         select status, count(*) as ct
                         from %s
                         where execution_time between ? and ?
                         group by status
-                        """.formatted(tableName),
+                        union all
+                        select 'RETRY' as status, sum(retry_count) as ct
+                        from %s
+                        where execution_time between ? and ?
+                        """.formatted(tableName, tableName),
                 processStatusCountRowMapper,
+                startTime,
+                endTime,
                 startTime,
                 endTime
         );
 
         return processStatusCounts.stream()
                 .collect(Collectors.toMap(
-                                processStatusCount -> ProcessStatus.valueOf(processStatusCount.status()),
+                                ProcessStatusCount::status,
                                 ProcessStatusCount::count
                         )
                 );
+    }
+
+    public Integer getCount(String tableName, LocalDate date) {
+        Instant startTime = date.atStartOfDay(clock.getZone()).toInstant();
+        Instant endTime = date.plusDays(1).atStartOfDay(clock.getZone()).toInstant();
+
+        return jdbcTemplate.queryForObject("""
+                        select count(*) as ct
+                        from %s
+                        where execution_time between ? and ?
+                        """.formatted(tableName),
+                Integer.class,
+                startTime,
+                endTime
+        );
     }
 
     record ProcessStatusCount(String status, int count) {

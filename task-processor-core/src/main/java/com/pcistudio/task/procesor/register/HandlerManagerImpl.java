@@ -21,6 +21,7 @@ public class HandlerManagerImpl implements HandlerManager {
 
     private final TaskStorageSetup taskTableSetupImpl;
 
+    @Override
     public void registerHandler(HandlerProperties handlerProperties) {
         validateHandlerProperties(handlerProperties);
         HandlerPropertiesWrapper handlerPropertiesWrapper = new HandlerPropertiesWrapper(handlerProperties);
@@ -37,9 +38,10 @@ public class HandlerManagerImpl implements HandlerManager {
 
         taskTableSetupImpl.createStorage(handlerPropertiesWrapper.getTableName());
 
-        log.info("Handler registered successfully for handler {}", handlerPropertiesWrapper.getHandlerName());
+        log.info("Handler registered successfully for handler {}", handlerPropertiesWrapper.getHandlerName());//NOPMD
     }
 
+    @Override
     public HandlerPropertiesWrapper getProperties(String handlerName) {
         return handlerPropertiesMap.get(handlerName);
     }

@@ -6,7 +6,7 @@ import org.springframework.context.ApplicationContext;
 import javax.sql.DataSource;
 
 @RequiredArgsConstructor
-public class TaskProcessorDataSourceHelper {
+public class TaskProcessorDataSourceResolver {
     private static final String DEFAULT_DATASOURCE_NAME = "dataSource";
     private static final String DATASOURCE_PROPERTY = "spring.task.processor.datasource";
     private final ApplicationContext applicationContext;

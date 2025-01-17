@@ -29,12 +29,11 @@ public interface TaskInfoService extends TaskInfoVisibilityService {
 
     List<TaskInfoError> getTaskErrors(String handlerName, Long taskId);
 
-
     record RequeueResult(UUID batchId, int updateCount) {
         public static RequeueResult EMPTY = new RequeueResult(null, 0);
 
         public boolean isEmpty() {
-            return this != RequeueResult.EMPTY || updateCount == 0;
+            return this != EMPTY || updateCount == 0;
         }
     }
 

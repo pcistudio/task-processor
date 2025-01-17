@@ -22,13 +22,13 @@ public class TaskProcessingContext {
     private Set<Class<? extends RuntimeException>> transientExceptions;
     private RetryManager retryManager;
     private MessageDecoding messageDecoding;
-//    private List<RequeueListener> requeueListeners = List.of();
     /**
      * IF CircuitBreakerDecorator is not set a DefaultCircuitBreakerDecorator will be use
      */
     private CircuitBreakerDecorator circuitBreakerDecorator;
     private Clock clock;
     private Class<?> taskHandlerType;
+
 
     private TaskProcessingContext() {
     }
@@ -61,7 +61,6 @@ public class TaskProcessingContext {
         private TaskInfoService taskInfoService;
         private RetryManager retryManager;
         private MessageDecoding messageDecoding;
-        //        private List<RequeueListener> requeueListeners;
         private CircuitBreakerDecorator circuitBreakerDecorator;
         private Clock clock;
 
@@ -90,17 +89,6 @@ public class TaskProcessingContext {
             return this;
         }
 
-//        public Builder listeners(RequeueListener... listeners) {
-//            return listeners(List.of(listeners));
-//        }
-//
-//        public Builder listeners(List<RequeueListener> listeners) {
-//            if (listeners != null) {
-//                this.requeueListeners = listeners;
-//            }
-//            return this;
-//        }
-
         public Builder circuitBreakerDecorator(CircuitBreakerDecorator circuitBreakerDecorator) {
             if (circuitBreakerDecorator != null) {
                 this.circuitBreakerDecorator = circuitBreakerDecorator;
@@ -112,7 +100,7 @@ public class TaskProcessingContext {
             try {
                 return GenericTypeUtil.getGenericTypeFromInterface(taskHandler.getClass(), TaskHandler.class);
             } catch (RuntimeException ex) {
-                Assert.notNull(handlerProperties.getTaskHandlerType(), "TaskHandlerType cannot be discover");
+                Assert.notNull(handlerProperties.getTaskHandlerType(), "TaskHandlerType cannot be discover. It can be set manually using taskHandlerType when registering the task ");
                 return handlerProperties.getTaskHandlerType();
             }
         }
@@ -135,9 +123,9 @@ public class TaskProcessingContext {
 
             context.retryManager = retryManager;
             context.messageDecoding = messageDecoding;
-//            context.requeueListeners = requeueListeners;
             context.clock = clock;
             context.circuitBreakerDecorator = Objects.requireNonNullElseGet(circuitBreakerDecorator, DefaultCircuitBreakerDecorator::new);
+
             return context;
         }
 

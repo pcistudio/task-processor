@@ -17,10 +17,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 public class JdbcTaskInfoService implements TaskInfoService {
@@ -73,6 +70,19 @@ public class JdbcTaskInfoService implements TaskInfoService {
                             " System is failing to move task back to PENDING status",
                     limit, tableName, handlerName);
         }
+        return removeCorruptRecords(tableName, taskToProcess);
+    }
+
+    private List<TaskInfo> removeCorruptRecords(String tableName, List<TaskInfo> taskToProcess) {
+        Iterator<TaskInfo> iterator = taskToProcess.iterator();
+        while (iterator.hasNext()) {
+            TaskInfo taskInfo = iterator.next();
+            if (taskInfo.getStatus() == ProcessStatus.CORRUPT_RECORD) {
+                iterator.remove();
+                taskInfoRepository.markCorruptTask(tableName, taskInfo);
+            }
+        }
+
         return taskToProcess;
     }
 
@@ -119,8 +129,16 @@ public class JdbcTaskInfoService implements TaskInfoService {
     @Override
     public Pageable<TaskInfo> getTasks(String handlerName, ProcessStatus processStatus, String pageToken, int limit, Sort sort) {
         String tableName = storageResolver.resolveStorageName(handlerName);
-        return taskInfoRepository.getTasks(tableName, processStatus, pageToken, limit, sort);
+        return taskInfoRepository.getTasks(tableName, handlerName, processStatus, pageToken, limit, sort);
     }
+
+    @Override
+    public Pageable<TaskInfo> getTasksRetried(String handlerName, String pageToken, int limit) {
+        String tableName = storageResolver.resolveStorageName(handlerName);
+        return taskInfoRepository.getTasksRetried(tableName, handlerName,pageToken, limit);
+    }
+
+
 
     @Override
     public List<TaskInfo> retrieveProcessingTimeoutTasks(String handlerName) {
@@ -168,10 +186,15 @@ public class JdbcTaskInfoService implements TaskInfoService {
     }
 
     @Override
-    public Map<ProcessStatus, Integer> stats(String handlerName, LocalDate date) {
+    public Map<String, Integer> stats(String handlerName, LocalDate date) {
         String tableName = storageResolver.resolveStorageName(handlerName);
         return taskInfoRepository.getStats(tableName, date);
     }
 
+    @Override
+    public int count(String handlerName, LocalDate date) {
+        String tableName = storageResolver.resolveStorageName(handlerName);
+        return taskInfoRepository.getCount(tableName, date);
+    }
 
 }

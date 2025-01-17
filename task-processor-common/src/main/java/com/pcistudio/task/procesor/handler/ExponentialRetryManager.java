@@ -11,6 +11,7 @@ public class ExponentialRetryManager implements RetryManager {
     private final long maxRetries;
     private final Clock clock;
 
+    @Override
     public Instant nextRetry(int retryCount) {
         return Instant.now(clock).plusMillis(retryDelayMs * (long) Math.pow(2, retryCount));
     }

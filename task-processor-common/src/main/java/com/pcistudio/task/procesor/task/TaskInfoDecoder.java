@@ -72,6 +72,7 @@ public class TaskInfoDecoder implements TaskInfoOperations, TaskInfoPayloadObjec
         return delegate.getObjectType();
     }
 
+    @Override
     public Object getPayload() {
         if (payload == null) {
             payload = messageDecoding.decode(delegate.getPayloadBytes(), objectType);

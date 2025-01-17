@@ -6,7 +6,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 @Slf4j
-public class GenericTypeUtil {
+public final class GenericTypeUtil {
 
 
     private GenericTypeUtil() {

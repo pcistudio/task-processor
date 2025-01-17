@@ -3,6 +3,7 @@ package com.pcistudio.task.processor.config;
 import com.pcistudio.task.procesor.JdbcTaskInfoService;
 import com.pcistudio.task.procesor.StorageResolver;
 import com.pcistudio.task.procesor.handler.*;
+import com.pcistudio.task.procesor.metrics.TaskProcessorMetricsFactory;
 import com.pcistudio.task.procesor.register.HandlerLookup;
 import com.pcistudio.task.procesor.util.decoder.MessageDecoding;
 import org.springframework.beans.BeansException;
@@ -20,7 +21,7 @@ import java.time.Clock;
 
 @ConditionalOnClass(name = "com.pcistudio.task.procesor.JdbcTaskInfoService")
 @Configuration
-@Import(DecodingConfiguration.class)
+@Import({DecodingConfiguration.class, MetricsConfig.class})
 @ConditionalOnProperty(prefix = "spring.task.handlers", name = "enabled", havingValue = "true")
 public class TaskProcessorManagerAutoConfiguration {
 
@@ -40,14 +41,14 @@ public class TaskProcessorManagerAutoConfiguration {
             TaskInfoService taskInfoService,
             MessageDecoding messageDecoding,
             Clock clock,
+            TaskProcessorMetricsFactory taskProcessorMetricsFactory,
             ObjectProvider<CircuitBreakerDecorator> circuitBreakerDecoratorProvider,
             ObjectProvider<TaskProcessorManagerCustomizer> taskProcessorManagerCustomizerProvider
     ) throws BeansException {
+        TaskProcessorManager taskProcessorManager = new TaskProcessorManager(taskProcessorMetricsFactory);
 
-        TaskProcessorManager taskProcessorManager = new TaskProcessorManager();
-
-        // Error if I going to put this listener to every body then the handler name dont make sence
-        // the eather thing is how the event is propagated to new added task handlers
+        // Error if I going to put this listener to every body then the handler name dont make sense
+        // the other thing is how the event is propagated to new added task handlers
         handlerLookup.getIterator().forEachRemaining(properties -> {
             TaskProcessingContext context = TaskProcessingContext.builder()
                     .handlerProperties(properties)

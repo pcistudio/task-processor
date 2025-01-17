@@ -1,6 +1,8 @@
 package com.pcistudio.task.procesor.handler;
 
 import com.pcistudio.task.procesor.HandlerPropertiesWrapper;
+import com.pcistudio.task.procesor.metrics.TaskProcessorMetrics;
+import com.pcistudio.task.procesor.metrics.TimeMeter;
 import com.pcistudio.task.procesor.task.ProcessStatus;
 import com.pcistudio.task.procesor.task.TaskInfo;
 import com.pcistudio.task.procesor.task.TaskInfoDecoder;
@@ -11,26 +13,34 @@ import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.pcistudio.task.procesor.util.ExceptionUtils.unwrapException;
+
 @Slf4j
 public class TaskHandlerProxy implements Iterable<TaskInfo> {
 
     private final TaskProcessingContext context;
+    private final TaskProcessorMetrics taskProcessorMetrics;
 
-    public TaskHandlerProxy(TaskProcessingContext taskProcessingContext) {
+    public TaskHandlerProxy(TaskProcessingContext taskProcessingContext, TaskProcessorMetrics taskProcessorMetrics) {
         this.context = taskProcessingContext;
+        this.taskProcessorMetrics = taskProcessorMetrics;
     }
 
     public List<TaskInfo> poll() {
         HandlerPropertiesWrapper properties = context.getHandlerProperties();
+        TimeMeter timeMeter = taskProcessorMetrics.recordTaskPolling();
         try {
-            return context.getTaskInfoService().poll(properties.getHandlerName(), properties.getMaxPoll());
+            List<TaskInfo> taskInfos = context.getTaskInfoService()
+                    .poll(properties.getHandlerName(), properties.getMaxPoll());
+
+            timeMeter.success();
+            return taskInfos;
         } catch (RuntimeException exception) {
-            log.error("Error polling tasks", exception);
-            if (isTransient(exception)) {
-                // This will force a wait
-                return List.of();
+            if (log.isErrorEnabled()) {
+                log.error("Error polling tasks handler={}", properties.getHandlerName(), exception);
             }
-            throw exception;
+            timeMeter.error(exception);
+            return List.of();
         }
     }
 
@@ -69,7 +79,7 @@ public class TaskHandlerProxy implements Iterable<TaskInfo> {
         } catch (TaskTransientException exception) { // library exception
             throw exception;
         } catch (RuntimeException exception) { // library exception
-            log.error("Error processing task={}", task.getId(), exception); // probably I don't need to do anything just rethrow it
+            log.error("Error processing task={} in handler={}", task.getId(), task.getHandlerName(), exception); //NOPMD
             if (context.isTransient(exception)) {
                 throw new TaskTransientException("Task execution exception" + task.getId(), exception);
             }
@@ -86,21 +96,28 @@ public class TaskHandlerProxy implements Iterable<TaskInfo> {
     }
 
     private void processAndUpdateStatus(TaskInfoDecoder task) {
+        TimeMeter timeMeter = taskProcessorMetrics.recordTaskProcess();
         try {
-            log.debug("Processing task={} from handler={}", task.getId(), task.getHandlerName());
+            if(log.isDebugEnabled()) {
+                log.debug("Processing task={} from handler={}", task.getId(), task.getHandlerName());
+            }
+
             doProcess(task);
             //TODO stop when the error is not related to the handler
             // like the error with the getting the handler type
             // or the
-
             context.getTaskInfoService().markTaskCompleted(task);
+            timeMeter.success();
+
         } catch (TaskHandlerException exception) {// handler exception
+            timeMeter.error(unwrapException(exception));//NOPMD
             context.getTaskInfoService().storeError(task.createError(exception));
             context.getTaskInfoService().markTaskFailed(task);
-            log.warn("Error calling handler={}", context.getHandlerProperties().getHandlerName(), exception);
+            log.warn("Error calling handler={} for taskId={}", context.getHandlerProperties().getHandlerName(), task.getId(), exception);//NOPMD
         } catch (TaskHandlerTransientException exception) {
             Instant nextRetry = context.getRetryManager().nextRetry(task.getRetryCount());
             context.getTaskInfoService().markTaskToRetry(task, nextRetry);
+            timeMeter.retry(unwrapException(exception));
             throw exception;
         }
     }
@@ -111,7 +128,7 @@ public class TaskHandlerProxy implements Iterable<TaskInfo> {
         } catch (TaskHandlerTransientException ex) {
             throw ex;
         } catch (TaskTransientException ex) {
-            log.warn("Handler={} throwing TaskTransientException, TaskHandlerTransientException should be used instead", context.getHandlerProperties().getHandlerName());
+            log.warn("Handler={} throwing TaskTransientException, TaskHandlerTransientException should be used instead", context.getHandlerProperties().getHandlerName());//NOPMD
             throw new TaskHandlerTransientException("Wrapping Transient exception", ex);
         } catch (RuntimeException exception) {
             if (shouldRetry(exception, task.getRetryCount())) {
@@ -130,10 +147,5 @@ public class TaskHandlerProxy implements Iterable<TaskInfo> {
     private boolean isTransient(RuntimeException exception) {
         return context.isTransient(exception);
     }
-
-    private void notifyCircuitOpen() {
-
-    }
-
 
 }

@@ -5,7 +5,7 @@ import com.pcistudio.task.procesor.register.MariadbTaskStorageSetup;
 import com.pcistudio.task.procesor.register.MysqlTaskStorageSetup;
 import com.pcistudio.task.procesor.register.TaskStorageSetup;
 import com.pcistudio.task.procesor.template.LoggingJdbcTemplate;
-import com.pcistudio.task.processor.util.TaskProcessorDataSourceHelper;
+import com.pcistudio.task.processor.util.TaskProcessorDataSourceResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,12 +33,12 @@ public class TaskProcessorJdbcTemplateAutoConfiguration implements ApplicationCo
     private ApplicationContext applicationContext;
 
     @Configuration
-    @ConditionalOnProperty(prefix = "spring.task.logging", name = "template", havingValue = "false")
+    @ConditionalOnProperty(prefix = "spring.task.logging", name = "template", havingValue = "false", matchIfMissing = true)
     static class DefaultJdbcTemplate {
         @Bean
         @ConditionalOnMissingBean(name = "taskProcessorJdbcTemplate")
-        JdbcTemplate taskProcessorJdbcTemplate(TaskProcessorDataSourceHelper dataSourceHelper) {
-            DataSource dataSource = dataSourceHelper.resolveDatasource();
+        JdbcTemplate taskProcessorJdbcTemplate(TaskProcessorDataSourceResolver dataSourceResolver) {
+            DataSource dataSource = dataSourceResolver.resolveDatasource();
             log.info("TaskProcessor using dataSource: {}", dataSource.getClass().getName());
             return new JdbcTemplate(dataSource);
         }
@@ -48,16 +48,16 @@ public class TaskProcessorJdbcTemplateAutoConfiguration implements ApplicationCo
     static class LoggingTemplate {
         @Bean
         @ConditionalOnMissingBean(name = "taskProcessorJdbcTemplate")
-        JdbcTemplate taskProcessorJdbcTemplate(TaskProcessorDataSourceHelper dataSourceHelper) {
-            DataSource dataSource = dataSourceHelper.resolveDatasource();
+        JdbcTemplate taskProcessorJdbcTemplate(TaskProcessorDataSourceResolver dataSourceResolver) {
+            DataSource dataSource = dataSourceResolver.resolveDatasource();
             log.info("TaskProcessor using dataSource: {}", dataSource.getClass().getName());
             return new LoggingJdbcTemplate(dataSource);
         }
     }
 
     @Bean
-    TaskProcessorDataSourceHelper taskProcessorDataSourceHelper() {
-        return new TaskProcessorDataSourceHelper(applicationContext);
+    TaskProcessorDataSourceResolver taskProcessorDataSourceResolver() {
+        return new TaskProcessorDataSourceResolver(applicationContext);
     }
 
     @Override

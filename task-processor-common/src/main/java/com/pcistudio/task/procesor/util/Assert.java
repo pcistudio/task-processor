@@ -2,7 +2,7 @@ package com.pcistudio.task.procesor.util;
 
 import java.util.Collection;
 
-public abstract class Assert {
+public final class Assert {
     private Assert() {
     }
 

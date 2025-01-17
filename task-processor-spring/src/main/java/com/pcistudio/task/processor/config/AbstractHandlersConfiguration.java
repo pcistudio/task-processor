@@ -30,7 +30,7 @@ public abstract class AbstractHandlersConfiguration {
     // Meaning for each task you will create a different bean
     protected abstract void addTask(HandlerManagerImpl.Builder builder);
 
-
+    //TODO Add Actuator endpoint
     @Bean
     @ConditionalOnMissingBean(StorageResolver.class)
     StorageResolver storageResolver(HandlerManagerImpl handlerManager) {

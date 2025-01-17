@@ -6,7 +6,7 @@ public interface StorageResolver {
 
     IdentityStorageResolver IDENTITY = new IdentityStorageResolver();
 
-    class IdentityStorageResolver implements StorageResolver {
+    final class IdentityStorageResolver implements StorageResolver {
         private IdentityStorageResolver() {
         }
 

@@ -12,6 +12,20 @@ public interface TaskInfoVisibilityService {
 
     Pageable<TaskInfo> getTasks(String handlerName, ProcessStatus processStatus, String pageToken, int limit, Sort sort);
 
+    Pageable<TaskInfo> getTasksRetried(String handlerName, String pageToken, int limit);
 
-    Map<ProcessStatus, Integer> stats(String handlerName, LocalDate date);
+    int count(String handlerName, LocalDate date);
+
+    Map<String, Integer> stats(String handlerName, LocalDate date);
+
+    default int calculateFinishedTask(String handlerName, LocalDate date) {
+        Map<String, Integer> stats = stats(handlerName, date);
+        return stats.getOrDefault(ProcessStatus.COMPLETED.name(), 0) + stats.getOrDefault(ProcessStatus.FAILED.name(), 0);
+    }
+
+    //Useful for integration test
+    default boolean allTaskCompleted(String handlerName, LocalDate date) {
+        count(handlerName, date);
+        return count(handlerName, date) == calculateFinishedTask(handlerName, date);
+    }
 }

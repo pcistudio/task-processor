@@ -89,4 +89,8 @@ public class HandlerPropertiesWrapper {
     public Class<?> getTaskHandlerType() {
         return delegate.getTaskHandlerType();
     }
+
+    public boolean isAutoStartEnabled() {
+        return delegate.isAutoStartEnabled();
+    }
 }

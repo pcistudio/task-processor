@@ -24,6 +24,7 @@
             <artifactId>spring-boot-starter-logging</artifactId>
 <!--            <scope>provided</scope>-->
         </dependency>
+
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
@@ -81,5 +82,16 @@
 <!--            <artifactId>task-processor-spring-jdbc-mysql</artifactId>-->
 <!--        </dependency>-->
 
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-jmx</artifactId>
+            <version>${micrometer.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

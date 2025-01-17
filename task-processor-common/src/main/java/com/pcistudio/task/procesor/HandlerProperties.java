@@ -41,5 +41,6 @@ public class HandlerProperties extends HandlerWriteProperties {
     private Duration processingGracePeriod = Duration.ofMinutes(0);
     private TaskHandler taskHandler;
     private Class<?> taskHandlerType;
-
+    @Builder.Default
+    private boolean autoStartEnabled = true;
 }

@@ -1,9 +1,10 @@
 package com.pcistudio.task.procesor.util;
 
-public class ExceptionUtils {
+public final class ExceptionUtils {
     private ExceptionUtils() {
     }
 
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public static Throwable getRootCause(Throwable original) {
         if (original == null) {
             return null;
@@ -19,6 +20,12 @@ public class ExceptionUtils {
 
     public static Throwable getMostSpecificCause(Throwable original) {
         Throwable rootCause = getRootCause(original);
-        return (rootCause != null ? rootCause : original);
+        return rootCause != null ? rootCause : original;
     }
+
+    public static Throwable unwrapException(Exception exception) {
+        return exception.getCause() == null ? exception : exception.getCause();
+    }
+
+
 }

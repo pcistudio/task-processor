@@ -17,6 +17,7 @@
         <module>task-processor-spring-jdbc-h2</module>
         <module>task-processor-spring</module>
         <module>task-processor-spring-test</module>
+        <module>task-processor-sample</module>
     </modules>
 
     <parent>
@@ -105,9 +106,6 @@
                 <version>${resilience4jVersion}</version>
             </dependency>
         </dependencies>
-
-
-
     </dependencyManagement>
 
     <build>
@@ -126,6 +124,26 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-pmd-plugin</artifactId>-->
+<!--                <version>3.26.0</version> &lt;!&ndash; Replace with the latest version &ndash;&gt;-->
+<!--                <configuration>-->
+<!--                    <targetJdk>16</targetJdk> &lt;!&ndash; Adjust as per your project &ndash;&gt;-->
+<!--                    <rulesets>-->
+<!--                        <ruleset>rulesets/java/quickstart.xml</ruleset>-->
+<!--                    </rulesets>-->
+<!--                    <linkXRef>true</linkXRef>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>verify</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>check</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
         </plugins>
     </build>
 

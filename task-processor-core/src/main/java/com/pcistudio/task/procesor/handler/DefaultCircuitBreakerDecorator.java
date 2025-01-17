@@ -46,4 +46,9 @@ public class DefaultCircuitBreakerDecorator implements CircuitBreakerDecorator {
     public <T> Consumer<T> decorate(Consumer<T> processTaskInfo) {
         return circuitBreaker.decorateConsumer(processTaskInfo);
     }
+
+    @Override
+    public void open() {
+        circuitBreaker.transitionToOpenState();
+    }
 }

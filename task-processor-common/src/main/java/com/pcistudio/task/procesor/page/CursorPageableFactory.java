@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 @Slf4j
+@SuppressWarnings("PMD.GenericsNaming")
 public abstract class CursorPageableFactory<ITEM, OFFSET> {
     protected final Class<OFFSET> offsetClass;
 
@@ -70,7 +71,5 @@ public abstract class CursorPageableFactory<ITEM, OFFSET> {
     protected abstract Cursor<OFFSET> decode(String token);
 
     protected abstract Cursor<OFFSET> createCursor(ITEM lastElement);
-
-//    protected abstract Cursor<OFFSET> createCursorOffset(byte[] cursorBytes);
 
 }

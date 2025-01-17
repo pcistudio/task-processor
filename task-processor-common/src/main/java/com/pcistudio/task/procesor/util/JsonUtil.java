@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 @Slf4j
-public class JsonUtil {
+public final class JsonUtil {
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Instant.class, new InstantTypeAdapter())
             .create();
@@ -46,12 +46,16 @@ public class JsonUtil {
 
     public static void print(String message, Object object) { // this print didn't work with lamdas
         Logger logger = callerLogger();
-        logger.info(message + " " + gsonPretty.toJson(object));
+        if (logger.isInfoEnabled()) {
+            logger.info("{} {}", message, gsonPretty.toJson(object));
+        }
     }
 
     public static void print(Object object) { // this print didn't work with lamdas
         Logger logger = callerLogger();
-        logger.info(gsonPretty.toJson(object));
+        if (logger.isInfoEnabled()) {
+            logger.info(gsonPretty.toJson(object));
+        }
     }
 
     private static Logger callerLogger() {

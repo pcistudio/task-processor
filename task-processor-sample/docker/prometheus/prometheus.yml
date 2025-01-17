@@ -1,0 +1,21 @@
+# Global configuration
+global:
+  scrape_interval: 15s    # Adjust based on your system's needs (e.g., 30s or 1m for production).
+  scrape_timeout: 10s     # Timeout for each scrape.
+  evaluation_interval: 15s  # How often to evaluate rules.
+
+# Scrape configurations
+scrape_configs:
+  - job_name: 'task-processor-sample'
+    scrape_interval: 30s
+    metrics_path: '/actuator/prometheus'  # Path to the metrics endpoint (default is /metrics).
+    static_configs:
+      - targets:
+          - 'task-processor-sample:8080'  # Replace with your production endpoint hostname and port.
+
+    # Optional: Add labels to distinguish this target
+#    relabel_configs:
+#      - source_labels: [__address__]
+#        app: task-processor-sample
+
+
