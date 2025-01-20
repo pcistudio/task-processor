@@ -62,17 +62,13 @@ class CursorPageableFactoryTest {
         );
     }
 
-    public List<Person> getPerson3(Cursor<String> cursor, int limit) {
-        return List.of();
-    }
-
     record Person(Long id, String name, int age) {
     }
 
     public static class PersonCursorPageableFactory extends DefaultCursorPageableFactory<Person, String> {
         @Override
-        protected Cursor<String> createCursor(Person lastElement) {
-            return new Cursor<>(lastElement.id(), lastElement.name());
+        protected Cursor<String> createCursor(Person person) {
+            return new Cursor<>(person.id(), person.name());
         }
     }
 

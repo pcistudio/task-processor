@@ -1,11 +1,11 @@
 package com.pcistudio.task.procesor.handler;
 
 public class TaskProcessorClosingException extends Exception {
-    public TaskProcessorClosingException(String message) {
+    public TaskProcessorClosingException(final String message) {
         super(message);
     }
 
-    public TaskProcessorClosingException(String message, Throwable cause) {
+    public TaskProcessorClosingException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

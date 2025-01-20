@@ -1,11 +1,11 @@
 package com.pcistudio.task.procesor.handler;
 
 public class TaskPollingException extends RuntimeException {
-    public TaskPollingException(String message) {
+    public TaskPollingException(final String message) {
         super(message);
     }
 
-    public TaskPollingException(String message, Throwable cause) {
+    public TaskPollingException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

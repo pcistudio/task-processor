@@ -46,7 +46,7 @@ public abstract class AbstractHandlersConfiguration {
     }
 
 
-    @ConditionalOnMissingBean(value = Clock.class)
+    @ConditionalOnMissingBean(Clock.class)
     @Bean
     Clock clock() {
         return Clock.systemUTC();

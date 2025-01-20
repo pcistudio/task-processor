@@ -52,7 +52,6 @@ public class JdbcTaskInfoService implements TaskInfoService {
         UUID readToken = UUID.randomUUID();
         int updated = taskInfoRepository.markToProcess(tableName, handlerName, readToken, limit);
 
-        //FIXME this shouldn't be here because if nothing is updated and we have some backlog we will never process it
         if (updated == 0) {
             log.info("No tasks to process in tableName={}, handlerName={}", tableName, handlerName);
             return Collections.emptyList();
@@ -108,7 +107,10 @@ public class JdbcTaskInfoService implements TaskInfoService {
         }
         taskInfoRepository.markToRetry(tableName, task, ProcessStatus.PROCESSING, ProcessStatus.PENDING, nextRetryTime);
         task.markForRetry();
-        log.info("Task={} mark for retry", task.getId());
+
+        if (log.isInfoEnabled()) {
+            log.info("Task={} mark for retry", task.getId());
+        }
     }
 
     @Override
@@ -122,7 +124,10 @@ public class JdbcTaskInfoService implements TaskInfoService {
         }
         taskInfoRepository.failTask(tableName, task);
         task.failed();
-        log.info("Task={} failed", task.getId());
+
+        if (log.isInfoEnabled()) {
+            log.info("Task={} failed", task.getId());
+        }
 
     }
 
@@ -152,12 +157,16 @@ public class JdbcTaskInfoService implements TaskInfoService {
     @Override
     public RequeueResult requeueTimeoutTask(String handlerName) {
         Duration processingExpire = handlerLookup.getProperties(handlerName).getProcessingExpire();
+        Duration processingGracePeriod = handlerLookup.getProperties(handlerName).getProcessingGracePeriod();
         String tableName = storageResolver.resolveStorageName(handlerName);
-        RequeueResult requeueResult = taskInfoRepository.requeueProcessingTimeoutTask(tableName, handlerName, processingExpire);
+        RequeueResult requeueResult = taskInfoRepository.requeueProcessingTimeoutTask(tableName, handlerName, processingExpire.plus(processingGracePeriod));
 
         if (!requeueResult.isEmpty()) {
             List<TaskInfoError> timeoutTaskInfoError = taskInfoRepository.createBatchTaskInfoError(tableName, handlerName, requeueResult.batchId(), "Processing timeout");
-            log.info("Timeout task found for handlerName={}, tableName={}, batchId={}, errors={}", handlerName, tableName, requeueResult.batchId(), timeoutTaskInfoError.size());
+
+            if (log.isInfoEnabled()) {
+                log.info("Timeout task found for handlerName={}, tableName={}, batchId={}, errors={}", handlerName, tableName, requeueResult.batchId(), timeoutTaskInfoError.size());
+            }
             String errorTableName = storageResolver.resolveErrorStorageName(handlerName);
             taskInfoErrorRepository.saveErrors(errorTableName, timeoutTaskInfoError);
         }
@@ -174,14 +183,20 @@ public class JdbcTaskInfoService implements TaskInfoService {
         }
         String tableName = storageResolver.resolveErrorStorageName(taskError.getHandlerName());
         taskInfoErrorRepository.saveError(tableName, taskError);
-        log.info("Stored error processing task: {}", taskError);
+
+        if (log.isInfoEnabled()) {
+            log.info("Stored error processing task: {}", taskError);
+        }
     }
 
     @Override
     public List<TaskInfoError> getTaskErrors(String handlerName, Long taskId) {
         String tableName = storageResolver.resolveErrorStorageName(handlerName);
         List<TaskInfoError> taskErrors = taskInfoErrorRepository.getTaskErrors(tableName, taskId);
-        log.info("{} error found for task={}", taskErrors.size(), taskId);
+
+        if(log.isInfoEnabled()) {
+            log.info("{} error found for task={}", taskErrors.size(), taskId);
+        }
         return taskErrors;
     }
 

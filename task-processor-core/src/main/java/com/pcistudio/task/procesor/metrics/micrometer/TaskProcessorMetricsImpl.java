@@ -1,19 +1,24 @@
 package com.pcistudio.task.procesor.metrics.micrometer;
 
+import com.pcistudio.task.procesor.metrics.ProcessorStats;
 import com.pcistudio.task.procesor.metrics.TaskProcessorMetrics;
 import com.pcistudio.task.procesor.metrics.TimeMeter;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 
+import java.util.function.Supplier;
+
+@SuppressFBWarnings({"EI_EXPOSE_REP2"})
 public class TaskProcessorMetricsImpl implements TaskProcessorMetrics {
     private final MeterRegistry meterRegistry;
     private final String handlerName;
     private final Tags commonTag;
     private final Counter requeueCounter;
 
-    public TaskProcessorMetricsImpl(String handlerName, MeterRegistry meterRegistry) {
+    public TaskProcessorMetricsImpl(final String handlerName, final MeterRegistry meterRegistry) {
         this.handlerName = handlerName;
         this.meterRegistry = meterRegistry;
         this.commonTag = Tags.of(
@@ -23,7 +28,7 @@ public class TaskProcessorMetricsImpl implements TaskProcessorMetrics {
     }
 
     @Override
-    public void incrementTaskRequeueCount(int requeue) {
+    public void incrementTaskRequeueCount(final int requeue) {
         requeueCounter.increment(requeue);
     }
 
@@ -43,6 +48,13 @@ public class TaskProcessorMetricsImpl implements TaskProcessorMetrics {
     }
 
     @Override
+    public void registerProcessor(Supplier<ProcessorStats> statsSupplier) {
+        meterRegistry.gauge("task.processor.track.executions", commonTag, statsSupplier, value -> value.get().getTrackedTaskCount());
+        meterRegistry.gauge("task.processor.track.long.executions", commonTag, statsSupplier, value -> value.get().getTrackedLongWaitingTaskCount());
+        meterRegistry.gauge("task.processor.circuitbreaker.closed", commonTag, statsSupplier, value -> value.get().getCircuitBreakerClosed());
+    }
+
+    @Override
     public String toString() {
         return "TaskProcessorMetrics{" +
                 "handlerName='" + handlerName + '\'' +
@@ -54,7 +66,7 @@ public class TaskProcessorMetricsImpl implements TaskProcessorMetrics {
         private final String indicator;
         private final Tags tags;
 
-        public TimeMeterIml(String indicator, Tags tags) {
+        public TimeMeterIml(final String indicator, final Tags tags) {
             sample = Timer.start();
             this.indicator = indicator;
             this.tags = tags;
@@ -66,32 +78,32 @@ public class TaskProcessorMetricsImpl implements TaskProcessorMetrics {
                     indicator,
                     Tags.concat(
                             tags,
-                            "exception", "none",
-                            "outcome", "success"
+                            ERROR_TAG, "none",
+                            OUTCOME_TAG, "success"
                     )
             ));
         }
 
         @Override
-        public void error(Throwable exception) {
+        public void error(final Throwable exception) {
             sample.stop(meterRegistry.timer(
                     indicator,
                     Tags.concat(
                             tags,
-                            "exception", exception.getClass().getSimpleName(),
-                            "outcome", "error"
+                            ERROR_TAG, exception.getClass().getSimpleName(),
+                            OUTCOME_TAG, "error"
                     )
             ));
         }
 
         @Override
-        public void retry(Throwable exception) {
+        public void retry(final Throwable exception) {
             sample.stop(meterRegistry.timer(
                     indicator,
                     Tags.concat(
                             tags,
-                            "exception", exception.getClass().getSimpleName(),
-                            "outcome", "retry"
+                            ERROR_TAG, exception.getClass().getSimpleName(),
+                            OUTCOME_TAG, "retry"
                     )
             ));
         }

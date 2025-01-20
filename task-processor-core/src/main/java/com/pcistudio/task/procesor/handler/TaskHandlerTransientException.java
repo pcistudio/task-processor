@@ -5,11 +5,11 @@ package com.pcistudio.task.procesor.handler;
  *  <code>{@link TaskHandler}</code>
  */
 public class TaskHandlerTransientException extends TaskTransientException {
-    public TaskHandlerTransientException(String message) {
+    public TaskHandlerTransientException(final String message) {
         super(message);
     }
 
-    public TaskHandlerTransientException(String message, Throwable cause) {
+    public TaskHandlerTransientException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

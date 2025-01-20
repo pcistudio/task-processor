@@ -1,5 +1,6 @@
 package com.pcistudio.task.procesor.register;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -7,10 +8,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public class MysqlTaskStorageSetup implements TaskStorageSetup {
     private final JdbcTemplate jdbcTemplate;
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public MysqlTaskStorageSetup(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    @Override
+    @SuppressFBWarnings("VA_FORMAT_STRING_USES_NEWLINE")
     public void createStorage(String tableName) {
 //TODO object_type probably not needed
         jdbcTemplate.execute("""

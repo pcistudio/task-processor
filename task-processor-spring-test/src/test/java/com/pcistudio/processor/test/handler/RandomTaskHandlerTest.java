@@ -10,8 +10,7 @@ class RandomTaskHandlerTest {
 
     @Test
     void process() {
-        RandomTaskHandler<Person> personRandomTaskHandler = new RandomTaskHandler<Person>()
-                .builder()
+        RandomTaskHandler<Person> personRandomTaskHandler = RandomTaskHandler.<Person>builder()
                 .withConsumer(person -> {
                     log.info("{}", person);
                 })
@@ -39,8 +38,7 @@ class RandomTaskHandlerTest {
 
     @Test
     void process50() {
-        RandomTaskHandler<Person> personRandomTaskHandler = new RandomTaskHandler<Person>()
-                .builder()
+        RandomTaskHandler<Person> personRandomTaskHandler = RandomTaskHandler.<Person>builder()
                 .withConsumer(person -> {
                     log.info("{}", person);
                 })

@@ -12,20 +12,24 @@ import org.springframework.context.annotation.Configuration;
 public class MeterConfig {
     @Bean
     public MeterFilter customMeterFilter() {
-        return new MeterFilter() {
-            @Override
-            public DistributionStatisticConfig configure(Meter.Id id,
-                                                         DistributionStatisticConfig config) {
-//                log.info("filtering {}", id.getName());
-                if (id.getType() == Meter.Type.TIMER && id.getName().startsWith("task.processor.handler")) {
+        return new CustomeMeterFilter();
+    }
+
+    private static final class CustomeMeterFilter implements MeterFilter {
+        @Override
+        public DistributionStatisticConfig configure(Meter.Id id,
+                                                     DistributionStatisticConfig config) {
+            if (id.getType() == Meter.Type.TIMER && id.getName().startsWith("task.processor.handler")) {
+                if (log.isTraceEnabled()) {
                     log.trace("Adding percentiles config to {}", id.getName());
-                    return DistributionStatisticConfig.builder()
-                            .percentiles(0.99, 0.999)
-                            .build()
-                            .merge(config);
                 }
-                return config;
+
+                return DistributionStatisticConfig.builder()
+                        .percentiles(0.99, 0.999)
+                        .build()
+                        .merge(config);
             }
-        };
+            return config;
+        }
     }
 }

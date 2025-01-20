@@ -3,7 +3,7 @@ package com.pcistudio.task.procesor.writer;
 import com.pcistudio.task.procesor.StorageResolver;
 import com.pcistudio.task.procesor.task.TaskInfo;
 import com.pcistudio.task.procesor.task.TaskMetadata;
-import com.pcistudio.task.procesor.util.encoder.MessageEncoding;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +13,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 public class MysqlTaskInfoWriter implements TaskInfoWriter {
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     private final JdbcTemplate jdbcTemplate;
     private final StorageResolver storageResolver;
 
@@ -20,21 +21,7 @@ public class MysqlTaskInfoWriter implements TaskInfoWriter {
     public TaskMetadata writeTasks(TaskInfo taskInfo) {
         String tableName = storageResolver.resolveStorageName(taskInfo.getHandlerName());
 
-        jdbcTemplate.update("""
-                INSERT INTO %s (
-                batch_id,
-                status,
-                version,
-                created_at,
-                updated_at,
-                execution_time,
-                payload,
-                retry_count,
-                handler_name,
-                object_type
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """.formatted(tableName),
+        jdbcTemplate.update("INSERT INTO %s (batch_id, status, version, created_at, updated_at, execution_time, payload, retry_count, handler_name, object_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ".formatted(tableName),
                 taskInfo.getBatchId(),
                 taskInfo.getStatus().name(),
                 taskInfo.getVersion(),

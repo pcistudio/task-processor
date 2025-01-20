@@ -1,35 +1,27 @@
 package com.pcistudio.task.procesor.metrics;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
 public class ManagerStats {
-    protected long handlersRunningCount;
-    protected long handlersPausedCount;
-    protected long handlersRegisteredCount;
+    protected long runningHandlers;
+    protected long pausedHandlers;
+    protected long totalHandlers;
 
-    public long getHandlersRunningCount() {
-        return handlersRunningCount;
-    }
-
-    public long getHandlersRegisteredCount() {
-        return handlersRegisteredCount;
-    }
-
-    public long getHandlersPausedCount() {
-        return handlersPausedCount;
-    }
-
-
-    public ManagerStats setHandlersRunningCount(long handlersRunningCount) {
-        this.handlersRunningCount = handlersRunningCount;
+    public ManagerStats runningHandlers(final long runningHandlers) {
+        this.runningHandlers = runningHandlers;
         return this;
     }
 
-    public ManagerStats setHandlersRegisteredCount(long handlersRegisteredCount) {
-        this.handlersRegisteredCount = handlersRegisteredCount;
+    public ManagerStats totalHandlers(final long totalHandlers) {
+        this.totalHandlers = totalHandlers;
         return this;
     }
 
-    public ManagerStats setHandlersPausedCount(long handlersPausedCount) {
-        this.handlersPausedCount = handlersPausedCount;
+    public ManagerStats pausedHandlers(final long pausedHandlers) {
+        this.pausedHandlers = pausedHandlers;
         return this;
     }
 }

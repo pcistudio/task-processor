@@ -1,6 +1,5 @@
 package com.contact.manager.util;
 
-import org.springframework.data.domain.Page;
 import org.springframework.util.Assert;
 
 import java.text.Normalizer;

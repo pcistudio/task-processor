@@ -2,6 +2,7 @@ package com.pcistudio.task.procesor.handler;
 
 
 import com.pcistudio.task.procesor.metrics.*;
+import com.pcistudio.task.procesor.util.CacheSupplier;
 import com.pcistudio.task.procesor.util.DeamonThreadFactory;
 import com.pcistudio.task.procesor.util.DefaultThreadFactory;
 import com.pcistudio.task.procesor.util.JsonUtil;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 @Slf4j
 public class TaskProcessorManager implements TaskProcessorLifecycleManager {
@@ -18,41 +20,30 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
     private final ScheduledExecutorService requeueExecutor = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("task-requeue"));
     //TODO for now keep the metrics in here but this will need to be created from a factory
     //
-    private final TaskProcessorMetricsFactory taskProcessorMetricsFactory;
+    private final TaskProcessorMetricsFactory metricsFactory;
     private final ManagerStats managerStats = new ManagerStats();
+    /**
+     * Don't remove this field, it is used to keep the metrics alive
+     */
     private final TaskProcessorManagerMetrics managerMetrics;
+    private final Supplier<ManagerStats> managerStatsSupplier = CacheSupplier.from(this::managerStats);
 
-    public TaskProcessorManager(TaskProcessorMetricsFactory taskProcessorMetricsFactory) {
-        this.taskProcessorMetricsFactory = taskProcessorMetricsFactory;
-        this.managerMetrics = this.taskProcessorMetricsFactory.createManagerMetrics(this::managerStats);
+    public TaskProcessorManager(final TaskProcessorMetricsFactory metricsFactory) {
+        this.metricsFactory = metricsFactory;
+        this.managerMetrics = this.metricsFactory.createManagerMetrics(managerStatsSupplier);
     }
 
-    private ManagerStats managerStats() {
-        return managerStats
-                .setHandlersRegisteredCount(processorMap.size())
-                .setHandlersRunningCount(
-                        processorMap.values().stream()
-                                .filter(TaskHolder::isRunning)
-                                .count()
-                )
-                .setHandlersPausedCount(
-                        processorMap.values().stream()
-                                .filter(TaskHolder::isPaused)
-                                .count()
-                );
-    }
-
-    public void createTaskProcessor(TaskProcessingContext taskProcessingContext) {
-        String handlerName = taskProcessingContext.getHandlerProperties().getHandlerName();
+    public void createTaskProcessor(final TaskProcessingContext context) {
+        final String handlerName = context.getHandlerProperties().getHandlerName();
         if (this.processorMap.containsKey(handlerName)) {
             throw new IllegalStateException("Task processor with name " + handlerName + " already exists");
         }
-        this.processorMap.put(handlerName, new TaskHolder(taskProcessingContext, taskProcessorMetricsFactory));
-        long requeueIntervalMs = taskProcessingContext.getHandlerProperties().getRequeueIntervalMs();
+        this.processorMap.put(handlerName, new TaskHolder(context, metricsFactory));
+        final long requeueIntervalMs = context.getHandlerProperties().getRequeueIntervalMs();
         this.requeueExecutor.scheduleWithFixedDelay(this::requeueTimeoutTask, requeueIntervalMs, requeueIntervalMs, TimeUnit.MILLISECONDS);
         Runtime.getRuntime().addShutdownHook(new Thread(this::closeRequestExecutor));
 
-        if(taskProcessingContext.getHandlerProperties().isAutoStartEnabled()) {
+        if (context.getHandlerProperties().isAutoStartEnabled()) {
             log.info("Auto starting handlerName={}", handlerName);
             start(handlerName);
         }
@@ -61,19 +52,20 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
     private void closeRequestExecutor() {
         try {
             requeueExecutor.shutdown();
-            boolean awaitTermination = requeueExecutor.awaitTermination(10, TimeUnit.SECONDS);
+            final boolean awaitTermination = requeueExecutor.awaitTermination(10, TimeUnit.SECONDS);
             if (!awaitTermination) {
                 requeueExecutor.shutdownNow();
             }
         } catch (InterruptedException e) {
             log.error("Error closing task processor", e);
+            requeueExecutor.shutdownNow();
             Thread.currentThread().interrupt();
         }
     }
 
     @Override
     public void close() {
-        Iterator<Map.Entry<String, TaskHolder>> iterator = processorMap.entrySet().iterator();
+        final Iterator<Map.Entry<String, TaskHolder>> iterator = processorMap.entrySet().iterator();
         TaskHolder taskHolder;
         while (iterator.hasNext()) {
             taskHolder = iterator.next().getValue();
@@ -84,41 +76,41 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
 
     @Override
     public void start() {
-        for (String handler : processorMap.keySet()) {
+        for (final String handler : processorMap.keySet()) {
             start(handler);
         }
     }
 
     @Override
-    public void close(String handlerName) {
+    public void close(final String handlerName) {
         processorMap.get(handlerName).close();
     }
 
 
     @Override
-    public void start(String handlerName) {
+    public void start(final String handlerName) {
         processorMap.get(handlerName).start();
     }
 
-    public Map<String, Integer> stats(String handlerName) {
+    public Map<String, Integer> stats(final String handlerName) {
         return processorMap.get(handlerName).stats();
     }
 
     @Override
-    public void restart(String handlerName) {
+    public void restart(final String handlerName) {
         processorMap.get(handlerName).restart();
     }
 
-    public TaskProcessor.EventPublisher getEventPublisher(String handlerName) {
+    public TaskProcessor.EventPublisher getEventPublisher(final String handlerName) {
         return processorMap.get(handlerName).getEventPublisher();
     }
 
     // TODO fix the for and use the same idea than start
     // Do a listener or observer to be able to execute code when this is trigger
     public void requeueTimeoutTask() {
-        for (Map.Entry<String, TaskHolder> handlerNameEntry : processorMap.entrySet()) {
-            String handlerName = handlerNameEntry.getKey();
-            TaskHolder taskHolder = handlerNameEntry.getValue();
+        for (final Map.Entry<String, TaskHolder> handlerNameEntry : processorMap.entrySet()) {
+            final String handlerName = handlerNameEntry.getKey();
+            final TaskHolder taskHolder = handlerNameEntry.getValue();
             try {
                 if (taskHolder.taskProcessor.notStarted()) {
                     log.trace("Task processor not started, skipping requeue for handlerName={}", handlerName);
@@ -131,27 +123,38 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
         }
     }
 
+    private ManagerStats managerStats() {
+        return managerStats
+                .totalHandlers(processorMap.size())
+                .runningHandlers(
+                        processorMap.values().stream()
+                                .filter(TaskHolder::isRunning)
+                                .count()
+                )
+                .pausedHandlers(
+                        processorMap.values().stream()
+                                .filter(TaskHolder::isPaused)
+                                .count()
+                );
+    }
+
     private static class TaskHolder {
         private static final ThreadFactory THREAD_FACTORY = new DeamonThreadFactory("task-processor");
-        private final TaskProcessingContext taskProcessingContext;
-        private final TaskProcessorMetricsFactory taskProcessorMetricsFactory;
+        private final TaskProcessingContext context;
         private TaskProcessor taskProcessor;
         private Thread thread;
-        private Exception lastException = null;
-        private TaskProcessorMetrics taskProcessorMetrics;
+        private TaskProcessorMetrics metrics;
 
 
-        public TaskHolder(TaskProcessingContext taskProcessingContext, TaskProcessorMetricsFactory taskProcessorMetricsFactory) {
-            this.taskProcessingContext = taskProcessingContext;
-            this.taskProcessorMetrics = taskProcessorMetricsFactory.createHandlerMetrics(taskProcessingContext.getHandlerProperties().getHandlerName());
-            this.taskProcessor = new TaskProcessor(taskProcessingContext, taskProcessorMetrics);
+        public TaskHolder(final TaskProcessingContext context, final TaskProcessorMetricsFactory metricsFactory) {
+            this.context = context;
+            this.metrics = metricsFactory.createHandlerMetrics(context.getHandlerProperties().getHandlerName());
+            this.taskProcessor = new TaskProcessor(context, metrics);
             this.thread = THREAD_FACTORY.newThread(taskProcessor);
-            this.taskProcessorMetricsFactory = taskProcessorMetricsFactory;
-
         }
 
         public void start() {
-            if(thread.getState().equals(Thread.State.NEW)){
+            if (thread.getState().equals(Thread.State.NEW)) {
                 thread.start();
             }
         }
@@ -162,13 +165,12 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
                 thread.interrupt();
             } catch (Exception e) {
                 log.error("Error closing task processor={}", taskProcessor.getHandlerName(), e);//NOPMD
-                lastException = e;
             }
         }
 
         public void restart() {
             if (thread.getState() == Thread.State.TERMINATED) {
-                this.taskProcessor = new TaskProcessor(taskProcessingContext, taskProcessorMetrics);
+                this.taskProcessor = new TaskProcessor(context, metrics);
                 this.thread = new Thread(taskProcessor);
                 thread.start();
             } else {
@@ -183,14 +185,14 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
         //This probably should go in the TaskProcessor to check that the process is alive
         public void requeueTimeoutTask() {
             log.info("Requeue timeout task started");
-            TimeMeter timeMeter = taskProcessorMetrics.recordRequeueTime();
+            final TimeMeter timeMeter = metrics.recordRequeueTime();
             try {
-                TaskInfoService.RequeueResult requeueResult = taskProcessingContext.getTaskInfoService().requeueTimeoutTask(getHandlerName());
+                final TaskInfoService.RequeueResult requeueResult = context.getTaskInfoService().requeueTimeoutTask(getHandlerName());
                 timeMeter.success();
-                taskProcessorMetrics.incrementTaskRequeueCount(requeueResult.updateCount());
+                metrics.incrementTaskRequeueCount(requeueResult.updateCount());
                 notifyRequeueListener(getHandlerName(), requeueResult.updateCount(), true);
 
-                if(log.isInfoEnabled()) {
+                if (log.isInfoEnabled()) {
                     log.info("handlerName={}, stats={}", getHandlerName(), JsonUtil.toJson(stats()));
                 }
             } catch (RuntimeException ex) {
@@ -201,16 +203,16 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
         }
 
         public Map<String, Integer> stats() {
-            return taskProcessingContext.getTaskInfoService()
-                    .stats(getHandlerName(), LocalDate.now(taskProcessingContext.getClock()));
+            return context.getTaskInfoService()
+                    .stats(getHandlerName(), LocalDate.now(context.getClock()));
         }
 
         public TaskProcessor.EventPublisher getEventPublisher() {
             return taskProcessor.getEventManager();
         }
 
-        public void notifyRequeueListener(String handlerName, int requeueCount, boolean success) {
-            TaskProcessor.RequeueEndedEvent requeueEndedEvent =
+        public void notifyRequeueListener(final String handlerName, final int requeueCount, final boolean success) {
+            final TaskProcessor.RequeueEndedEvent requeueEndedEvent =
                     new TaskProcessor.RequeueEndedEvent(handlerName, requeueCount, success);
             taskProcessor.getEventManager().notifyListeners(requeueEndedEvent);
         }

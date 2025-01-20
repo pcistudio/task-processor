@@ -39,7 +39,9 @@ public class TaskProcessorJdbcTemplateAutoConfiguration implements ApplicationCo
         @ConditionalOnMissingBean(name = "taskProcessorJdbcTemplate")
         JdbcTemplate taskProcessorJdbcTemplate(TaskProcessorDataSourceResolver dataSourceResolver) {
             DataSource dataSource = dataSourceResolver.resolveDatasource();
-            log.info("TaskProcessor using dataSource: {}", dataSource.getClass().getName());
+            if (log.isInfoEnabled()) {
+                log.info("TaskProcessor using dataSource: {}", dataSource.getClass().getName());
+            }
             return new JdbcTemplate(dataSource);
         }
     }
@@ -50,7 +52,9 @@ public class TaskProcessorJdbcTemplateAutoConfiguration implements ApplicationCo
         @ConditionalOnMissingBean(name = "taskProcessorJdbcTemplate")
         JdbcTemplate taskProcessorJdbcTemplate(TaskProcessorDataSourceResolver dataSourceResolver) {
             DataSource dataSource = dataSourceResolver.resolveDatasource();
-            log.info("TaskProcessor using dataSource: {}", dataSource.getClass().getName());
+            if (log.isInfoEnabled()) {
+                log.info("TaskProcessor using dataSource: {}", dataSource.getClass().getName());
+            }
             return new LoggingJdbcTemplate(dataSource);
         }
     }

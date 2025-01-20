@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 //TODO Centralize processor registration to avoid name collisions
 // where handler tablename and application name should be unique
@@ -15,43 +16,43 @@ import java.util.*;
 @Slf4j
 @RequiredArgsConstructor
 public class HandlerManagerImpl implements HandlerManager {
-    private final Map<String, HandlerPropertiesWrapper> handlerPropertiesMap = new HashMap<>();
+    private final Map<String, HandlerPropertiesWrapper> propertiesMap = new ConcurrentHashMap<>();
 
-    private final Map<String, List<HandlerPropertiesWrapper>> handlersByTable = new HashMap<>();
+    private final Map<String, List<HandlerPropertiesWrapper>> handlersByTable = new ConcurrentHashMap<>();
 
-    private final TaskStorageSetup taskTableSetupImpl;
+    private final TaskStorageSetup taskTableSetup;
 
     @Override
-    public void registerHandler(HandlerProperties handlerProperties) {
+    public void registerHandler(final HandlerProperties handlerProperties) {
         validateHandlerProperties(handlerProperties);
-        HandlerPropertiesWrapper handlerPropertiesWrapper = new HandlerPropertiesWrapper(handlerProperties);
-        this.handlerPropertiesMap.put(handlerPropertiesWrapper.getHandlerName(), handlerPropertiesWrapper);
-        this.handlersByTable.compute(handlerPropertiesWrapper.getTableName(), (k, v) -> {
+        final HandlerPropertiesWrapper properties = new HandlerPropertiesWrapper(handlerProperties);
+        this.propertiesMap.put(properties.getHandlerName(), properties);
+        this.handlersByTable.compute(properties.getTableName(), (k, v) -> {
             if (v == null) {
-                v = List.of(handlerPropertiesWrapper);
+                v = List.of(properties);
             } else {
-                v.add(handlerPropertiesWrapper);
+                v.add(properties);
             }
             return v;
         });
 
 
-        taskTableSetupImpl.createStorage(handlerPropertiesWrapper.getTableName());
+        taskTableSetup.createStorage(properties.getTableName());
 
-        log.info("Handler registered successfully for handler {}", handlerPropertiesWrapper.getHandlerName());//NOPMD
+        log.info("Handler registered successfully for handler {}", properties.getHandlerName());//NOPMD
     }
 
     @Override
-    public HandlerPropertiesWrapper getProperties(String handlerName) {
-        return handlerPropertiesMap.get(handlerName);
+    public HandlerPropertiesWrapper getProperties(final String handlerName) {
+        return propertiesMap.get(handlerName);
     }
 
     @Override
     public Iterator<HandlerPropertiesWrapper> getIterator() {
-        return Collections.unmodifiableMap(handlerPropertiesMap).values().iterator();
+        return Collections.unmodifiableMap(propertiesMap).values().iterator();
     }
 
-    private void validateHandlerProperties(HandlerProperties handlerProperties) {
+    private void validateHandlerProperties(final HandlerProperties handlerProperties) {
         if (handlerProperties.getHandlerName() == null || handlerProperties.getHandlerName().isBlank()) {
             throw new IllegalArgumentException("Handler name cannot be null or empty");
         }
@@ -61,25 +62,25 @@ public class HandlerManagerImpl implements HandlerManager {
     }
 
     public static class Builder {
-        List<HandlerProperties> handlerPropertiesList = new ArrayList<>();
+        private final List<HandlerProperties> propertiesList = new ArrayList<>();
         private TaskStorageSetup taskTableSetup;
 
-        public Builder taskTableSetup(TaskStorageSetup taskTableSetup) {
+        public Builder taskTableSetup(final TaskStorageSetup taskTableSetup) {
             this.taskTableSetup = taskTableSetup;
             return this;
         }
 
-        public Builder register(HandlerProperties handlerProperties) {
-            handlerPropertiesList.add(handlerProperties);
+        public Builder register(final HandlerProperties handlerProperties) {
+            propertiesList.add(handlerProperties);
             return this;
         }
 
         public HandlerManagerImpl build() {
             Assert.notNull(taskTableSetup, "TaskTableSetup cannot be null");
-            Assert.notEmpty(handlerPropertiesList, "HandlerProperties cannot be empty");
+            Assert.notEmpty(propertiesList, "HandlerProperties cannot be empty");
 
-            HandlerManagerImpl handlerManager = new HandlerManagerImpl(taskTableSetup);
-            handlerPropertiesList.forEach(handlerManager::registerHandler);
+            final HandlerManagerImpl handlerManager = new HandlerManagerImpl(taskTableSetup);
+            propertiesList.forEach(handlerManager::registerHandler);
             return handlerManager;
         }
     }

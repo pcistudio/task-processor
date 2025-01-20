@@ -14,6 +14,7 @@ import java.util.List;
 
 @Slf4j
 public class LoggingJdbcTemplate extends JdbcTemplate {
+    private boolean showSql = false;
 
     public LoggingJdbcTemplate(DataSource dataSource) {
         super(dataSource);
@@ -41,16 +42,31 @@ public class LoggingJdbcTemplate extends JdbcTemplate {
         return query;
     }
 
+    @SuppressWarnings("PMD.GuardLogStatement")
     private void logSqlAndParameters(String sql, PreparedStatementSetter pss) {
         if (!log.isDebugEnabled()) {
             return;
         }
-//        log.debug("SQL: " + sql);
+
+        if (showSql) {
+            log.debug("SQL: " + sql);
+        }
+
         if (pss instanceof ArgumentPreparedStatementSetter) {
 
             Field argsFields = ReflectionUtils.findField(ArgumentPreparedStatementSetter.class, "args");
+            if (argsFields == null) {
+                log.debug("No parameters");
+
+                return;
+            }
             ReflectionUtils.makeAccessible(argsFields);
             Object[] args = (Object[]) ReflectionUtils.getField(argsFields, pss);
+            if (args == null) {
+                log.debug("No parameters");
+                return;
+            }
+
             log.debug("Parameters: ");
             for (Object arg : args) {
                 Assert.notNull(arg, "Argument must not be null");

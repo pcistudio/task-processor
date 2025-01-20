@@ -1,5 +1,6 @@
 package com.pcistudio.task.procesor.util;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Clock;
@@ -17,6 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class MutableFixedClock extends Clock {
     private final Clock baseClock;
     private boolean debug = false;
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     private ClockIncreaseStrategy clockIncreaseStrategy = new FixedClockIncreaseStrategy();
     private short speed = 1;
 
@@ -108,6 +110,7 @@ public final class MutableFixedClock extends Clock {
         public void addTime(Duration duration) {
             timeAddedMillis.addAndGet(duration.toMillis());
         }
+
     }
 
     private final class FixedClockIncreaseStrategy implements ClockIncreaseStrategy {

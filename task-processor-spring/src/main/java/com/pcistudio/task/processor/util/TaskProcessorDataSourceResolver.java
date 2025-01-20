@@ -1,5 +1,6 @@
 package com.pcistudio.task.processor.util;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 
@@ -10,7 +11,8 @@ public class TaskProcessorDataSourceResolver {
     private static final String DEFAULT_DATASOURCE_NAME = "dataSource";
     private static final String DATASOURCE_PROPERTY = "spring.task.processor.datasource";
     private final ApplicationContext applicationContext;
-    DataSource dataSource;
+    @SuppressFBWarnings("EI_EXPOSE_REP")
+    private DataSource dataSource;
 
     public DataSource resolveDatasource() {
         if (dataSource == null) {

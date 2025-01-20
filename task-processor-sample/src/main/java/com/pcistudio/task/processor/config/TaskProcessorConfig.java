@@ -54,7 +54,7 @@ public class TaskProcessorConfig extends AbstractHandlersConfiguration {
     }
 
     TaskHandler<EncodeVideoCommand> getVideoHandler() {
-        return new RandomTaskHandler<EncodeVideoCommand>().builder()
+        return RandomTaskHandler.<EncodeVideoCommand>builder()
                 .withConsumer(video -> log.info("Encoding videoId={}", video.getVideoId()))
                 .withTaskCount(50)
                 .withExpectedException(new RuntimeException("Mock Runtime Exception"), 1)

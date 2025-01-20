@@ -7,6 +7,7 @@ import com.pcistudio.task.procesor.task.TaskParams;
 import com.pcistudio.task.procesor.util.encoder.MessageEncoding;
 import lombok.RequiredArgsConstructor;
 
+import javax.annotation.concurrent.Immutable;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Collection;
@@ -14,7 +15,8 @@ import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-public class TaskWriter {
+@Immutable
+public final class TaskWriter {
     private final TaskInfoWriter taskInfoWriter;
     private final MessageEncoding messageEncoding;
     private final Clock clock;

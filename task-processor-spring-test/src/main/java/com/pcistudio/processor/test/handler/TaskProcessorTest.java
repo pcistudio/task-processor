@@ -1,7 +1,6 @@
 package com.pcistudio.processor.test.handler;
 
 import com.pcistudio.processor.test.config.AutoConfigureTaskProcessorJdbcTemplate;
-import com.pcistudio.processor.test.writer.AutoConfigureTestTaskWriter;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 
 import java.lang.annotation.*;

@@ -16,19 +16,19 @@ public class MicrometerClockAdapter implements io.micrometer.core.instrument.Clo
 
     @Override
     public long monotonicTime() {
-        long seconds = clock.instant().getEpochSecond();
-        long nanos = clock.instant().getNano();
+        final long seconds = clock.instant().getEpochSecond();
+        final long nanos = clock.instant().getNano();
         if (seconds < 0 && nanos > 0) {
-            long nano = Math.multiplyExact(seconds + 1, 1000_000_000L);
-            long adjustment = nanos - 1000_000_000L;
+            final long nano = Math.multiplyExact(seconds + 1, 1_000_000_000L);
+            final long adjustment = nanos - 1_000_000_000L;
             return Math.addExact(nano, adjustment);
         } else {
-            long nano = Math.multiplyExact(seconds, 1000_000_000L);
+            final long nano = Math.multiplyExact(seconds, 1_000_000_000L);
             return Math.addExact(nano, nanos);
         }
     }
 
-    public static MicrometerClockAdapter of(Clock clock) {
+    public static MicrometerClockAdapter of(final Clock clock) {
         return new MicrometerClockAdapter(clock);
     }
 }

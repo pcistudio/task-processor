@@ -1,11 +1,10 @@
 package com.pcistudio.processor.test.writer;
 
 import com.pcistudio.task.procesor.StorageResolver;
-import com.pcistudio.task.procesor.register.H2TaskStorageSetup;
-import com.pcistudio.task.procesor.register.TaskStorageSetup;
 import com.pcistudio.task.procesor.writer.H2TaskInfoWriter;
 import com.pcistudio.task.procesor.writer.TaskInfoWriter;
 import com.pcistudio.task.processor.config.TaskWriterAutoConfiguration;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -15,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @AutoConfiguration(before = TaskWriterAutoConfiguration.class)
 public class TestTaskWriterAutoConfiguration {
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     private final JdbcTemplate jdbcTemplate;
 
     public TestTaskWriterAutoConfiguration(@Qualifier("taskProcessorJdbcTemplate") JdbcTemplate jdbcTemplate) {

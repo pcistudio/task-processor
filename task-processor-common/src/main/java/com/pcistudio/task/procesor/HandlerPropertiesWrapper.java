@@ -2,15 +2,15 @@ package com.pcistudio.task.procesor;
 
 import com.pcistudio.task.procesor.handler.TaskHandler;
 import lombok.Getter;
-import lombok.Setter;
 
+import javax.annotation.concurrent.Immutable;
 import java.time.Duration;
 import java.util.Set;
 
 @Getter
-@Setter
+@Immutable
 public class HandlerPropertiesWrapper {
-    private HandlerProperties delegate;
+    private final HandlerProperties delegate;
 
     public HandlerPropertiesWrapper(HandlerProperties delegate) {
         this.delegate = delegate;
@@ -52,6 +52,18 @@ public class HandlerPropertiesWrapper {
         return delegate.getTaskExecutionTimeout();
     }
 
+    public long getLongTaskTimeMs() {
+        return delegate.getLongTaskTimeMs();
+    }
+
+    public long getLongTaskCheckIntervalMs() {
+        return delegate.getLongTaskCheckIntervalMs();
+    }
+
+    public long getLongTaskCheckInitialDelayMs() {
+        return delegate.getLongTaskCheckInitialDelayMs();
+    }
+
 
     public String getTableName() {
         return "task_info_" + delegate.getTableName().trim();
@@ -59,19 +71,6 @@ public class HandlerPropertiesWrapper {
 
     public Set<Class<? extends RuntimeException>> getTransientExceptions() {
         return delegate.getTransientExceptions();
-//        return delegate.getTransientExceptions()
-//                .stream()
-//                .map(exName -> {
-//                    try {
-//                        return (RuntimeException) Class.forName(exName)
-//                                .getConstructor()
-//                                .newInstance();
-//                    } catch (NoSuchMethodException | ClassNotFoundException | InstantiationException |
-//                             IllegalAccessException | InvocationTargetException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                })
-//                .collect(Collectors.toSet());
     }
 
     public Duration getProcessingExpire() {

@@ -2,20 +2,21 @@ package com.pcistudio.task.procesor.metrics.micrometer;
 
 import com.pcistudio.task.procesor.metrics.ManagerStats;
 import com.pcistudio.task.procesor.metrics.TaskProcessorManagerMetrics;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 
 import java.util.function.Supplier;
 
-public class TaskProcessorManagerMetricsImpl extends TaskProcessorManagerMetrics {
+@SuppressFBWarnings({"EI_EXPOSE_REP2"})
+public class TaskProcessorManagerMetricsImpl implements TaskProcessorManagerMetrics {
     private final MeterRegistry meterRegistry;
-    private final Supplier<ManagerStats> managerStatsSupplier;
 
-    public TaskProcessorManagerMetricsImpl(MeterRegistry meterRegistry, Supplier<ManagerStats> managerStatsSupplier) {
+    public TaskProcessorManagerMetricsImpl(final MeterRegistry meterRegistry, final Supplier<ManagerStats> statsSupplier) {
+        super();
         this.meterRegistry = meterRegistry;
-        this.managerStatsSupplier = managerStatsSupplier;
-        this.meterRegistry.gauge("task.processor.handler.count", this.managerStatsSupplier, value -> (double) value.get().getHandlersRegisteredCount());
-        this.meterRegistry.gauge("task.processor.handler.running", this.managerStatsSupplier, value -> (double)value.get().getHandlersRunningCount());
-        this.meterRegistry.gauge("task.processor.handler.paused", this.managerStatsSupplier, value -> (double)value.get().getHandlersPausedCount());
+        this.meterRegistry.gauge("task.processor.handler.count", statsSupplier, value -> value.get().getTotalHandlers());
+        this.meterRegistry.gauge("task.processor.handler.running", statsSupplier, value -> value.get().getRunningHandlers());
+        this.meterRegistry.gauge("task.processor.handler.paused", statsSupplier, value -> value.get().getPausedHandlers());
     }
 
 }

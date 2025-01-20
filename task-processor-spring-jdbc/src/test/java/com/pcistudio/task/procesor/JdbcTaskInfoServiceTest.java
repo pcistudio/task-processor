@@ -63,7 +63,7 @@ class JdbcTaskInfoServiceTest {
 
         List<TaskInfo> taskTable2 = jdbcTaskInfoService.poll("task_table", 10);
         assertEquals(2, taskTable2.size());
-//        log.debug("--------------------------------------------------------------------");
+
         taskTable2.forEach(taskInfo -> jdbcTaskInfoService.markTaskCompleted(taskInfo));
 
         List<TaskInfo> taskTable3 = jdbcTaskInfoService.poll("task_table", 10);
@@ -98,7 +98,7 @@ class JdbcTaskInfoServiceTest {
         List<TaskInfo> taskTable2 = jdbcTaskInfoService.poll("task_table", 10);
         stopWatch.stop();
         assertEquals(2, taskTable2.size());  // try to poll 10 but there are only 2 ready
-//        log.debug("--------------------------------------------------------------------");
+
         stopWatch.start("mark 2 tasks completed");
         taskTable2.forEach(taskInfo -> jdbcTaskInfoService.markTaskCompleted(taskInfo));
         stopWatch.stop();

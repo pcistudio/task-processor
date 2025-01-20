@@ -19,19 +19,14 @@ public final class GenericTypeUtil {
     // This method extracts the generic type of the class that extends the superclass
     public static Class<?> getGenericTypeFromSuperclass(Class<?> clazz, int index) {
         Type genericSuperclass = clazz.getGenericSuperclass();
-        // Check if it's a parameterized type (i.e., a class with generics)
+
         if (genericSuperclass instanceof ParameterizedType parameterizedType) {
+            Assert.isTrue(index >= 0 && index < parameterizedType.getActualTypeArguments().length, "No generic type found at index: " + index);
+
             return (Class<?>) parameterizedType.getActualTypeArguments()[index];
-            // Get the actual type arguments (generics) of the superclass
-//            Type[] typeArguments = parameterizedType.getActualTypeArguments();
-//
-//            if (index >= 0 && index < typeArguments.length) {
-//                // Return the Class of the specified generic type
-//                return (Class<?>) typeArguments[index];
-//            }
         }
 
-        throw new IllegalArgumentException("No generic type found at index: " + index);
+        throw new IllegalArgumentException("No ParameterizedType class=" + clazz.getCanonicalName());
     }
 
     public static Class<?> getGenericTypeFromInterface(Class<?> clazz, Class<?> type) {
@@ -41,13 +36,11 @@ public final class GenericTypeUtil {
     // This method extracts the generic type of the class that extends the superclass
     public static Class<?> getGenericTypeFromInterface(Class<?> clazz, Class<?> type, int index) {
         Type[] genericInterfaces = clazz.getGenericInterfaces();
-        // Check if it's a parameterized type (i.e., a class with generics)
+        // Check if it's a parameterized type
         for (Type genericInterface : genericInterfaces) {
-            if (genericInterface instanceof ParameterizedType parameterizedType) {
-                if (type == parameterizedType.getRawType()) {
-                    Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-                    return (Class<?>) actualTypeArguments[index];
-                }
+            if (genericInterface instanceof ParameterizedType parameterizedType && parameterizedType.getRawType() == type) {
+                Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                return (Class<?>) actualTypeArguments[index];
             }
         }
         throw new IllegalArgumentException("No generic type found at index: " + index);

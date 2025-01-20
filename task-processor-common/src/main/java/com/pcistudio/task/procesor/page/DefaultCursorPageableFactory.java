@@ -17,8 +17,7 @@ public abstract class DefaultCursorPageableFactory<ITEM, OFFSET> extends CursorP
     @Override
     protected Cursor<OFFSET> decode(String token) {
         byte[] decode = Base64.getUrlDecoder().decode(token);
-        String json = new String(decode);
-        return JsonUtil.fromJson(json, Cursor.class, offsetClass);
+        return JsonUtil.fromJson(decode, Cursor.class, offsetClass);
     }
 
 }

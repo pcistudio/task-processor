@@ -10,8 +10,8 @@ public class DefaultStorageResolver implements StorageResolver {
     private final HandlerLookup handlerLookup;
 
     @Override
-    public String resolveStorageName(String handlerName) {
-        HandlerPropertiesWrapper properties = handlerLookup.getProperties(handlerName);
+    public String resolveStorageName(final String handlerName) {
+        final HandlerPropertiesWrapper properties = handlerLookup.getProperties(handlerName);
         if (properties == null) {
             throw new IllegalArgumentException("Handler not found: " + handlerName);
         }
@@ -19,7 +19,7 @@ public class DefaultStorageResolver implements StorageResolver {
     }
 
     @Override
-    public String resolveErrorStorageName(String handlerName) {
+    public String resolveErrorStorageName(final String handlerName) {
         return resolveStorageName(handlerName) + "_error";
     }
 }

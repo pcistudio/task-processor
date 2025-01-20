@@ -19,18 +19,18 @@ import static com.pcistudio.task.procesor.util.ExceptionUtils.unwrapException;
 public class TaskHandlerProxy implements Iterable<TaskInfo> {
 
     private final TaskProcessingContext context;
-    private final TaskProcessorMetrics taskProcessorMetrics;
+    private final TaskProcessorMetrics metrics;
 
-    public TaskHandlerProxy(TaskProcessingContext taskProcessingContext, TaskProcessorMetrics taskProcessorMetrics) {
-        this.context = taskProcessingContext;
-        this.taskProcessorMetrics = taskProcessorMetrics;
+    public TaskHandlerProxy(final TaskProcessingContext context, final TaskProcessorMetrics metrics) {
+        this.context = context;
+        this.metrics = metrics;
     }
 
     public List<TaskInfo> poll() {
-        HandlerPropertiesWrapper properties = context.getHandlerProperties();
-        TimeMeter timeMeter = taskProcessorMetrics.recordTaskPolling();
+        final HandlerPropertiesWrapper properties = context.getHandlerProperties();
+        final TimeMeter timeMeter = metrics.recordTaskPolling();
         try {
-            List<TaskInfo> taskInfos = context.getTaskInfoService()
+            final List<TaskInfo> taskInfos = context.getTaskInfoService()
                     .poll(properties.getHandlerName(), properties.getMaxPoll());
 
             timeMeter.success();
@@ -46,14 +46,15 @@ public class TaskHandlerProxy implements Iterable<TaskInfo> {
 
     @Override
     public Iterator<TaskInfo> iterator() {
-        return new Iterator<TaskInfo>() {
-            List<TaskInfo> tasks = poll();
-            Iterator<TaskInfo> tasksTempIterator = tasks.iterator();
+        return new Iterator<>() {
+            private List<TaskInfo> tasks = poll();
+            private Iterator<TaskInfo> tasksTempIterator = tasks.iterator();
 
             @Override
             public boolean hasNext() {
-                if (tasksTempIterator.hasNext())
+                if (tasksTempIterator.hasNext()) {
                     return true;
+                }
                 if (tasks.size() < context.getHandlerProperties().getMaxPoll()) {
                     return false;
                 }
@@ -72,7 +73,7 @@ public class TaskHandlerProxy implements Iterable<TaskInfo> {
     /**
      * @param task
      */
-    public void process(TaskInfo task) {
+    public void process(final TaskInfo task) {
         Assert.isTrue(task.getStatus().equals(ProcessStatus.PROCESSING), "Task is not in PROCESSING state");
         try {
             processAndUpdateStatus(wrapForDecode(task));
@@ -87,18 +88,14 @@ public class TaskHandlerProxy implements Iterable<TaskInfo> {
         }
     }
 
-    public void addCircuitOpenListener(CircuitOpenListener circuitOpenListener) {
-        Assert.notNull(circuitOpenListener, "circuitOpenListener cannot be null");
-    }
-
-    private TaskInfoDecoder wrapForDecode(TaskInfo task) {
+    private TaskInfoDecoder wrapForDecode(final TaskInfo task) {
         return new TaskInfoDecoder(task, context.getMessageDecoding(), context.getTaskHandlerType());
     }
 
-    private void processAndUpdateStatus(TaskInfoDecoder task) {
-        TimeMeter timeMeter = taskProcessorMetrics.recordTaskProcess();
+    private void processAndUpdateStatus(final TaskInfoDecoder task) {
+        final TimeMeter timeMeter = metrics.recordTaskProcess();
         try {
-            if(log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {
                 log.debug("Processing task={} from handler={}", task.getId(), task.getHandlerName());
             }
 
@@ -115,14 +112,14 @@ public class TaskHandlerProxy implements Iterable<TaskInfo> {
             context.getTaskInfoService().markTaskFailed(task);
             log.warn("Error calling handler={} for taskId={}", context.getHandlerProperties().getHandlerName(), task.getId(), exception);//NOPMD
         } catch (TaskHandlerTransientException exception) {
-            Instant nextRetry = context.getRetryManager().nextRetry(task.getRetryCount());
+            final Instant nextRetry = context.getRetryManager().nextRetry(task.getRetryCount());
             context.getTaskInfoService().markTaskToRetry(task, nextRetry);
             timeMeter.retry(unwrapException(exception));
             throw exception;
         }
     }
 
-    private void doProcess(TaskInfoDecoder task) throws TaskHandlerException {
+    private void doProcess(final TaskInfoDecoder task) throws TaskHandlerException {
         try {
             context.getTaskHandler().process(task.getPayload());
         } catch (TaskHandlerTransientException ex) {
@@ -138,13 +135,13 @@ public class TaskHandlerProxy implements Iterable<TaskInfo> {
         }
     }
 
-    private boolean shouldRetry(Throwable exception, int retryCount) {
+    private boolean shouldRetry(final RuntimeException exception, final int retryCount) {
         // TODO AL this int eh RetryObject on the context
-        return isTransient((RuntimeException) exception) &&
+        return isTransient(exception) &&
                 context.getRetryManager().shouldRetry(retryCount);
     }
 
-    private boolean isTransient(RuntimeException exception) {
+    private boolean isTransient(final RuntimeException exception) {
         return context.isTransient(exception);
     }
 

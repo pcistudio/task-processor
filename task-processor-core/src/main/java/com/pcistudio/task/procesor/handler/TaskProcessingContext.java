@@ -7,48 +7,71 @@ import com.pcistudio.task.procesor.util.decoder.MessageDecoding;
 import lombok.Getter;
 
 import java.time.Clock;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-@Getter
-public class TaskProcessingContext {
-    private HandlerPropertiesWrapper handlerProperties;
-    private TaskHandler taskHandler;
-    private TaskInfoService taskInfoService;
-    //TODO This should go in the properties
-    // ignore getter generation lombok
+public final class TaskProcessingContext {
+    @Getter
+    private final HandlerPropertiesWrapper handlerProperties;
+    @Getter
+    private final TaskHandler taskHandler;
+    @Getter
+    private final TaskInfoService taskInfoService;
 
-    private Set<Class<? extends RuntimeException>> transientExceptions;
-    private RetryManager retryManager;
-    private MessageDecoding messageDecoding;
+    private final Set<Class<? extends RuntimeException>> transientErrors;
+    @Getter
+    private final RetryManager retryManager;
+    @Getter
+    private final MessageDecoding messageDecoding;
     /**
      * IF CircuitBreakerDecorator is not set a DefaultCircuitBreakerDecorator will be use
      */
-    private CircuitBreakerDecorator circuitBreakerDecorator;
-    private Clock clock;
-    private Class<?> taskHandlerType;
+    @Getter
+    private final CircuitBreakerDecorator circuitBreaker;
+    @Getter
+    private final Clock clock;
+    @Getter
+    private final Class<?> taskHandlerType;
 
+    private TaskProcessingContext(Builder builder) {
+        if (builder.handlerProperties == null) {
+            throw new IllegalArgumentException("Handler properties cannot be null");
+        }
+        Set<Class<? extends RuntimeException>> transientExceptions = builder.handlerProperties.getTransientExceptions();
+        transientExceptions.add(TaskHandlerTransientException.class);
 
-    private TaskProcessingContext() {
+        this.handlerProperties = builder.handlerProperties;
+        this.taskHandler = builder.taskHandler;
+        this.taskHandlerType = discoverTaskHandlerType();
+        this.taskInfoService = builder.taskInfoService;
+        this.transientErrors = transientExceptions;
+        this.retryManager = builder.retryManager;
+        this.messageDecoding = builder.messageDecoding;
+        this.circuitBreaker = Objects.requireNonNullElseGet(builder.circuitBreaker, DefaultCircuitBreakerDecorator::new);
+        this.clock = builder.clock;
+    }
+
+    private Class<?> discoverTaskHandlerType() {
+        try {
+            return GenericTypeUtil.getGenericTypeFromInterface(taskHandler.getClass(), TaskHandler.class);
+        } catch (RuntimeException ex) {
+            Assert.notNull(handlerProperties.getTaskHandlerType(), "TaskHandlerType cannot be discover. It can be set manually using taskHandlerType when registering the task ");
+            return handlerProperties.getTaskHandlerType();
+        }
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public Class getTaskHandlerType() {
-        return taskHandlerType;
-    }
-
-    public boolean isTransient(RuntimeException exception) {
-        if (transientExceptions.contains(exception.getClass())) {
+    public boolean isTransient(final RuntimeException exception) {
+        if (transientErrors.contains(exception.getClass())) {
             return true;
         }
 
-        for (Class<? extends RuntimeException> transientExceptionClass : transientExceptions) {
-            if (transientExceptionClass.isInstance(exception)) {
-                transientExceptions.add(exception.getClass());
+        for (final Class<? extends RuntimeException> transientError : transientErrors) {
+            if (transientError.isInstance(exception)) {
+                transientErrors.add(exception.getClass());
                 return true;
             }
         }
@@ -61,77 +84,57 @@ public class TaskProcessingContext {
         private TaskInfoService taskInfoService;
         private RetryManager retryManager;
         private MessageDecoding messageDecoding;
-        private CircuitBreakerDecorator circuitBreakerDecorator;
+        private CircuitBreakerDecorator circuitBreaker;
         private Clock clock;
 
-        public Builder handlerProperties(HandlerPropertiesWrapper handlerProperties) {
+        public Builder handlerProperties(final HandlerPropertiesWrapper handlerProperties) {
             this.handlerProperties = handlerProperties;
             return this;
         }
 
-        public Builder taskHandler(TaskHandler taskHandler) {
+        public Builder taskHandler(final TaskHandler taskHandler) {
             this.taskHandler = taskHandler;
             return this;
         }
 
-        public Builder taskInfoService(TaskInfoService taskInfoService) {
+        public Builder taskInfoService(final TaskInfoService taskInfoService) {
             this.taskInfoService = taskInfoService;
             return this;
         }
 
-        public Builder retryManager(RetryManager retryManager) {
+        public Builder retryManager(final RetryManager retryManager) {
             this.retryManager = retryManager;
             return this;
         }
 
-        public Builder messageDecoding(MessageDecoding messageDecoding) {
+        public Builder messageDecoding(final MessageDecoding messageDecoding) {
             this.messageDecoding = messageDecoding;
             return this;
         }
 
-        public Builder circuitBreakerDecorator(CircuitBreakerDecorator circuitBreakerDecorator) {
-            if (circuitBreakerDecorator != null) {
-                this.circuitBreakerDecorator = circuitBreakerDecorator;
+        public Builder circuitBreakerDecorator(final CircuitBreakerDecorator circuitBreaker) {
+            if (circuitBreaker != null) {
+                this.circuitBreaker = circuitBreaker;
             }
             return this;
         }
 
-        private Class<?> discoverTaskHandlerType() {
-            try {
-                return GenericTypeUtil.getGenericTypeFromInterface(taskHandler.getClass(), TaskHandler.class);
-            } catch (RuntimeException ex) {
-                Assert.notNull(handlerProperties.getTaskHandlerType(), "TaskHandlerType cannot be discover. It can be set manually using taskHandlerType when registering the task ");
-                return handlerProperties.getTaskHandlerType();
-            }
+        public Builder clock(final Clock clock) {
+            this.clock = clock;
+            return this;
         }
 
         public TaskProcessingContext build() {
-            TaskProcessingContext context = new TaskProcessingContext();
+
             Assert.notNull(handlerProperties, "Handler properties cannot be null");
-            Assert.notNull(handlerProperties.getTransientExceptions(), "Transient exceptions cannot be null");
             Assert.notNull(taskHandler, "taskHandler cannot be null");
 
-            context.handlerProperties = handlerProperties;
+            Assert.notNull(taskInfoService, "taskInfoService cannot be null");
+            Assert.notNull(retryManager, "retryManager cannot be null");
+            Assert.notNull(messageDecoding, "messageDecoding cannot be null");
+            Assert.notNull(clock, "clock cannot be null");
 
-            context.taskHandler = taskHandler;
-            context.taskHandlerType = discoverTaskHandlerType();
-
-            context.taskInfoService = taskInfoService;
-
-            context.transientExceptions = new HashSet<>(handlerProperties.getTransientExceptions());
-            context.transientExceptions.add(TaskHandlerTransientException.class);
-
-            context.retryManager = retryManager;
-            context.messageDecoding = messageDecoding;
-            context.clock = clock;
-            context.circuitBreakerDecorator = Objects.requireNonNullElseGet(circuitBreakerDecorator, DefaultCircuitBreakerDecorator::new);
-
-            return context;
-        }
-
-        public Builder clock(Clock clock) {
-            this.clock = clock;
-            return this;
+            return new TaskProcessingContext(this);
         }
     }
 }

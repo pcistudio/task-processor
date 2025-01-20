@@ -1,6 +1,5 @@
 package com.pcistudio.task.procesor.handler;
 
-import com.pcistudio.task.procesor.util.Assert;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -10,7 +9,7 @@ import java.util.function.Consumer;
 
 public class DefaultCircuitBreakerDecorator implements CircuitBreakerDecorator {
 
-    private CircuitBreaker circuitBreaker;
+    private final CircuitBreaker circuitBreaker;
 
     public DefaultCircuitBreakerDecorator() {
         this(
@@ -27,28 +26,17 @@ public class DefaultCircuitBreakerDecorator implements CircuitBreakerDecorator {
         );
     }
 
-    public DefaultCircuitBreakerDecorator(CircuitBreakerRegistry circuitBreakerRegistry) {
-        circuitBreaker = circuitBreakerRegistry.circuitBreaker("task-run");
+    public DefaultCircuitBreakerDecorator(final CircuitBreakerRegistry registry) {
+        circuitBreaker = registry.circuitBreaker("task-run");
     }
 
     @Override
-    public void addCircuitOpenListener(CircuitOpenListener circuitOpenListener) {
-        Assert.notNull(circuitOpenListener, "circuitOpenListener can not be null");
-        circuitBreaker.getEventPublisher()
-                .onStateTransition(event -> {
-                    if (event.getStateTransition().getToState() == CircuitBreaker.State.OPEN) {
-                        circuitOpenListener.onOpen();
-                    }
-                });
-    }
-
-    @Override
-    public <T> Consumer<T> decorate(Consumer<T> processTaskInfo) {
+    public <T> Consumer<T> decorate(final Consumer<T> processTaskInfo) {
         return circuitBreaker.decorateConsumer(processTaskInfo);
     }
 
     @Override
-    public void open() {
-        circuitBreaker.transitionToOpenState();
+    public boolean isClosed() {
+        return circuitBreaker.getState().equals(CircuitBreaker.State.CLOSED);
     }
 }

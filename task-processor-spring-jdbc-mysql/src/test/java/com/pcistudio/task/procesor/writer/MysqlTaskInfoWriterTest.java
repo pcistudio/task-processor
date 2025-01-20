@@ -5,7 +5,6 @@ import com.pcistudio.task.procesor.register.MysqlTaskStorageSetup;
 import com.pcistudio.task.procesor.task.TaskParams;
 import com.pcistudio.task.procesor.util.JsonUtil;
 import com.pcistudio.task.procesor.util.encoder.JsonMessageEncoding;
-import com.pcistudio.task.procesor.util.encoder.MessageEncoding;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;

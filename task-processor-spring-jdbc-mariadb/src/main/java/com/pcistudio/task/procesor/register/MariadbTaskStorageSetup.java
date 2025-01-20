@@ -1,9 +1,11 @@
 package com.pcistudio.task.procesor.register;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @Slf4j
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class MariadbTaskStorageSetup implements TaskStorageSetup {
     private final JdbcTemplate jdbcTemplate;
 
@@ -11,6 +13,8 @@ public class MariadbTaskStorageSetup implements TaskStorageSetup {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    @Override
+    @SuppressFBWarnings("VA_FORMAT_STRING_USES_NEWLINE")
     public void createStorage(String tableName) {
 //TODO object_type probably not needed
         jdbcTemplate.execute("""

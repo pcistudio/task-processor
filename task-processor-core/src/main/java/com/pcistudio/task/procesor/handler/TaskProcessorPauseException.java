@@ -1,11 +1,11 @@
 package com.pcistudio.task.procesor.handler;
 
 public class TaskProcessorPauseException extends Exception {
-    public TaskProcessorPauseException(String message) {
+    public TaskProcessorPauseException(final String message) {
         super(message);
     }
 
-    public TaskProcessorPauseException(String message, Throwable cause) {
+    public TaskProcessorPauseException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

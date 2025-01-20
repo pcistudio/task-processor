@@ -6,6 +6,7 @@ import com.pcistudio.task.procesor.writer.TaskWriter;
 import com.pcistudio.task.processor.config.TaskProcessorConfig;
 import com.pcistudio.task.processor.model.EncodeVideoCommand;
 import com.pcistudio.task.processor.model.Person;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,6 +21,7 @@ import java.util.function.Supplier;
 @Component
 @RequiredArgsConstructor
 public class WriterScheduler {
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     private final TaskWriter taskWriter;
     private final TaskInfoVisibilityService taskInfoVisibilityService;
     private final SecureRandom random = new SecureRandom();

@@ -7,15 +7,10 @@ import com.pcistudio.processor.test.writer.TaskWriterHelper;
 import com.pcistudio.processor.test.writer.TaskWriterTest;
 import com.pcistudio.task.procesor.HandlerProperties;
 import com.pcistudio.task.procesor.handler.*;
-import com.pcistudio.task.procesor.page.Pageable;
 import com.pcistudio.task.procesor.page.PageableReader;
-import com.pcistudio.task.procesor.page.Sort;
 import com.pcistudio.task.procesor.register.HandlerManagerImpl;
 import com.pcistudio.task.procesor.task.ProcessStatus;
 import com.pcistudio.task.procesor.task.TaskInfo;
-import com.pcistudio.task.procesor.task.TaskParams;
-import com.pcistudio.task.procesor.util.JsonUtil;
-import com.pcistudio.task.procesor.writer.TaskWriter;
 import com.pcistudio.task.processor.config.AbstractHandlersConfiguration;
 import com.pcistudio.task.processor.config.TaskProcessorManagerCustomizer;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -34,9 +29,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 @TaskProcessorTest
@@ -51,8 +43,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 })
 class WriteAndProcessIT {
 
-    static RandomTaskHandler<Person> personRandomTaskHandlerWithSlowCalls = new RandomTaskHandler<Person>()
-            .builder()
+    //    static RandomTaskHandler<Person> personRandomTaskHandlerWithSlowCalls = new RandomTaskHandler<Person>()
+//            .builder()
+    static RandomTaskHandler<Person> personRandomTaskHandlerWithSlowCalls = RandomTaskHandler.<Person>builder()
             .withConsumer(person -> {
                 log.info("{}", person);
             })
@@ -149,7 +142,7 @@ class WriteAndProcessIT {
 
         Assertions.assertThat(stats.get(ProcessStatus.COMPLETED.name())).isGreaterThan(850);
 
-        taskProcessorManager.close("test_one_thousand");
+        taskProcessorManager.close("test_slow_calls");
     }
 
     private record Person(String name, int age) {

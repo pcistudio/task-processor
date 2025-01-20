@@ -36,12 +36,20 @@ public final class JsonUtil {
         return gson.toJson(object).getBytes(StandardCharsets.UTF_8);
     }
 
+    public static <T> T from(byte[] objectBytes, Class<T> clazz) {
+        return from(new String(objectBytes, StandardCharsets.UTF_8), clazz);
+    }
+
     public static <T> T from(String objectStr, Class<T> clazz) {
         return gson.fromJson(objectStr, clazz);
     }
 
     public static <T> T fromJson(String json, Class<T> clazz, Class<?>... genericTypes) {
         return gson.fromJson(json, TypeToken.getParameterized(clazz, genericTypes).getType());
+    }
+
+    public static <T> T fromJson(byte[] json, Class<T> clazz, Class<?>... genericTypes) {
+        return fromJson(new String(json, StandardCharsets.UTF_8), clazz, genericTypes);
     }
 
     public static void print(String message, Object object) { // this print didn't work with lamdas

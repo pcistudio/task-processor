@@ -46,8 +46,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
         "task.processor.metrics.enable=true"
 })
 class WriteAndProcessTest {
-    static RandomTaskHandler<Person> personRandomTaskHandler = new RandomTaskHandler<Person>()
-            .builder()
+    //    static RandomTaskHandler<Person> personRandomTaskHandler = new RandomTaskHandler<Person>()
+//            .builder()
+    static RandomTaskHandler<Person> personRandomTaskHandler = RandomTaskHandler.<Person>builder()
             .withConsumer(person -> {
                 log.info("{}", person);
             })

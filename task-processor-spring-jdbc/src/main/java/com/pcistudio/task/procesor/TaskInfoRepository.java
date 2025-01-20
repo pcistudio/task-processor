@@ -53,13 +53,11 @@ class TaskInfoRepository {
         log.debug("Mark To process tableName={} handler={}, execution_time {} for partition_id {} with limit {}",
                 tableName, handlerName, now, partitionId, limit);
         int updated = jdbcTemplate.update(
-                """
-                        update %s
-                        SET status=?, version=version + 1, updated_at=?, partition_id=?, read_token=?
-                        where execution_time<=? and status = ? and handler_name=?
-                        order by execution_time asc
-                        limit ?
-                        """.formatted(tableName)
+                ("update %s %n" +
+                        "SET status=?, version=version + 1, updated_at=?, partition_id=?, read_token=? %n" +
+                        "where execution_time<=? and status = ? and handler_name=? %n" +
+                        "order by execution_time asc %n" +
+                        "limit ? %n").formatted(tableName)
                 , ProcessStatus.PROCESSING.name(), now, partitionId, readToken.toString(), now, ProcessStatus.PENDING.name(), handlerName, limit
         );
         log.debug("Mark to process {} tasks in tableName={}, handlerName={}", updated, tableName, handlerName);
@@ -78,18 +76,16 @@ class TaskInfoRepository {
                 partitionId,
                 readToken.toString()
         );
-        log.trace("Read {} records to process from tableName={}, handlerName={}", taskToProcess.size(), tableName, handlerName);
+
+        if (log.isTraceEnabled()) {
+            log.trace("Read {} records to process from tableName={}, handlerName={}", taskToProcess.size(), tableName, handlerName);
+        }
         return taskToProcess;
     }
 
     public void completeTask(String tableName, TaskInfoOperations taskInfo) {
         Instant now = Instant.now(clock);
-        int updated = jdbcTemplate.update(
-                """
-                        update %s
-                        SET status=?, version=version+1, updated_at=?
-                        where id=? and status=? and version=? and handler_name=?
-                        """.formatted(tableName),
+        int updated = jdbcTemplate.update("update %s SET status=?, version=version+1, updated_at=? where id=? and status=? and version=? and handler_name=?".formatted(tableName),
                 ProcessStatus.COMPLETED.name(), now, taskInfo.getId(), ProcessStatus.PROCESSING.name(), taskInfo.getVersion(), taskInfo.getHandlerName()
         );
 
@@ -97,24 +93,21 @@ class TaskInfoRepository {
         if (updated == 0) {
             throw new OptimisticLockingFailureException("Task was not updated, task=" + taskInfo.getId() + " in table=" + tableName + " handlerName=" + taskInfo.getHandlerName());
         }
-        log.info("Task={} in tableName={},handlerName={} has completed", taskInfo.getId(), tableName, taskInfo.getHandlerName());
+        if (log.isInfoEnabled()) {
+            log.info("Task={} in tableName={},handlerName={} has completed", taskInfo.getId(), tableName, taskInfo.getHandlerName());
+        }
         taskInfo.completed();
     }
 
-    //FIXME add retry count. Right now it is wrong
     public void markToRetry(String tableName, TaskInfoOperations task, ProcessStatus oldStatus, ProcessStatus newStatus, Instant nextRetryTime) {
         Instant now = Instant.now(clock);
         int updated = jdbcTemplate.update(
-                """
-                        update %s
-                        SET status=?, version=version+1, updated_at=?, retry_count=?, execution_time=?, partition_id=null
-                        where id=? and status = ? and version=? and handler_name=?
-                        """.formatted(tableName),
+                "update %s %n SET status=?, version=version+1, updated_at=?, retry_count=?, execution_time=?, partition_id=null %n where id=? and status = ? and version=? and handler_name=? ".formatted(tableName),
                 newStatus.name(), now, task.getRetryCount() + 1, nextRetryTime, task.getId(), oldStatus.name(), task.getVersion(), task.getHandlerName()
         );
 
         if (updated == 0) {
-            throw new OptimisticLockingFailureException("Task was not updated, task=" + task.getId() + " from status=" + oldStatus + " to status=" + newStatus);
+            throw new OptimisticLockingFailureException("Task was not updated, task=%s from status=%s to status=%s".formatted(task.getId(), oldStatus, newStatus));
         }
         task.markForRetry();
     }
@@ -122,16 +115,12 @@ class TaskInfoRepository {
     public void failTask(String tableName, TaskInfoOperations task) {
         Instant now = Instant.now(clock);
         int updated = jdbcTemplate.update(
-                """
-                        update %s
-                        SET status=?, version=version+1, updated_at=?
-                        where id=? and status = ? and version=? and handler_name=?
-                        """.formatted(tableName),
+                "update %s SET status=?, version=version+1, updated_at=? where id=? and status = ? and version=? and handler_name=?".formatted(tableName),
                 ProcessStatus.FAILED.name(), now, task.getId(), ProcessStatus.PROCESSING.name(), task.getVersion(), task.getHandlerName()
         );
 
         if (updated == 0) {
-            throw new OptimisticLockingFailureException("Task was not updated, task=" + task.getId() + " from status=" + ProcessStatus.PROCESSING + " to status=" + ProcessStatus.FAILED);
+            throw new OptimisticLockingFailureException("Task was not updated, task=%s from status=%s to status=%s".formatted(task.getId(), ProcessStatus.PROCESSING, ProcessStatus.FAILED));
         }
         task.failed();
     }
@@ -139,11 +128,7 @@ class TaskInfoRepository {
     public void markCorruptTask(String tableName, TaskInfoOperations task) {
         Instant now = Instant.now(clock);
         int updated = jdbcTemplate.update(
-                """
-                        update %s
-                        SET status=?, version=version+1, updated_at=?
-                        where id=? and version=? and handler_name=?
-                        """.formatted(tableName),
+                "update %s SET status=?, version=version+1, updated_at=? where id=? and version=? and handler_name=?".formatted(tableName),
                 ProcessStatus.CORRUPT_RECORD.name(), now, task.getId(), task.getVersion(), task.getHandlerName()
         );
 
@@ -173,7 +158,10 @@ class TaskInfoRepository {
                     limit
             );
         }
-        log.trace("Read {} retried records tableName={}, handlerName={}", retriedTasks.size(), tableName, handlerName);
+
+        if (log.isTraceEnabled()) {
+            log.trace("Read {} retried records tableName={}, handlerName={}", retriedTasks.size(), tableName, handlerName);
+        }
         return taskInfoCursorPageableFactory.createPageable(retriedTasks, limit);
     }
 
@@ -240,17 +228,15 @@ class TaskInfoRepository {
         Instant now = Instant.now(clock);
         UUID batchId = UUID.randomUUID();
         int updated = jdbcTemplate.update(
-                """
-                        update %s
-                        SET status=?, version=version+1, updated_at=?, batch_id=?, partition_id=null
-                        where status=? and updated_at<? and handler_name=?
-                        """.formatted(tableName),
+                "update %s SET status=?, version=version+1, updated_at=?, batch_id=?, partition_id=null where status=? and updated_at<? and handler_name=?".formatted(tableName),
                 ProcessStatus.PENDING.name(), now, batchId.toString(), ProcessStatus.PROCESSING.name(), now.minus(processingExpire), handlerName
         );
-        log.info("Requeue {} tasks in tableName={}, handlerName={}", updated, tableName, handlerName);
+
         if (updated == 0) {
             log.info("No timeout task found for handlerName={}, tableName={}", handlerName, tableName);
             return TaskInfoService.RequeueResult.EMPTY;
+        } else {
+            log.info("Requeue {} tasks in tableName={}, handlerName={}, batchId={}", updated, tableName, handlerName, batchId);
         }
         return new TaskInfoService.RequeueResult(batchId, updated);
     }
@@ -269,10 +255,7 @@ class TaskInfoRepository {
     @Nullable
     public List<TaskInfo> retrieveRequeueForecast(String tableName, String handlerName, Duration processingExpire, Instant date) {
         return jdbcTemplate.query(
-                """
-                        select * from %s
-                        where status=? and updated_at<? and handler_name=? limit 100 sort by execution_time asc
-                        """.formatted(tableName),
+                "select * from %s where status=? and updated_at<? and handler_name=? limit 100 sort by execution_time asc".formatted(tableName),
                 taskInfoMapper,
                 ProcessStatus.PROCESSING.name(), date.minus(processingExpire), handlerName
         );
@@ -308,16 +291,15 @@ class TaskInfoRepository {
         Instant startTime = date.atStartOfDay(clock.getZone()).toInstant();
         Instant endTime = date.plusDays(1).atStartOfDay(clock.getZone()).toInstant();
 
-        List<ProcessStatusCount> processStatusCounts = jdbcTemplate.query("""
-                        select status, count(*) as ct
-                        from %s
-                        where execution_time between ? and ?
-                        group by status
-                        union all
-                        select 'RETRY' as status, sum(retry_count) as ct
-                        from %s
-                        where execution_time between ? and ?
-                        """.formatted(tableName, tableName),
+        List<ProcessStatusCount> processStatusCounts = jdbcTemplate.query(
+                ("select status, count(*) as ct %n" +
+                        "from %s %n" +
+                        "where execution_time between ? and ? %n" +
+                        "group by status %n" +
+                        "union all %n" +
+                        "select 'RETRY' as status, sum(retry_count) as ct %n" +
+                        "from %s %n" +
+                        "where execution_time between ? and ? %n").formatted(tableName, tableName),
                 processStatusCountRowMapper,
                 startTime,
                 endTime,
@@ -337,11 +319,7 @@ class TaskInfoRepository {
         Instant startTime = date.atStartOfDay(clock.getZone()).toInstant();
         Instant endTime = date.plusDays(1).atStartOfDay(clock.getZone()).toInstant();
 
-        return jdbcTemplate.queryForObject("""
-                        select count(*) as ct
-                        from %s
-                        where execution_time between ? and ?
-                        """.formatted(tableName),
+        return jdbcTemplate.queryForObject("select count(*) as ct from %s where execution_time between ? and ?".formatted(tableName),
                 Integer.class,
                 startTime,
                 endTime
@@ -351,7 +329,7 @@ class TaskInfoRepository {
     record ProcessStatusCount(String status, int count) {
     }
 
-    private static class ProcessStatusCountRowMapper implements RowMapper<ProcessStatusCount> {
+    private static final class ProcessStatusCountRowMapper implements RowMapper<ProcessStatusCount> {
 
         @Override
         public ProcessStatusCount mapRow(ResultSet rs, int rowNum) throws SQLException {

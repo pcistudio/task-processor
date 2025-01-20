@@ -19,22 +19,46 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 @Slf4j
-public class RandomTaskHandler<T> implements TaskHandler<T> {
+public final class RandomTaskHandler<T> implements TaskHandler<T> {
     private final static String SLOW_CALLS = "SLOW_CALLS";
-    private final SecureRandom random = new SecureRandom();
+    private final static SecureRandom RANDOM = new SecureRandom();
     private final AtomicInteger numberOfCalls = new AtomicInteger(0);
-    private final Map<Integer, ConsumerHolder<T>> exceptionsAndSlowIndexMap = new ConcurrentHashMap<>();
+    private final Map<Integer, ConsumerHolder<T>> exceptionsAndSlowIndexMap;
 
     private final Map<Class<? extends RuntimeException>, AtomicInteger> stats = new ConcurrentHashMap<>();
 
     private final AtomicInteger slowTaskCount = new AtomicInteger(0);
 
-    private Clock clock;
-    private Consumer<T> defaultConsumer;
-    private int taskCount;
+    private final Clock clock;
+    private final Consumer<T> defaultConsumer;
+    private final int taskCount;
+
+    private final int slowTaskDurationMs;
+    private final Duration stopSlowCallsAfter;
+    private final Duration stopErrorsCallsAfter;
+
 
     private Instant startCalls;
     private boolean randomizeDuration = false;
+
+
+    private RandomTaskHandler(RandomTaskHandlerBuilder<T> builder) {
+        this.clock = builder.clock;
+        this.defaultConsumer = builder.defaultConsumer == null ? t -> {
+        } : builder.defaultConsumer;
+        this.taskCount = builder.taskCount;
+        this.randomizeDuration = builder.randomizeDuration;
+        this.slowTaskDurationMs = builder.slowTaskDurationMs;
+        this.stopSlowCallsAfter = builder.stopSlowCallsAfter;
+        this.stopErrorsCallsAfter = builder.stopErrorsCallsAfter;
+
+        exceptionsAndSlowIndexMap = new ConcurrentHashMap<>(shuffleExceptionsAndSlowCalls(builder, this));
+
+        if (builder.debugConfiguration) {
+            printExceptionsAndSlowIndexMap(builder.expectedExceptions, exceptionsAndSlowIndexMap);
+        }
+    }
+
 
     @Override
     public void process(T payload) {
@@ -74,9 +98,13 @@ public class RandomTaskHandler<T> implements TaskHandler<T> {
 
     public void printStats() {
         stats.forEach((aClass, integer) -> {
-            log.info("{} {}", aClass.getSimpleName(), integer.get());
+            if (log.isInfoEnabled()) {
+                log.info("{} {}", aClass.getSimpleName(), integer.get());
+            }
         });
-        log.info("{} {}", SLOW_CALLS, slowTaskCount.get());
+        if (log.isInfoEnabled()) {
+            log.info("{} {}", SLOW_CALLS, slowTaskCount.get());
+        }
     }
 
     public void assertExceptionCount(Class<? extends RuntimeException> exception, int count) {
@@ -87,12 +115,14 @@ public class RandomTaskHandler<T> implements TaskHandler<T> {
         Assertions.assertThat(slowTaskCount.get()).isEqualTo(count);
     }
 
-    public Builder builder() {
-        return new RandomTaskHandler<T>().new Builder();
+    public static <T> RandomTaskHandlerBuilder<T> builder() {
+        return new RandomTaskHandlerBuilder<>();
     }
 
     private static void simulateCall(int waitingTime) {
-        if (waitingTime == 0) return;
+        if (waitingTime == 0) {
+            return;
+        }
 
         try {
             Thread.sleep(waitingTime);
@@ -101,14 +131,78 @@ public class RandomTaskHandler<T> implements TaskHandler<T> {
         }
     }
 
+    private static <T> void printExceptionsAndSlowIndexMap(Map<RuntimeException, Integer> expectedExceptions, Map<Integer, ConsumerHolder<T>> exceptionsAndSlowIndexMap) {
+        JsonUtil.print("-----------------Exception Config----------------\n", expectedExceptions);
+        log.info("-----------------Randomized exceptions and slow calls index----------------");
+
+        exceptionsAndSlowIndexMap.forEach((key, value) -> {
+            if (value.isErrorConsumer()) {
+                log.info("{} => {}", key, value.getException().getClass().getSimpleName());//NOPMD
+            } else {
+                log.info("{} => {}", key, SLOW_CALLS);
+            }
+        });
+        log.info("--------------------------------------------------------------------------");
+    }
+
+    private static <T> Map<Integer, ConsumerHolder<T>> shuffleExceptionsAndSlowCalls(RandomTaskHandlerBuilder<T> builder, RandomTaskHandler<T> taskHandler) {
+        List<ConsumerHolder<T>> list = new LinkedList<>();
+
+        for (Map.Entry<RuntimeException, Integer> entry : builder.expectedExceptions.entrySet()) {
+            RuntimeException exception = entry.getKey();
+            ConsumerHolder<T> exConsumer = ConsumerHolder.createErrorConsumer(t -> taskHandler.runException(t, exception), exception);
+            for (int i = 0; i < entry.getValue(); i++) {
+                list.add(exConsumer);
+            }
+        }
+        ConsumerHolder<T> slowConsumer = ConsumerHolder.createConsumer(taskHandler::runSlow);
+        int slow = builder.slowTaskCount;
+        int success = builder.taskCount - builder.slowTaskCount - list.size();
+        Map<Integer, ConsumerHolder<T>> exceptionsAndSlowIndexMap = new HashMap<>();
+        for (int i = 0; i < builder.taskCount; i++) {
+            int index = RANDOM.nextInt(list.size() + slow + success);
+            if (index < list.size()) {
+                exceptionsAndSlowIndexMap.put(i, list.remove(index));
+            } else if (index < list.size() + slow) {
+                slow--;
+                exceptionsAndSlowIndexMap.put(i, slowConsumer);
+            } else {
+                success--;
+            }
+        }
+
+        return exceptionsAndSlowIndexMap;
+    }
+
+    private void runSlow(T payload) {
+        if (stopSlowCallsAfter != null && startCalls.plus(stopSlowCallsAfter).isBefore(clock.instant())) {
+            log.info("slow calls stopped");
+            defaultConsumer.accept(payload);
+            return;
+        }
+
+        simulateCall(slowTaskDurationMs + getRandomDuration(2000));
+        slowTaskCount.incrementAndGet();
+    }
+
+    private void runException(T payload, RuntimeException exception) {
+        simulateCall(getRandomDuration(1000));
+        if (stopErrorsCallsAfter != null && startCalls.plus(stopErrorsCallsAfter).isBefore(clock.instant())) {
+            log.info("All errors stopped");
+            defaultConsumer.accept(payload);
+            return;
+        }
+        throw exception;
+    }
+
     private int getRandomDuration(int maxValue) {
         if (!randomizeDuration) {
             return 0;
         }
-        return random.nextInt(maxValue);
+        return RANDOM.nextInt(maxValue);
     }
 
-    public class Builder {
+    public static class RandomTaskHandlerBuilder<T> {
         private int taskCount;
         private int slowTaskCount = 0;
 
@@ -118,139 +212,72 @@ public class RandomTaskHandler<T> implements TaskHandler<T> {
         private Clock clock = Clock.systemDefaultZone();
         private boolean debugConfiguration = false;
         private final Map<RuntimeException, Integer> expectedExceptions = new HashMap<>();
+        private Consumer<T> defaultConsumer;
+        private boolean randomizeDuration = false;
 
-        public Builder withTaskCount(int taskCount) {
+        public RandomTaskHandlerBuilder<T> withTaskCount(int taskCount) {
             this.taskCount = taskCount;
             return this;
         }
 
-        public Builder withClock(Clock clock) {
+        public RandomTaskHandlerBuilder<T> withClock(Clock clock) {
             this.clock = clock;
             return this;
         }
 
-        public Builder withSlowTaskCount(int slowTaskCount) {
+        public RandomTaskHandlerBuilder<T> withSlowTaskCount(int slowTaskCount) {
             this.slowTaskCount = slowTaskCount;
             return this;
         }
 
-        public Builder withStopSlowCallsAfter(Duration stopSlowCallsAfter) {
+        public RandomTaskHandlerBuilder<T> withStopSlowCallsAfter(Duration stopSlowCallsAfter) {
             this.stopSlowCallsAfter = stopSlowCallsAfter;
             return this;
         }
 
-        public Builder withStopErrorsCallsAfter(Duration stopErrorsCallsAfter) {
+        public RandomTaskHandlerBuilder<T> withStopErrorsCallsAfter(Duration stopErrorsCallsAfter) {
             this.stopErrorsCallsAfter = stopErrorsCallsAfter;
             return this;
         }
 
-        public Builder withSlowTaskDurationMs(int slowTaskDurationMs) {
+        public RandomTaskHandlerBuilder<T> withSlowTaskDurationMs(int slowTaskDurationMs) {
             this.slowTaskDurationMs = slowTaskDurationMs;
             return this;
         }
 
-        public Builder withConsumer(Consumer<T> consumer) {
-            RandomTaskHandler.this.defaultConsumer = consumer;
+        public RandomTaskHandlerBuilder<T> withConsumer(Consumer<T> consumer) {
+            this.defaultConsumer = consumer;
             return this;
         }
 
-        public Builder withExpectedException(RuntimeException exception, int times) {
+        public RandomTaskHandlerBuilder<T> withExpectedException(RuntimeException exception, int times) {
             Assert.isTrue(times > 0, "Times must be greater than 0");
             expectedExceptions.put(exception, times);
             return this;
         }
 
-        public Builder enableRandomizeDurationCalls() {
-            RandomTaskHandler.this.randomizeDuration = true;
+        public RandomTaskHandlerBuilder<T> enableRandomizeDurationCalls() {
+            this.randomizeDuration = true;
             return this;
         }
 
-        public Builder enableDebugConfiguration() {
-            debugConfiguration = true;
+        public RandomTaskHandlerBuilder<T> enableDebugConfiguration() {
+            this.debugConfiguration = true;
             return this;
         }
 
         public RandomTaskHandler<T> build() {
-            RandomTaskHandler.this.clock = this.clock;
             int totalExceptions = expectedExceptions.values().stream().mapToInt(Integer::intValue).sum();
             Assert.isTrue(totalExceptions + slowTaskCount <= taskCount, "Total exceptions plus slowTaskCount must be less than or equal to task count");
 
-            shuffleExceptionsAndSlowCalls();
+            return new RandomTaskHandler<>(this);
 
-            if (debugConfiguration) {
-                printExceptionsAndSlowIndexMap();
-            }
-            RandomTaskHandler.this.taskCount = taskCount;
-            return RandomTaskHandler.this;
         }
 
-        private void printExceptionsAndSlowIndexMap() {
-            JsonUtil.print("-----------------Exception Config----------------\n", expectedExceptions);
-            log.info("-----------------Randomized exceptions and slow calls index----------------");
-            exceptionsAndSlowIndexMap.forEach((key, value) -> {
-                if (value.isErrorConsumer()) {
-                    log.info("{} => {}", key, value.getException().getClass().getSimpleName());
-                } else {
-                    log.info("{} => {}", key, SLOW_CALLS);
-                }
-            });
-            log.info("--------------------------------------------------------------------------");
-        }
 
-        private void shuffleExceptionsAndSlowCalls() {
-            List<ConsumerHolder<T>> list = new LinkedList<>();
-
-            for (Map.Entry<RuntimeException, Integer> entry : expectedExceptions.entrySet()) {
-                RuntimeException exception = entry.getKey();
-                ConsumerHolder<T> exConsumer = ConsumerHolder.createErrorConsumer(getExceptionConsumer(exception), exception);
-                for (int i = 0; i < entry.getValue(); i++) {
-                    list.add(exConsumer);
-                }
-            }
-            ConsumerHolder<T> slowConsumer = ConsumerHolder.createConsumer(getSlowConsumer());
-
-            int slow = slowTaskCount;
-            int success = taskCount - slowTaskCount - list.size();
-            for (int i = 0; i < taskCount; i++) {
-                int index = random.nextInt(list.size() + slow + success);
-                if (index < list.size()) {
-                    exceptionsAndSlowIndexMap.put(i, list.remove(index));
-                } else if (index < list.size() + slow) {
-                    slow--;
-                    exceptionsAndSlowIndexMap.put(i, slowConsumer);
-                } else {
-                    success--;
-                }
-            }
-        }
-
-        private Consumer<T> getSlowConsumer() {
-            return (t) -> {
-                if (stopSlowCallsAfter != null && startCalls.plus(stopSlowCallsAfter).isBefore(clock.instant())) {
-                    log.info("slow calls stopped");
-                    defaultConsumer.accept(t);
-                    return;
-                }
-
-                simulateCall(slowTaskDurationMs + getRandomDuration(2000));
-                RandomTaskHandler.this.slowTaskCount.incrementAndGet();
-            };
-        }
-
-        private Consumer<T> getExceptionConsumer(RuntimeException exception) {
-            return (payload) -> {
-                simulateCall(getRandomDuration(1000));
-                if (stopErrorsCallsAfter != null && startCalls.plus(stopErrorsCallsAfter).isBefore(clock.instant())) {
-                    log.info("All errors stopped");
-                    defaultConsumer.accept(payload);
-                    return;
-                }
-                throw exception;
-            };
-        }
     }
 
-    private static class ConsumerHolder<T> implements Consumer<T> {
+    private static final class ConsumerHolder<T> implements Consumer<T> {
         private final Consumer<T> delegate;
         private final RuntimeException exception;
 

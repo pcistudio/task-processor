@@ -1,10 +1,9 @@
 package com.contact.manager.notification;
 
 import com.pcistudio.task.procesor.HandlerProperties;
-
 import com.pcistudio.task.procesor.register.HandlerManagerImpl;
 import com.pcistudio.task.processor.config.AbstractHandlersConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.TransientDataAccessException;
 
@@ -12,8 +11,9 @@ import java.time.Duration;
 import java.util.Set;
 
 @Configuration
+@RequiredArgsConstructor
 public class TaskProcessorConfig extends AbstractHandlersConfiguration {
-    @Autowired
+
     private NotificationTaskHandler notificationTaskHandler;
 
     @Override

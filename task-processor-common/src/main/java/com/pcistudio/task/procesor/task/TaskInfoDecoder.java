@@ -2,6 +2,7 @@ package com.pcistudio.task.procesor.task;
 
 
 import com.pcistudio.task.procesor.util.decoder.MessageDecoding;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
@@ -12,6 +13,7 @@ import java.util.UUID;
  */
 @RequiredArgsConstructor
 public class TaskInfoDecoder implements TaskInfoOperations, TaskInfoPayloadObject {
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     private final TaskInfo delegate;
     private final MessageDecoding messageDecoding;
     private final Class<?> objectType;

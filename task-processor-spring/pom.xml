@@ -22,7 +22,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-logging</artifactId>
-<!--            <scope>provided</scope>-->
         </dependency>
 
         <dependency>
@@ -77,11 +76,6 @@
             <artifactId>h2</artifactId>
             <scope>provided</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.pcistudio.task.procesor</groupId>-->
-<!--            <artifactId>task-processor-spring-jdbc-mysql</artifactId>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>

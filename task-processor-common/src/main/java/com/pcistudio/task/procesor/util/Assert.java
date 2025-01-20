@@ -1,10 +1,13 @@
 package com.pcistudio.task.procesor.util;
 
+
 import java.util.Collection;
+
 
 public final class Assert {
     private Assert() {
     }
+
 
     public static void notNull(Object object, String message) {
         if (object == null) {
@@ -25,7 +28,7 @@ public final class Assert {
     }
 
     public static void notEmpty(Collection<?> collection, String message) {
-        if (collection.isEmpty()) {
+        if (collection == null || collection.isEmpty()) {
             throw new IllegalArgumentException(message);
         }
     }

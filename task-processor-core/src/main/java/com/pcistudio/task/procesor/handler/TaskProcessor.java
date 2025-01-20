@@ -2,11 +2,10 @@ package com.pcistudio.task.procesor.handler;
 
 
 import com.pcistudio.task.procesor.HandlerPropertiesWrapper;
+import com.pcistudio.task.procesor.metrics.ProcessorStats;
 import com.pcistudio.task.procesor.metrics.TaskProcessorMetrics;
 import com.pcistudio.task.procesor.task.TaskInfo;
-import com.pcistudio.task.procesor.util.Assert;
-import com.pcistudio.task.procesor.util.BlockingRejectedExecutionHandler;
-import com.pcistudio.task.procesor.util.DefaultThreadFactory;
+import com.pcistudio.task.procesor.util.*;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,54 +14,59 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Slf4j
-public class TaskProcessor implements Closeable, Runnable {
+public final class TaskProcessor implements Closeable, Runnable {
     private final TaskHandlerProxy taskHandlerProxy;
-    private final ThreadPoolExecutor executorService;
     private final HandlerPropertiesWrapper properties;
     private final TaskProcessingContext context;
     private final AtomicReference<TaskProcessorState> state = new AtomicReference<>(TaskProcessorState.CREATED);
-    private final Consumer<TaskInfo> circuitBreakerTaskProcessor;
+    private final Consumer<TaskInfo> taskHandler;
     private final EventManager eventManager;
-    private final TaskProcessorMetrics taskProcessorMetrics;
+    private final TaskProcessorMetrics metrics;
+    private final ExecutionTracker executionTracker;
+    private final Supplier<ProcessorStats> processorStatsSupplier = CacheSupplier.from(this::getStats);
 
-    TaskProcessor(TaskProcessingContext taskProcessingContext, TaskProcessorMetrics taskProcessorMetrics) {
+    /* package */
+    TaskProcessor(final TaskProcessingContext context, final TaskProcessorMetrics metrics) {
         this(
-                taskProcessingContext,
-                taskProcessorMetrics,
-                new TaskHandlerProxy(taskProcessingContext, taskProcessorMetrics),
+                context,
+                metrics,
+                new TaskHandlerProxy(context, metrics),
                 new ThreadPoolExecutor(
-                        Math.max(taskProcessingContext.getHandlerProperties().getMaxParallelTasks() / 2, 1),
-                        taskProcessingContext.getHandlerProperties().getMaxParallelTasks(),
+                        Math.max(context.getHandlerProperties().getMaxParallelTasks() / 2, 1),
+                        context.getHandlerProperties().getMaxParallelTasks(),
                         1000L,
                         TimeUnit.MILLISECONDS,
-                        new LinkedBlockingQueue<>(Math.max(taskProcessingContext.getHandlerProperties().getMaxParallelTasks(), taskProcessingContext.getHandlerProperties().getMaxPoll()) * 2),
-                        new DefaultThreadFactory("task-handler-" + taskProcessingContext.getHandlerProperties().getHandlerName()),
+                        new LinkedBlockingQueue<>(Math.max(context.getHandlerProperties().getMaxParallelTasks(), context.getHandlerProperties().getMaxPoll()) * 2),
+                        new DefaultThreadFactory("task-handler-" + context.getHandlerProperties().getHandlerName()),
                         new BlockingRejectedExecutionHandler()
                 )
         );
     }
 
-    TaskProcessor(TaskProcessingContext taskProcessingContext, TaskProcessorMetrics taskProcessorMetrics, TaskHandlerProxy taskHandlerProxy, ThreadPoolExecutor executorService) {
-        this.context = taskProcessingContext;
-        this.taskProcessorMetrics = taskProcessorMetrics;
+    /* package */
+    TaskProcessor(final TaskProcessingContext context, final TaskProcessorMetrics metrics, final TaskHandlerProxy taskHandlerProxy, final ThreadPoolExecutor executorService) {
+        this.context = context;
+        this.metrics = metrics;
         this.taskHandlerProxy = taskHandlerProxy;
-        this.properties = taskProcessingContext.getHandlerProperties();
-        this.executorService = executorService;
+        this.properties = context.getHandlerProperties();
 
-        this.circuitBreakerTaskProcessor = context.getCircuitBreakerDecorator().decorate(taskHandlerProxy::process);
+        this.taskHandler = context.getCircuitBreaker().decorate(taskHandlerProxy::process);
+
         this.eventManager = new DefaultEventManager();
+        this.executionTracker = new TaskExecutionTracker(properties.getHandlerName(), executorService, context.getClock(), properties.getLongTaskTimeMs(), properties.getLongTaskCheckIntervalMs(), properties.getLongTaskCheckInitialDelayMs());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 close();
-                waitTermination(10, TimeUnit.SECONDS);
             } catch (RuntimeException e) {
-                log.error("Error closing task processor={}", getHandlerName(), e);//NOPMD
+                log.error("Error closing task processor={}", properties.getHandlerName(), e);
             }
         }));
 
-        log.info("Created task processor for handler={}", getHandlerName());//NOPMD
+        metrics.registerProcessor(processorStatsSupplier);
+        log.info("Created task processor for handler={}", properties.getHandlerName());//NOPMD
     }
 
     public void processTasks() throws InterruptedException, TaskProcessorClosingException {
@@ -77,7 +81,7 @@ public class TaskProcessor implements Closeable, Runnable {
                 doProcessTasks(taskHandlerProxy.iterator());
                 waitForNextPoll();
             } catch (TaskProcessorPauseException e) {
-                log.warn("Task processor={} paused", getHandlerName(), e);//NOPMD
+                log.warn("Task processor={} paused", getHandlerName(), e);
                 waitForCircuitToOpen();
                 state.compareAndSet(TaskProcessorState.PAUSED, TaskProcessorState.RUNNING);
                 if (log.isInfoEnabled()) {
@@ -107,9 +111,9 @@ public class TaskProcessor implements Closeable, Runnable {
         notifyPollWaitingEnded(properties.getHandlerName());
     }
 
-    private boolean changeCurrentState(TaskProcessorState nextState) {
+    private boolean changeCurrentState(final TaskProcessorState nextState) {
         if (state.get() == nextState) {
-            log.warn("Trying to change to the current state, processor={}", properties.getHandlerName());//NOPMD
+            log.warn("Trying to change to the current state, processor={}", properties.getHandlerName());
             return true;
         }
         if (state.get() == TaskProcessorState.CREATED && nextState == TaskProcessorState.RUNNING) {
@@ -118,7 +122,7 @@ public class TaskProcessor implements Closeable, Runnable {
             return state.compareAndSet(TaskProcessorState.RUNNING, nextState);
         } else if (state.get() == TaskProcessorState.PAUSED && nextState == TaskProcessorState.SHUTTING_DOWN) {
             if (state.compareAndSet(TaskProcessorState.PAUSED, nextState)) {
-                waitTermination(10, TimeUnit.SECONDS);
+                close();
                 return true;
             }
             return false;
@@ -153,32 +157,32 @@ public class TaskProcessor implements Closeable, Runnable {
         return state.get() == TaskProcessorState.RUNNING;
     }
 
-    private void doProcessTasks(Iterator<TaskInfo> tasks) throws TaskProcessorClosingException, TaskProcessorPauseException {
+    private void doProcessTasks(final Iterator<TaskInfo> tasks) throws TaskProcessorClosingException, TaskProcessorPauseException {
         int count = 0; //TODO remove this counter
         while (tasks.hasNext()) {
-            TaskInfo task = tasks.next();
+            final TaskInfo task = tasks.next();
             if (isShuttingDown()) {
-                log.warn("Task processor={} is shutdown, skipping task={}", getHandlerName(), task.getId());//NOPMD
+                log.warn("Task processor={} is shutdown, skipping task={}", getHandlerName(), task.getId());
                 throw new TaskProcessorClosingException("Task processor=" + getHandlerName() + " is shutting down");
             }
             if (isPaused()) {
-                log.warn("Task processor={} is paused, skipping task={}", getHandlerName(), task.getId());//NOPMD
+                log.warn("Task processor={} is paused, skipping task={}", getHandlerName(), task.getId());
                 throw new TaskProcessorPauseException("Task processor=" + getHandlerName() + " is paused");
             }
 
             try {
-                executorService.submit(() -> wrapInCircuitBreaker(task));
+                executionTracker.trackFuture(task.getId(), () -> wrapInCircuitBreaker(task));
                 count++;
             } catch (RejectedExecutionException e) {
-                log.error("Task processor={} rejected task={}", getHandlerName(), task.getId(), e);//NOPMD
+                log.error("Task processor={} rejected task={}", getHandlerName(), task.getId(), e);
             }
         }
         notifyProcessingBatch(properties.getHandlerName(), count);
     }
 
-    private void wrapInCircuitBreaker(TaskInfo taskInfo) {
+    private void wrapInCircuitBreaker(final TaskInfo taskInfo) {
         try {
-            circuitBreakerTaskProcessor.accept(taskInfo);
+            taskHandler.accept(taskInfo);
         } catch (TaskTransientException ignored) {
 
         } catch (CallNotPermittedException ex) {
@@ -189,7 +193,7 @@ public class TaskProcessor implements Closeable, Runnable {
     @Override
     public void close() {
         shutdown();
-        waitTermination(10, TimeUnit.SECONDS);
+        executionTracker.shutdown();
         if (log.isInfoEnabled()) {
             log.info("Processor {} closed", getHandlerName());
         }
@@ -206,30 +210,8 @@ public class TaskProcessor implements Closeable, Runnable {
         }
     }
 
-    private void waitTermination(long timeout, TimeUnit unit) {
-        executorService.shutdown();
-        try {
-            boolean b = executorService.awaitTermination(timeout, unit);
-            if (!b) {
-                log.warn("Task processor={} not terminated!", getHandlerName());//NOPMD
-                executorService.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            log.warn("Task processor={} Interrupted!", getHandlerName(), e);//NOPMD
-            Thread.currentThread().interrupt();
-        }
-    }
-
     public String getHandlerName() {
         return properties.getHandlerName();
-    }
-
-    public int getActiveProcessingCount() {
-        return executorService.getActiveCount();
-    }
-
-    public int getActiveWaitingInMemory() {
-        return executorService.getQueue().size();
     }
 
     public EventManager getEventManager() {
@@ -242,13 +224,40 @@ public class TaskProcessor implements Closeable, Runnable {
             processTasks();
         } catch (TaskProcessorClosingException e) {
 
-            log.warn("Task processor={} closing", getHandlerName(), e);//NOPMD
-        } catch (Throwable e) {
-
-            log.error("Error processing task from processor={}", getHandlerName(), e);//NOPMD
+            log.warn("Task processor={} closing", getHandlerName(), e);
+        } catch (Exception e) {
+            log.error("Error processing task from processor={}", getHandlerName(), e);
         } finally {
             close();
         }
+    }
+
+    private void notifyPollWaiting(final String handlerName, final long expectedWaiting) {
+        eventManager.notifyListeners(new PollWaitingEvent(handlerName, expectedWaiting));
+    }
+
+    private void notifyPollWaitingEnded(final String handlerName) {
+        eventManager.notifyListeners(new PollWaitingEndedEvent(handlerName));
+    }
+
+    private void notifyCircuitWaiting(final String handlerName, final long expectedWaiting) {
+        eventManager.notifyListeners(new CircuitBreakerWaitingEvent(handlerName, expectedWaiting));
+    }
+
+    private void notifyCircuitWaitingEnded(final String handlerName) {
+        eventManager.notifyListeners(new CircuitBreakerWaitingEndedEvent(handlerName));
+    }
+
+    private void notifyProcessingBatch(final String handlerName, final int count) {
+        eventManager.notifyListeners(new ProcessingBatchEvent(handlerName, count));
+    }
+
+    private ProcessorStats getStats() {
+        return new ProcessorStats(
+                executionTracker.getTaskCount(),
+                executionTracker.getLongWaitingTaskCount(),
+                context.getCircuitBreaker().isClosed() ? 1 : 0
+        );
     }
 
     private enum TaskProcessorState {
@@ -260,27 +269,6 @@ public class TaskProcessor implements Closeable, Runnable {
          */
         PAUSED
     }
-
-    private void notifyPollWaiting(String handlerName, long expectedWaiting) {
-        eventManager.notifyListeners(new PollWaitingEvent(handlerName, expectedWaiting));
-    }
-
-    private void notifyPollWaitingEnded(String handlerName) {
-        eventManager.notifyListeners(new PollWaitingEndedEvent(handlerName));
-    }
-
-    private void notifyCircuitWaiting(String handlerName, long expectedWaiting) {
-        eventManager.notifyListeners(new CircuitBreakerWaitingEvent(handlerName, expectedWaiting));
-    }
-
-    private void notifyCircuitWaitingEnded(String handlerName) {
-        eventManager.notifyListeners(new CircuitBreakerWaitingEndedEvent(handlerName));
-    }
-
-    private void notifyProcessingBatch(String handlerName, int count) {
-        eventManager.notifyListeners(new ProcessingBatchEvent(handlerName, count));
-    }
-
 
     public interface EventPublisher {
         void onRequeueEnded(Consumer<RequeueEndedEvent> action);
@@ -312,63 +300,63 @@ public class TaskProcessor implements Closeable, Runnable {
 
 
         @Override
-        public void onRequeueEnded(Consumer<RequeueEndedEvent> action) {
+        public void onRequeueEnded(final Consumer<RequeueEndedEvent> action) {
             eventListenersMap.compute(RequeueEndedEvent.class, (aClass, consumers) -> {
-                List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
+                final List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
                 result.add(action);
                 return result;
             });
         }
 
         @Override
-        public void onPollWaiting(Consumer<PollWaitingEvent> action) {
+        public void onPollWaiting(final Consumer<PollWaitingEvent> action) {
             eventListenersMap.compute(PollWaitingEvent.class, (aClass, consumers) -> {
-                List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
+                final List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
                 result.add(action);
                 return result;
             });
         }
 
         @Override
-        public void onPollWaitingEnded(Consumer<PollWaitingEndedEvent> action) {
+        public void onPollWaitingEnded(final Consumer<PollWaitingEndedEvent> action) {
             eventListenersMap.compute(PollWaitingEndedEvent.class, (aClass, consumers) -> {
-                List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
+                final List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
                 result.add(action);
                 return result;
             });
         }
 
         @Override
-        public void onCircuitBreakerWaiting(Consumer<CircuitBreakerWaitingEvent> action) {
+        public void onCircuitBreakerWaiting(final Consumer<CircuitBreakerWaitingEvent> action) {
             eventListenersMap.compute(CircuitBreakerWaitingEvent.class, (aClass, consumers) -> {
-                List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
+                final List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
                 result.add(action);
                 return result;
             });
         }
 
         @Override
-        public void onCircuitBreakerWaitingEnded(Consumer<CircuitBreakerWaitingEndedEvent> action) {
+        public void onCircuitBreakerWaitingEnded(final Consumer<CircuitBreakerWaitingEndedEvent> action) {
             eventListenersMap.compute(CircuitBreakerWaitingEndedEvent.class, (aClass, consumers) -> {
-                List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
+                final List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
                 result.add(action);
                 return result;
             });
         }
 
         @Override
-        public void onProcessingBatch(Consumer<ProcessingBatchEvent> action) {
+        public void onProcessingBatch(final Consumer<ProcessingBatchEvent> action) {
             eventListenersMap.compute(ProcessingBatchEvent.class, (aClass, consumers) -> {
-                List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
+                final List<Consumer> result = Objects.requireNonNullElseGet(consumers, ArrayList::new);
                 result.add(action);
                 return result;
             });
         }
 
         @Override
-        public void notifyListeners(ProcessorEvent event) {
+        public void notifyListeners(final ProcessorEvent event) {
             Assert.notNull(event, "Event cannot be null");
-            List<Consumer> listeners = eventListenersMap.get(event.getClass());
+            final List<Consumer> listeners = eventListenersMap.get(event.getClass());
             if (listeners == null) {
                 if (log.isDebugEnabled()) {
                     log.debug("No event registered with class={}", event.getClass().getCanonicalName());

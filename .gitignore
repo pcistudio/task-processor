@@ -43,3 +43,4 @@ contact-manager-api/cache/
 cache/
 mariadb_data/
 *.log
+.attach_pid*

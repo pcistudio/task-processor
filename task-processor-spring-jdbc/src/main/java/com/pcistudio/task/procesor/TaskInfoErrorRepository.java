@@ -19,11 +19,7 @@ class TaskInfoErrorRepository {
     @Transactional
     public void saveError(String tableName, TaskInfoError taskInfoError) {
         Instant now = Instant.now(clock);
-        jdbcTemplate.update(
-                """
-                        insert into %s (id, task_id, error_message, created_at,partition_id)
-                        values (?, ?, ?, ?, ?)
-                        """.formatted(tableName),
+        jdbcTemplate.update("insert into %s (id, task_id, error_message, created_at,partition_id) %n values (?, ?, ?, ?, ?) ".formatted(tableName),
                 taskInfoError.getId(),
                 taskInfoError.getTaskId(),
                 taskInfoError.getErrorMessage().substring(0, Math.min(taskInfoError.getErrorMessage().length(), 512)),
@@ -33,13 +29,7 @@ class TaskInfoErrorRepository {
     }
 
     public List<TaskInfoError> getTaskErrors(String tableName, Long taskId) {
-        return jdbcTemplate.query(
-                """
-                        select id, task_id, error_message, created_at, partition_id
-                        from %s
-                        where task_id = ?
-                        order by created_at desc
-                        """.formatted(tableName),
+        return jdbcTemplate.query("select id, task_id, error_message, created_at, partition_id %n from %s  %n where task_id = ? %n order by created_at desc%n".formatted(tableName),
                 taskInfoErrorMapper,
                 taskId
         );
@@ -48,10 +38,7 @@ class TaskInfoErrorRepository {
     public void saveErrors(String tableName, List<TaskInfoError> timeoutTaskInfoError) {
         Instant now = Instant.now(clock);
         jdbcTemplate.batchUpdate(
-                """
-                        insert into %s (id, task_id, error_message, created_at, partition_id)
-                        values (?, ?, ?, ?, ?)
-                        """.formatted(tableName),
+                "insert into %s (id, task_id, error_message, created_at, partition_id) %n values (?, ?, ?, ?, ?) %n".formatted(tableName),
                 timeoutTaskInfoError,
                 timeoutTaskInfoError.size(),
                 (ps, taskInfoError) -> {

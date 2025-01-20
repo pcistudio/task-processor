@@ -6,19 +6,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DefaultThreadFactory implements ThreadFactory {
     private final AtomicInteger threadCounter = new AtomicInteger();
     private String namePrefix;
-    public DefaultThreadFactory(String namePrefix) {
+    public DefaultThreadFactory(final String namePrefix) {
         this.namePrefix = namePrefix;
     }
 
     @Override
-    public Thread newThread(Runnable runnable) {
+    public Thread newThread(final Runnable runnable) {
 
-        Thread thread = new Thread(runnable,
+        final Thread thread = new Thread(runnable,
                 namePrefix + "-" + threadCounter.getAndIncrement());
-        if (thread.isDaemon())
+        if (thread.isDaemon()) {
             thread.setDaemon(false);
-        if (thread.getPriority() != Thread.NORM_PRIORITY)
+        }
+        if (thread.getPriority() != Thread.NORM_PRIORITY) {
             thread.setPriority(Thread.NORM_PRIORITY);
+        }
         return thread;
     }
 }
