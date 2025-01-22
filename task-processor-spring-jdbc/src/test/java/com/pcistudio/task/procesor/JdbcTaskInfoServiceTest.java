@@ -1,5 +1,6 @@
 package com.pcistudio.task.procesor;
 
+import com.pcistudio.task.procesor.handler.TaskHandler;
 import com.pcistudio.task.procesor.page.Pageable;
 import com.pcistudio.task.procesor.page.Sort;
 import com.pcistudio.task.procesor.register.HandlerLookup;
@@ -35,10 +36,15 @@ class JdbcTaskInfoServiceTest {
 
     private HandlerLookup handlerLookup = new HandlerLookup() {
         public HandlerPropertiesWrapper getProperties(String handlerName) {
+            TaskHandler<TaskInfo> taskInfoTaskHandler = (taskInfo) -> {
+                log.info("taskInfo={}", taskInfo);
+            };
             return new HandlerPropertiesWrapper(HandlerProperties.builder()
                     .handlerName(handlerName)
                     .tableName("task_table")
                     .processingExpire(Duration.ofSeconds(3))
+                    .taskHandler(taskInfoTaskHandler)
+                    .taskHandlerType(TaskInfo.class)
                     .build()
             );
         }

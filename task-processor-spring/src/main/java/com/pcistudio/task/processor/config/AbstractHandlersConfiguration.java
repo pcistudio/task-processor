@@ -20,8 +20,8 @@ public abstract class AbstractHandlersConfiguration {
     @Bean
     @ConditionalOnMissingBean(HandlerManager.class)
     HandlerManagerImpl processorRegister(TaskStorageSetup taskStorageSetup) {
-        HandlerManagerImpl.Builder builder = new HandlerManagerImpl.Builder();
-        builder.taskTableSetup(taskStorageSetup);
+        HandlerManagerImpl.Builder builder = HandlerManagerImpl.builder()
+                .taskTableSetup(taskStorageSetup);
         addTask(builder);
         return builder.build();
     }

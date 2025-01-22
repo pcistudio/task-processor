@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -137,9 +138,10 @@ class TaskInfoRepository {
         }
     }
 
-    public Pageable<TaskInfo> getTasksRetried(String tableName, String handlerName, String pageToken, int limit) {
+    public Pageable<TaskInfo> getTasksRetried(String tableName, String handlerName, @Nullable String pageToken, int limit) {
         List<TaskInfo> retriedTasks;
-        if (pageToken == null) {
+        Cursor<Instant> curs = taskInfoCursorPageableFactory.decodeCursor(pageToken);
+        if (curs == null) {
             retriedTasks = jdbcTemplate.query(
                     "SELECT * FROM %s WHERE retry_count>0 and handler_name=? limit ?".formatted(tableName),
                     taskInfoMapper,
@@ -147,7 +149,6 @@ class TaskInfoRepository {
                     limit
             );
         } else {
-            Cursor<Instant> curs = taskInfoCursorPageableFactory.decodeCursor(pageToken);
             retriedTasks = jdbcTemplate.query(
                     "SELECT * FROM %s WHERE retry_count>0 and handler_name=? and (execution_time>? or (execution_time=? and id>?)) order by execution_time asc, id asc limit ?".formatted(tableName),
                     taskInfoMapper,
@@ -176,7 +177,7 @@ class TaskInfoRepository {
         return taskInfoCursorPageableFactory.createPageable(tasks, limit);
     }
 
-    private List<TaskInfo> getLatestTasks(String tableName, String handlerName, ProcessStatus processStatus, Cursor<Instant> pageToken, int limit) {
+    private List<TaskInfo> getLatestTasks(String tableName, String handlerName, ProcessStatus processStatus, @Nullable Cursor<Instant> pageToken, int limit) {
         if (pageToken == null) {
             return jdbcTemplate.query(
                     "SELECT * FROM %s where status=? and handler_name=? order by execution_time desc,id desc limit ?".formatted(tableName),
@@ -200,7 +201,7 @@ class TaskInfoRepository {
         }
     }
 
-    public List<TaskInfo> getOldestTasks(String tableName, String handlerName, ProcessStatus processStatus, Cursor<Instant> pageToken, int limit) {
+    public List<TaskInfo> getOldestTasks(String tableName, String handlerName, ProcessStatus processStatus, @Nullable Cursor<Instant> pageToken, int limit) {
         if (pageToken == null) {
             return jdbcTemplate.query(
                     "SELECT * FROM %s where status=? and handler_name=? order by execution_time asc,id asc limit ?".formatted(tableName),
@@ -319,11 +320,12 @@ class TaskInfoRepository {
         Instant startTime = date.atStartOfDay(clock.getZone()).toInstant();
         Instant endTime = date.plusDays(1).atStartOfDay(clock.getZone()).toInstant();
 
-        return jdbcTemplate.queryForObject("select count(*) as ct from %s where execution_time between ? and ?".formatted(tableName),
+        Integer count = jdbcTemplate.queryForObject("select count(*) as ct from %s where execution_time between ? and ?".formatted(tableName),
                 Integer.class,
                 startTime,
                 endTime
         );
+        return Objects.requireNonNullElse(count, 0);
     }
 
     record ProcessStatusCount(String status, int count) {

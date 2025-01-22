@@ -25,8 +25,12 @@ import java.time.Clock;
 @ConditionalOnProperty(prefix = "spring.task.handlers", name = "enabled", havingValue = "true")
 public class TaskProcessorManagerAutoConfiguration {
 
-    @Value("${task.processor.partitionId:#{T(java.util.UUID).randomUUID().toString()}}")
-    private String partitionId;
+    private final String partitionId;
+
+    public TaskProcessorManagerAutoConfiguration(
+            @Value("${task.processor.partitionId:#{T(java.util.UUID).randomUUID().toString()}}") String partitionId) {
+        this.partitionId = partitionId;
+    }
 
     @Bean
     @ConditionalOnMissingBean
@@ -47,14 +51,12 @@ public class TaskProcessorManagerAutoConfiguration {
     ) throws BeansException {
         TaskProcessorManager taskProcessorManager = new TaskProcessorManager(taskProcessorMetricsFactory);
 
-        // Error if I going to put this listener to every body then the handler name dont make sense
+        // Error if I going to put this listener to every body then the handler name don't make sense
         // the other thing is how the event is propagated to new added task handlers
         handlerLookup.getIterator().forEachRemaining(properties -> {
             TaskProcessingContext context = TaskProcessingContext.builder()
                     .handlerProperties(properties)
                     .taskInfoService(taskInfoService)
-
-//                    .listeners(requeueListeners.getIfAvailable(ArrayList::new))
                     .retryManager(
                             properties.isExponentialBackoff()
                                     ? new ExponentialRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries(), clock)

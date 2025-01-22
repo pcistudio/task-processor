@@ -36,7 +36,6 @@ public class MysqlTaskInfoWriter implements TaskInfoWriter {
         taskInfo.setId(id);
 
         return taskInfo;
-
     }
 
     @Override

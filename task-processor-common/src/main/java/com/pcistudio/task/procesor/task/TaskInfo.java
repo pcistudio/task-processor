@@ -2,10 +2,12 @@ package com.pcistudio.task.procesor.task;
 
 
 import com.pcistudio.task.procesor.util.Assert;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -18,10 +20,12 @@ import java.util.UUID;
 @Getter
 //@Builder
 public final class TaskInfo implements TaskInfoOperations {
+    @Nullable
     private Long id;
     /**
      * This is for batch writing and for requeue
      */
+    @Nullable
     private UUID batchId;
     private ProcessStatus status;
     private Instant executionTime;
@@ -30,16 +34,38 @@ public final class TaskInfo implements TaskInfoOperations {
     private transient byte[] payloadBytes;
 
     private String handlerName;
+    @Nullable
     private String partitionId;
+
+    /**
+     * The type of the object that is stored in the payload
+     * It is only for information purposes because if the payload is decode in other app it will not have the type
+     * or could not be in the same package
+     */
+    @Nullable
     private String objectType;
 
     // no exposed to the user
     private Long version;
+    @Nullable
     private Instant createdAt;
+    @Nullable
     private Instant updatedAt;
     private int retryCount;
 
-    private TaskInfo() {
+    private TaskInfo(TaskInfoBuilder taskInfoBuilder) {
+        this.id = taskInfoBuilder.id;
+        this.batchId = taskInfoBuilder.batchId;
+        this.status = Objects.requireNonNull(taskInfoBuilder.status, "status must not be null");
+        this.executionTime = Objects.requireNonNull(taskInfoBuilder.executionTime, "executionTime must not be null");
+        this.payloadBytes = Objects.requireNonNull(taskInfoBuilder.payloadBytes, "payloadBytes must not be null");
+        this.handlerName = Objects.requireNonNull(taskInfoBuilder.handlerName, "handlerName must not be null");
+        this.partitionId = taskInfoBuilder.partitionId;
+        this.objectType = taskInfoBuilder.objectType;
+        this.version = Objects.requireNonNull(taskInfoBuilder.version, "version must not be null");
+        this.createdAt = taskInfoBuilder.createdAt;
+        this.updatedAt = taskInfoBuilder.updatedAt;
+        this.retryCount = taskInfoBuilder.retryCount;
     }
 
     public void incrementRetryCount() {
@@ -58,7 +84,7 @@ public final class TaskInfo implements TaskInfoOperations {
         version++;
     }
 
-    public void setId(Long id) {
+    public void setId(@Nullable Long id) {
         Assert.notNull(id, "Id must not be null");
         if (this.id != null) {
             throw new IllegalStateException("Id can only be set once");
@@ -105,23 +131,33 @@ public final class TaskInfo implements TaskInfoOperations {
     }
 
     public byte[] getPayloadBytes() {
-        return payloadBytes == null ? new byte[0] : payloadBytes.clone();
+        return payloadBytes.clone();
     }
 
-    //TaskInfoBuilder class
-
     public static class TaskInfoBuilder {
+        @Nullable
         private Long id;
+        @Nullable
         private UUID batchId;
+        @Nullable
         private ProcessStatus status;
+        @Nullable
         private Instant executionTime;
+        @Nullable
         private byte[] payloadBytes;
+        @Nullable
         private String handlerName;
+        @Nullable
         private String partitionId;
+        @Nullable
         private String objectType;
+        @Nullable
         private Long version;
+        @Nullable
         private Instant createdAt;
+        @Nullable
         private Instant updatedAt;
+        @Nullable
         private int retryCount;
 
         public TaskInfoBuilder id(Long id) {
@@ -145,6 +181,7 @@ public final class TaskInfo implements TaskInfoOperations {
         }
 
         public TaskInfoBuilder payloadBytes(byte[] payloadBytes) {
+            Assert.notNull(payloadBytes, "payloadBytes must not be null");
             this.payloadBytes = payloadBytes.clone();
             return this;
         }
@@ -185,20 +222,7 @@ public final class TaskInfo implements TaskInfoOperations {
         }
 
         public TaskInfo build() {
-            TaskInfo taskInfo = new TaskInfo();
-            taskInfo.id = this.id;
-            taskInfo.batchId = this.batchId;
-            taskInfo.status = this.status;
-            taskInfo.executionTime = this.executionTime;
-            taskInfo.payloadBytes = this.payloadBytes;
-            taskInfo.handlerName = this.handlerName;
-            taskInfo.partitionId = this.partitionId;
-            taskInfo.objectType = this.objectType;
-            taskInfo.version = this.version;
-            taskInfo.createdAt = this.createdAt;
-            taskInfo.updatedAt = this.updatedAt;
-            taskInfo.retryCount = this.retryCount;
-            return taskInfo;
+            return new TaskInfo(this);
         }
     }
 }

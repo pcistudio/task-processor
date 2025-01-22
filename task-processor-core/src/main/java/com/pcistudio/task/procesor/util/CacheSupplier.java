@@ -1,6 +1,7 @@
 package com.pcistudio.task.procesor.util;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
@@ -11,7 +12,9 @@ public class CacheSupplier<T> implements Supplier<T> {
     private final Supplier<T> supplier;
     private final Duration cacheDuration;
 
+    @Nullable
     private T value;
+    @Nullable
     private Long lastUpdate;
 
     public CacheSupplier(Supplier<T> supplier, Duration cacheDuration) {
@@ -32,6 +35,7 @@ public class CacheSupplier<T> implements Supplier<T> {
         } else {
             log.trace("Returning cached value");
         }
+        Assert.notNull(value, "cache value cannot be null");
         return value;
     }
 

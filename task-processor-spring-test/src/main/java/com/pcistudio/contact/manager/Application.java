@@ -64,6 +64,7 @@ public class Application implements CommandLineRunner {
                     .taskHandler(payload -> {
                         System.out.println("test");
                     })
+                    .taskHandlerType(String.class)
                     .build());
         }
     }

@@ -3,6 +3,7 @@ package com.pcistudio.task.procesor.page;
 
 import com.pcistudio.task.procesor.util.Assert;
 import com.pcistudio.task.procesor.util.GenericTypeUtil;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -50,7 +51,8 @@ public abstract class CursorPageableFactory<ITEM, OFFSET> {
         return new Pageable<>(result, generateToken(lastElement));
     }
 
-    public Cursor<OFFSET> decodeCursor(String token) {
+    @Nullable
+    public Cursor<OFFSET> decodeCursor(@Nullable String token) {
         if (token == null || token.isBlank()) {
             return null;
         }

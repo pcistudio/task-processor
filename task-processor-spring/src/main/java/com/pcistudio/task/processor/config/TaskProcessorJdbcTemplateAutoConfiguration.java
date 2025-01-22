@@ -6,15 +6,14 @@ import com.pcistudio.task.procesor.register.MysqlTaskStorageSetup;
 import com.pcistudio.task.procesor.register.TaskStorageSetup;
 import com.pcistudio.task.procesor.template.LoggingJdbcTemplate;
 import com.pcistudio.task.processor.util.TaskProcessorDataSourceResolver;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -24,13 +23,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import javax.sql.DataSource;
 
 @Slf4j
-//@Configuration(proxyBeanMethods = false)
 @Configuration
 @Conditional(TaskCommonCondition.class)
 @Import(DecodingConfiguration.class)
-public class TaskProcessorJdbcTemplateAutoConfiguration implements ApplicationContextAware {
+@RequiredArgsConstructor
+public class TaskProcessorJdbcTemplateAutoConfiguration {
 
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
 
     @Configuration
     @ConditionalOnProperty(prefix = "spring.task.logging", name = "template", havingValue = "false", matchIfMissing = true)
@@ -62,11 +61,6 @@ public class TaskProcessorJdbcTemplateAutoConfiguration implements ApplicationCo
     @Bean
     TaskProcessorDataSourceResolver taskProcessorDataSourceResolver() {
         return new TaskProcessorDataSourceResolver(applicationContext);
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
     }
 
     @AutoConfiguration

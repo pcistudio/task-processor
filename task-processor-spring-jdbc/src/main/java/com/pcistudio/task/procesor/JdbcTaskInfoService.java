@@ -8,6 +8,7 @@ import com.pcistudio.task.procesor.task.ProcessStatus;
 import com.pcistudio.task.procesor.task.TaskInfo;
 import com.pcistudio.task.procesor.task.TaskInfoError;
 import com.pcistudio.task.procesor.task.TaskInfoOperations;
+import com.pcistudio.task.procesor.util.Assert;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Propagation;
@@ -140,9 +141,8 @@ public class JdbcTaskInfoService implements TaskInfoService {
     @Override
     public Pageable<TaskInfo> getTasksRetried(String handlerName, String pageToken, int limit) {
         String tableName = storageResolver.resolveStorageName(handlerName);
-        return taskInfoRepository.getTasksRetried(tableName, handlerName,pageToken, limit);
+        return taskInfoRepository.getTasksRetried(tableName, handlerName, pageToken, limit);
     }
-
 
 
     @Override
@@ -162,10 +162,13 @@ public class JdbcTaskInfoService implements TaskInfoService {
         RequeueResult requeueResult = taskInfoRepository.requeueProcessingTimeoutTask(tableName, handlerName, processingExpire.plus(processingGracePeriod));
 
         if (!requeueResult.isEmpty()) {
-            List<TaskInfoError> timeoutTaskInfoError = taskInfoRepository.createBatchTaskInfoError(tableName, handlerName, requeueResult.batchId(), "Processing timeout");
+            UUID batchId = requeueResult.batchId();
+            Assert.notNull(batchId, "BatchId is null");
+
+            List<TaskInfoError> timeoutTaskInfoError = taskInfoRepository.createBatchTaskInfoError(tableName, handlerName, batchId, "Processing timeout");
 
             if (log.isInfoEnabled()) {
-                log.info("Timeout task found for handlerName={}, tableName={}, batchId={}, errors={}", handlerName, tableName, requeueResult.batchId(), timeoutTaskInfoError.size());
+                log.info("Timeout task found for handlerName={}, tableName={}, batchId={}, errors={}", handlerName, tableName, batchId, timeoutTaskInfoError.size());
             }
             String errorTableName = storageResolver.resolveErrorStorageName(handlerName);
             taskInfoErrorRepository.saveErrors(errorTableName, timeoutTaskInfoError);
@@ -181,7 +184,10 @@ public class JdbcTaskInfoService implements TaskInfoService {
             log.warn("Empty error received, nothing to store");
             return;
         }
-        String tableName = storageResolver.resolveErrorStorageName(taskError.getHandlerName());
+        String handlerName = taskError.getHandlerName();
+        Assert.notNull(handlerName, "Error without handlerName, nothing to store");
+
+        String tableName = storageResolver.resolveErrorStorageName(handlerName);
         taskInfoErrorRepository.saveError(tableName, taskError);
 
         if (log.isInfoEnabled()) {
@@ -194,7 +200,7 @@ public class JdbcTaskInfoService implements TaskInfoService {
         String tableName = storageResolver.resolveErrorStorageName(handlerName);
         List<TaskInfoError> taskErrors = taskInfoErrorRepository.getTaskErrors(tableName, taskId);
 
-        if(log.isInfoEnabled()) {
+        if (log.isInfoEnabled()) {
             log.info("{} error found for task={}", taskErrors.size(), taskId);
         }
         return taskErrors;

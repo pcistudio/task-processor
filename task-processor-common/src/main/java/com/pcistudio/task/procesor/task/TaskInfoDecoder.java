@@ -2,6 +2,7 @@ package com.pcistudio.task.procesor.task;
 
 
 import com.pcistudio.task.procesor.util.decoder.MessageDecoding;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 
@@ -17,14 +18,20 @@ public class TaskInfoDecoder implements TaskInfoOperations, TaskInfoPayloadObjec
     private final TaskInfo delegate;
     private final MessageDecoding messageDecoding;
     private final Class<?> objectType;
+    /**
+     * It is decoded the payload object only once
+     */
+    @Nullable
     private Object payload;
 
     @Override
+    @Nullable
     public Long getId() {
         return delegate.getId();
     }
 
     @Override
+    @Nullable
     public UUID getBatchId() {
         return delegate.getBatchId();
     }
@@ -40,11 +47,13 @@ public class TaskInfoDecoder implements TaskInfoOperations, TaskInfoPayloadObjec
     }
 
     @Override
+    @Nullable
     public Instant getCreatedAt() {
         return delegate.getCreatedAt();
     }
 
     @Override
+    @Nullable
     public Instant getUpdatedAt() {
         return delegate.getUpdatedAt();
     }
@@ -65,11 +74,13 @@ public class TaskInfoDecoder implements TaskInfoOperations, TaskInfoPayloadObjec
     }
 
     @Override
+    @Nullable
     public String getPartitionId() {
         return delegate.getPartitionId();
     }
 
     @Override
+    @Nullable
     public String getObjectType() {
         return delegate.getObjectType();
     }

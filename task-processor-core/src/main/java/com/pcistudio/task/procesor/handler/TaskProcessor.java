@@ -171,7 +171,7 @@ public final class TaskProcessor implements Closeable, Runnable {
             }
 
             try {
-                executionTracker.trackFuture(task.getId(), () -> wrapInCircuitBreaker(task));
+                executionTracker.trackFuture(Objects.requireNonNull(task.getId()), () -> wrapInCircuitBreaker(task));
                 count++;
             } catch (RejectedExecutionException e) {
                 log.error("Task processor={} rejected task={}", getHandlerName(), task.getId(), e);

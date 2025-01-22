@@ -14,21 +14,26 @@ import java.util.List;
 
 @Slf4j
 public class LoggingJdbcTemplate extends JdbcTemplate {
-    private boolean showSql = false;
+    private final boolean showSql;
+
+    public LoggingJdbcTemplate(DataSource dataSource, boolean showSql) {
+        super(dataSource);
+        this.showSql = showSql;
+    }
 
     public LoggingJdbcTemplate(DataSource dataSource) {
-        super(dataSource);
+        this(dataSource, false);
     }
 
     @Override
-    public int update(String sql, PreparedStatementSetter pss) {
+    public int update(String sql, @Nullable PreparedStatementSetter pss) {
         int update = super.update(sql, pss);
         logSqlAndParameters(sql, pss);
         return update;
     }
 
     @Override
-    public <T> List<T> query(String sql, PreparedStatementSetter pss, RowMapper<T> rowMapper) {
+    public <T> List<T> query(String sql, @Nullable PreparedStatementSetter pss, RowMapper<T> rowMapper) {
         List<T> query = super.query(sql, pss, rowMapper);
         logSqlAndParameters(sql, pss);
         return query;
@@ -43,7 +48,7 @@ public class LoggingJdbcTemplate extends JdbcTemplate {
     }
 
     @SuppressWarnings("PMD.GuardLogStatement")
-    private void logSqlAndParameters(String sql, PreparedStatementSetter pss) {
+    private void logSqlAndParameters(String sql, @Nullable PreparedStatementSetter pss) {
         if (!log.isDebugEnabled()) {
             return;
         }

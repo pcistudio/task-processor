@@ -1,7 +1,8 @@
 package com.pcistudio.task.procesor.task;
 
-import com.pcistudio.task.procesor.util.Assert;
 import com.pcistudio.task.procesor.util.ExceptionUtils;
+
+import java.util.Objects;
 
 public interface TaskMetadata {
     Long getId();
@@ -30,15 +31,12 @@ public interface TaskMetadata {
         if (errorMessage == null) {
             return TaskInfoError.EMPTY;
         }
-        Assert.notNull(getId(), "Id must not be null");
-        Assert.notNull(getPartitionId(), "PartitionId must not be null");
-        Assert.notNull(getHandlerName(), "HandlerName must not be null");
 
         return TaskInfoError.builder()
-                .taskId(getId())
-                .partitionId(getPartitionId())
+                .taskId(Objects.requireNonNull(getId(), "Id must not be null"))
+                .partitionId(Objects.requireNonNull(getPartitionId(), "PartitionId must not be null"))
                 .errorMessage(errorMessage)
-                .handlerName(getHandlerName())
+                .handlerName(Objects.requireNonNull(getHandlerName(), "HandlerName must not be null"))
                 .build();
     }
 

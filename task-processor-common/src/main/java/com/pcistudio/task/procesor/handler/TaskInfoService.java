@@ -3,6 +3,7 @@ package com.pcistudio.task.procesor.handler;
 import com.pcistudio.task.procesor.task.TaskInfo;
 import com.pcistudio.task.procesor.task.TaskInfoError;
 import com.pcistudio.task.procesor.task.TaskInfoOperations;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
@@ -29,7 +30,7 @@ public interface TaskInfoService extends TaskInfoVisibilityService {
 
     List<TaskInfoError> getTaskErrors(String handlerName, Long taskId);
 
-    record RequeueResult(UUID batchId, int updateCount) {
+    record RequeueResult(@Nullable UUID batchId, int updateCount) {
         public static final RequeueResult EMPTY = new RequeueResult(null, 0);
 
         public boolean isEmpty() {

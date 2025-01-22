@@ -24,6 +24,7 @@ class TestTaskWriterTestAnnotation {
                     .taskHandler(payload -> {
                         System.out.println("test");
                     })
+                    .taskHandlerType(Object.class)
                     .build());
         }
     }

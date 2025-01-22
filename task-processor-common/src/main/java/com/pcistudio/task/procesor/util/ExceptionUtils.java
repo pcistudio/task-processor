@@ -1,10 +1,13 @@
 package com.pcistudio.task.procesor.util;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 public final class ExceptionUtils {
     private ExceptionUtils() {
     }
 
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    @Nullable
     public static Throwable getRootCause(Throwable original) {
         if (original == null) {
             return null;

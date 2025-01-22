@@ -1,6 +1,9 @@
 package com.pcistudio.task.procesor;
 
 import com.pcistudio.task.procesor.handler.TaskHandler;
+import com.pcistudio.task.procesor.util.Assert;
+import com.pcistudio.task.procesor.util.GenericTypeUtil;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 
 import javax.annotation.concurrent.Immutable;
@@ -71,8 +74,8 @@ public final class HandlerProperties extends HandlerWriteProperties {
         this.maxParallelTasks = builder.maxParallelTasks;
         this.processingExpire = builder.processingExpire;
         this.processingGracePeriod = builder.processingGracePeriod;
-        this.taskHandler = builder.taskHandler;
-        this.taskHandlerType = builder.taskHandlerType;
+        this.taskHandler = Objects.requireNonNull(builder.taskHandler, "TaskHandler cannot be null");
+        this.taskHandlerType = Objects.requireNonNull(builder.taskHandlerType, "TaskHandlerType cannot be null");
         this.autoStartEnabled = builder.autoStartEnabled;
         this.transientExceptions = Objects.requireNonNullElse(builder.transientExceptions, Collections.emptySet());
     }
@@ -99,9 +102,12 @@ public final class HandlerProperties extends HandlerWriteProperties {
         private int maxParallelTasks = 1;
         private Duration processingExpire = Duration.ofMinutes(5);
         private Duration processingGracePeriod = Duration.ofMinutes(0);
+        @Nullable
         private TaskHandler taskHandler;
+        @Nullable
         private Class<?> taskHandlerType;
         private boolean autoStartEnabled = true;
+        @Nullable
         private Set<Class<? extends RuntimeException>> transientExceptions;
 
         public HandlerPropertiesBuilder maxRetries(int maxRetries) {
@@ -176,9 +182,19 @@ public final class HandlerProperties extends HandlerWriteProperties {
 
         @Override
         public HandlerProperties build() {
+            Assert.notNull(taskHandler, "TaskHandler cannot be null");
+            taskHandlerType = discoverTaskHandlerType(taskHandler);
             return new HandlerProperties(this);
         }
 
+        private Class<?> discoverTaskHandlerType(TaskHandler taskHandler) {
+            try {
+                return GenericTypeUtil.getGenericTypeFromInterface(taskHandler.getClass(), TaskHandler.class);
+            } catch (RuntimeException ex) {
+                Assert.notNull(taskHandlerType, "TaskHandlerType cannot be discover. It can be set manually using taskHandlerType when registering the task ");
+                return taskHandlerType;
+            }
+        }
     }
 }
 

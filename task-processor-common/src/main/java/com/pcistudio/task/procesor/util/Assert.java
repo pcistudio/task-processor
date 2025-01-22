@@ -1,6 +1,8 @@
 package com.pcistudio.task.procesor.util;
 
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 import java.util.Collection;
 
 
@@ -9,7 +11,7 @@ public final class Assert {
     }
 
 
-    public static void notNull(Object object, String message) {
+    public static void notNull(@Nullable Object object, String message) {
         if (object == null) {
             throw new IllegalArgumentException(message);
         }
@@ -27,7 +29,7 @@ public final class Assert {
         }
     }
 
-    public static void notEmpty(Collection<?> collection, String message) {
+    public static void notEmpty(@Nullable Collection<?> collection, String message) {
         if (collection == null || collection.isEmpty()) {
             throw new IllegalArgumentException(message);
         }
