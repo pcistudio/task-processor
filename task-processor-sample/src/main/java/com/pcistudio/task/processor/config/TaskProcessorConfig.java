@@ -42,6 +42,8 @@ public class TaskProcessorConfig extends AbstractHandlersConfiguration {
                         .transientExceptions(Set.of(TransientDataAccessException.class))
                         .taskHandler(getVideoHandler())
                         .taskHandlerType(EncodeVideoCommand.class)
+                        // For a faster processing, increase the number of parallel tasks
+                        // using: .maxParallelTasks(16)
                         .build()
         );
     }

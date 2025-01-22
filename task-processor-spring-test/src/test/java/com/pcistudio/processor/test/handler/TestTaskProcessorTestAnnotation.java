@@ -1,6 +1,5 @@
-package com.pcistudio.contact.manager;
+package com.pcistudio.processor.test.handler;
 
-import com.pcistudio.processor.test.handler.TaskProcessorTest;
 import com.pcistudio.task.procesor.HandlerProperties;
 import com.pcistudio.task.procesor.handler.TaskProcessorLifecycleManager;
 import com.pcistudio.task.procesor.handler.TaskProcessorManager;
@@ -59,7 +58,6 @@ class TestTaskProcessorTestAnnotation {
     void writeHelloWorld()  {
 
         taskProcessorManager.start();
-//        park();
     }
 }
 

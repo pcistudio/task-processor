@@ -9,7 +9,7 @@ mvn clean install -DskipTests -Dspotbugs.skip=true -Dpmd.skip=true
 
 # Build image
 cd $BASE
-mvn  spring-boot:build-image
+mvn spring-boot:build-image
 
 # Run Docker composer
 docker-compose up

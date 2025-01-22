@@ -1,4 +1,4 @@
-package com.pcistudio.contact.manager;
+package com.pcistudio.processor.test.handler;
 
 import com.pcistudio.task.procesor.HandlerProperties;
 import com.pcistudio.task.procesor.register.HandlerManagerImpl;

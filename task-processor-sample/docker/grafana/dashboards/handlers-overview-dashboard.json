@@ -301,7 +301,7 @@
           "refId": "A"
         }
       ],
-      "title": "Task Processor P99.9",
+      "title": "Task Processor P99.9(seconds)",
       "type": "bargauge"
     },
     {
@@ -311,18 +311,16 @@
       },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
           "custom": {
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
+            },
+            "scaleDistribution": {
+              "type": "linear"
             }
-          },
-          "mappings": [],
-          "noValue": "No Errors"
+          }
         },
         "overrides": []
       },
@@ -332,42 +330,53 @@
         "x": 0,
         "y": 18
       },
-      "id": 7,
+      "id": 18,
       "options": {
-        "displayLabels": [],
-        "legend": {
-          "displayMode": "list",
-          "placement": "right",
-          "showLegend": true,
-          "values": [
-            "value"
-          ]
+        "calculate": true,
+        "cellGap": 1,
+        "color": {
+          "exponent": 0.5,
+          "fill": "dark-orange",
+          "mode": "scheme",
+          "reverse": false,
+          "scale": "exponential",
+          "scheme": "Oranges",
+          "steps": 64
         },
-        "pieType": "donut",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+        "exemplars": {
+          "color": "rgba(255,0,255,0.7)"
+        },
+        "filterValues": {
+          "le": 1e-9
+        },
+        "legend": {
+          "show": true
+        },
+        "rowsFrame": {
+          "layout": "auto"
         },
         "tooltip": {
           "mode": "single",
-          "sort": "none"
+          "showColorScale": false,
+          "yHistogram": false
+        },
+        "yAxis": {
+          "axisPlacement": "left",
+          "reverse": false
         }
       },
       "pluginVersion": "11.4.0",
       "targets": [
         {
           "editorMode": "code",
-          "expr": "floor(increase(task_processor_handler_processing_seconds_count{outcome=\"error\",handler=\"$handler\"}[1d]))",
-          "legendFormat": "{{exception}}",
+          "expr": "task_processor_handler_processing_seconds{handler=\"$handler\",outcome!=\"error\"}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Today exceptions view",
-      "type": "piechart"
+      "title": "Task processing P99 and P999",
+      "type": "heatmap"
     },
     {
       "datasource": {
@@ -483,12 +492,102 @@
           "mappings": [],
           "noValue": "No Errors"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "IllegalArgumentException"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
+        "y": 26
+      },
+      "id": 7,
+      "options": {
+        "displayLabels": [],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "floor(increase(task_processor_handler_processing_seconds_count{outcome=\"error\",handler=\"$handler\"}[1d]))",
+          "legendFormat": "{{exception}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Today exceptions view",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce9ii0fc02t4wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "noValue": "No Errors"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
         "y": 26
       },
       "id": 8,
@@ -527,84 +626,6 @@
       ],
       "title": "Today Retriable Exceptions",
       "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ce9ii0fc02t4wb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "index": 0,
-                  "text": "OFF"
-                },
-                "1": {
-                  "index": 1,
-                  "text": "ON"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "max": 1,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "semi-dark-red",
-                "value": null
-              },
-              {
-                "color": "semi-dark-green",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 26
-      },
-      "id": 15,
-      "options": {
-        "minVizHeight": 75,
-        "minVizWidth": 75,
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": false,
-        "sizing": "auto"
-      },
-      "pluginVersion": "11.4.0",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "task_processor_circuitbreaker_closed{handler=\"$handler\"}",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "CircuitBreaker",
-      "type": "gauge"
     },
     {
       "datasource": {
@@ -704,6 +725,84 @@
         }
       ],
       "title": "Task executions",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce9ii0fc02t4wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "index": 0,
+                  "text": "OFF"
+                },
+                "1": {
+                  "index": 1,
+                  "text": "ON"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "semi-dark-red",
+                "value": null
+              },
+              {
+                "color": "semi-dark-green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "id": 15,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": false,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "task_processor_circuitbreaker_closed{handler=\"$handler\"}",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "CircuitBreaker",
       "type": "gauge"
     },
     {
@@ -830,7 +929,7 @@
             "uid": "ce9ii0fc02t4wb"
           },
           "editorMode": "code",
-          "expr": "task_processor_handler_polling_seconds{handler=\"$handler\", quantile=\"0.999\", outcome=\"error\"}",
+          "expr": "sum without(exception) (task_processor_handler_polling_seconds{handler=\"$handler\", quantile=\"0.999\", outcome=\"error\"})",
           "hide": false,
           "instant": false,
           "legendFormat": "error",
@@ -838,8 +937,88 @@
           "refId": "B"
         }
       ],
-      "title": "Polling P99.9",
+      "title": "Polling P99.9(seconds)",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ce9ii0fc02t4wb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 43
+      },
+      "id": 17,
+      "options": {
+        "calculate": true,
+        "calculation": {
+          "xBuckets": {
+            "mode": "size",
+            "value": ""
+          }
+        },
+        "cellGap": 1,
+        "color": {
+          "exponent": 0.5,
+          "fill": "dark-orange",
+          "mode": "scheme",
+          "reverse": false,
+          "scale": "exponential",
+          "scheme": "Oranges",
+          "steps": 64
+        },
+        "exemplars": {
+          "color": "rgba(255,0,255,0.7)"
+        },
+        "filterValues": {
+          "le": 1e-9
+        },
+        "legend": {
+          "show": true
+        },
+        "rowsFrame": {
+          "layout": "auto"
+        },
+        "tooltip": {
+          "mode": "single",
+          "showColorScale": false,
+          "yHistogram": false
+        },
+        "yAxis": {
+          "axisPlacement": "left",
+          "reverse": false
+        }
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "task_processor_handler_polling_seconds{handler=\"$handler\",outcome=\"success\"}",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Success polling P99 and P999",
+      "type": "heatmap"
     },
     {
       "collapsed": false,
@@ -1024,7 +1203,7 @@
           "refId": "A"
         }
       ],
-      "title": "Requeue P99",
+      "title": "Requeue P99(seconds)",
       "type": "timeseries"
     }
   ],
@@ -1063,6 +1242,6 @@
   "timezone": "browser",
   "title": "Handlers Overview",
   "uid": "fe9zcn9e6qm0wc",
-  "version": 5,
+  "version": 10,
   "weekStart": ""
 }

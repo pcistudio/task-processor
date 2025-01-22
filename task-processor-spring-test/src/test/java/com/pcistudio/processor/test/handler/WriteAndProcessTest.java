@@ -1,8 +1,5 @@
-package com.pcistudio.contact.manager;
+package com.pcistudio.processor.test.handler;
 
-import com.pcistudio.processor.test.handler.RandomTaskHandler;
-import com.pcistudio.processor.test.handler.TaskInfoServiceTestHelper;
-import com.pcistudio.processor.test.handler.TaskProcessorTest;
 import com.pcistudio.processor.test.writer.TaskWriterHelper;
 import com.pcistudio.processor.test.writer.TaskWriterTest;
 import com.pcistudio.task.procesor.HandlerProperties;

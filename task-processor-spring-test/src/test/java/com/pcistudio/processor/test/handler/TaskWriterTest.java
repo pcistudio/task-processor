@@ -1,4 +1,4 @@
-package com.pcistudio.contact.manager;
+package com.pcistudio.processor.test.handler;
 
 import com.pcistudio.task.procesor.task.TaskParams;
 import com.pcistudio.task.procesor.writer.TaskWriter;
