@@ -37,10 +37,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
-contact-manager-api/mariadb_data/
-contact-manager-api/attachments/
-contact-manager-api/cache/
-cache/
-mariadb_data/
 *.log
 .attach_pid*
+cache/

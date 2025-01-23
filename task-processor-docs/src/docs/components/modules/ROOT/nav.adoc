@@ -1,0 +1,2 @@
+* xref:ROOT:index.adoc[Home]
+* xref:ROOT:another-page.adoc[Another Page]
