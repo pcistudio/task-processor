@@ -13,7 +13,7 @@ permissions:
   pages: write
   id-token: write
 jobs:
-  build:
+  doc-build:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -33,10 +33,11 @@ jobs:
         run: |
           cd task-processor-docs/src/docs
           npx antora antora-playbook.yml
+
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build/site
+          path: task-processor-docs/src/docs/build/site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
