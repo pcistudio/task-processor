@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.pcistudio.task.processor</groupId>
+        <groupId>com.pcistudio</groupId>
         <artifactId>task-processor</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.pcistudio.task.procesor</groupId>
+    <groupId>com.pcistudio</groupId>
     <artifactId>task-processor-spring-test</artifactId>
 
     <properties>
@@ -20,15 +20,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.pcistudio.task.procesor</groupId>
+            <groupId>com.pcistudio</groupId>
             <artifactId>task-processor-spring</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.pcistudio.task.procesor</groupId>
+            <groupId>com.pcistudio</groupId>
             <artifactId>task-processor-spring-jdbc</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.pcistudio.task.procesor</groupId>
+            <groupId>com.pcistudio</groupId>
             <artifactId>task-processor-spring-jdbc-h2</artifactId>
         </dependency>
         <dependency>

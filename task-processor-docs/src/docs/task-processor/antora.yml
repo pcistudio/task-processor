@@ -1,6 +1,7 @@
 name: task-processor        # Component name
 title: Task Processor   # Display name
 version: 1.0                   # Version of the documentation
-start_page: ROOT:index
+start_page: ROOT:index.adoc
 nav:
-- ROOT/nav.adoc
+- modules/ROOT/nav.adoc
+- modules/sample/nav.adoc

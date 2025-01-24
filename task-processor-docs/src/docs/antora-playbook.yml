@@ -1,17 +1,25 @@
 site:
   title: Task Processor Documentation Site
-  start_page: task-processor:ROOT:index
+  start_page: task-processor::index.adoc
 
 content:
   sources:
-    - url: ./components
-#      branches: HEAD
-#        Local content source does not exist: /home/junior/Development/ContactManager/task-processor-docs/src/docs/task-processor-docs/src/docs/components (url: ./task-processor-docs/src/docs/components
+    - url: ./../../..
+      branches: HEAD
+      start_path: task-processor-docs/src/docs/task-processor
 
 ui:
   bundle:
     url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
     snapshot: true
+  supplemental_files:
+    - path: ui.yml
+      contents: |
+        static_files:
+        - .nojekyll
+    - path: .nojekyll
 
-runtime:
-  cache_dir: ./cache
+#runtime:
+#  cache_dir: ./cache
+#  log:
+#    failure_level: error

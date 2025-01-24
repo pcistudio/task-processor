@@ -1,0 +1,27 @@
+= Task Processor image:https://github.com/pcistudio/task-processing/actions/workflows/maven.yml/badge.svg["Build Status", link="https://github.com/pcistudio/task-processing/actions/workflows/maven.yml"]
+
+== Full build
+
+mvn clean install
+
+== Run integration test
+
+[source,bash]
+----
+mvn verify -P run-it
+----
+
+== Run sample project
+
+[source,bash]
+----
+cd task-processor-sample/
+bash run.sh
+----
+
+== Deploy
+
+[source,bash]
+----
+mvn deploy -P release
+----
