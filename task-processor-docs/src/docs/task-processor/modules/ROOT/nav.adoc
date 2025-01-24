@@ -1,0 +1,4 @@
+*  Architecture
+** xref:ROOT:index.adoc[Home]
+*  Architecture
+** xref:ROOT:another-page.adoc[Another Page]

@@ -1,0 +1,1 @@
+* xref:sample:index.adoc[Sample]

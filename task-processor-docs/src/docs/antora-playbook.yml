@@ -1,0 +1,25 @@
+site:
+  title: Task Processor Documentation Site
+  start_page: task-processor::index.adoc
+
+content:
+  sources:
+    - url: ./../../..
+      branches: HEAD
+      start_path: task-processor-docs/src/docs/task-processor
+
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true
+  supplemental_files:
+    - path: ui.yml
+      contents: |
+        static_files:
+        - .nojekyll
+    - path: .nojekyll
+
+#runtime:
+#  cache_dir: ./cache
+#  log:
+#    failure_level: error
