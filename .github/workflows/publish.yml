@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
   # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+#  workflow_dispatch:
 concurrency:
   group: github-pages
   cancel-in-progress: false
@@ -33,6 +33,7 @@ jobs:
         run: |
           cd task-processor-docs/src/docs
           npx antora antora-playbook.yml
+
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
