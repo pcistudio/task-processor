@@ -6,7 +6,6 @@ on:
 jobs:
   deploy-mvn-central:
     runs-on: ubuntu-latest
-    needs: build
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
