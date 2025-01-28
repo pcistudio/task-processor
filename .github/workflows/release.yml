@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -21,8 +23,8 @@ jobs:
           cache: maven
       - name: Set Git Author
         run: |
-          git config --global user.name "release-bot"
-          git config --global user.email "junior.martori@pcistudio.com"
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
       - name: Create New Release
         run: mvn release:prepare -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B
       - name: Update snapshot version
