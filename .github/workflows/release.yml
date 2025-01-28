@@ -19,10 +19,12 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           cache: maven
-      - name: Deploy to Maven Central
-        run: mvn -B deploy --file pom.xml -Prelease -DskipTests
-        env:
-          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Create Release
+        run: mvn -B release:prepare release:perform
+#      - name: Deploy to Maven Central
+#        run: mvn -B deploy --file pom.xml -Prelease -DskipTests
+#        env:
+#          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+#          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+#          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
