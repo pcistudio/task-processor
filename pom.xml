@@ -1,15 +1,16 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.2</version>
-        <relativePath />
+        <relativePath/>
     </parent>
 
     <groupId>com.pcistudio</groupId>
     <artifactId>task-processor</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Task processor</name>
     <description>
@@ -41,8 +42,7 @@
         <url>https://github.com/pcistudio/task-processor.git</url>
         <connection>scm:git:git://github.com:pcistudio/task-processor.git</connection>
         <developerConnection>scm:git:git@github.com:pcistudio/task-processor.gitt</developerConnection>
-      <tag>task-processor-0.0.1</tag>
-  </scm>
+    </scm>
 
     <developers>
         <developer>
@@ -92,42 +92,42 @@
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-core</artifactId>
-                <version>0.0.1</version>
+                <version>0.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-common</artifactId>
-                <version>0.0.1</version>
+                <version>0.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring-jdbc-mysql</artifactId>
-                <version>0.0.1</version>
+                <version>0.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring-jdbc-mariadb</artifactId>
-                <version>0.0.1</version>
+                <version>0.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring-jdbc-h2</artifactId>
-                <version>0.0.1</version>
+                <version>0.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring</artifactId>
-                <version>0.0.1</version>
+                <version>0.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring-jdbc</artifactId>
-                <version>0.0.1</version>
+                <version>0.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring-test</artifactId>
-                <version>0.0.1</version>
+                <version>0.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>io.github.resilience4j</groupId>
