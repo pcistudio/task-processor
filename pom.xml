@@ -41,7 +41,7 @@
     <scm>
         <url>https://github.com/pcistudio/task-processor.git</url>
         <connection>scm:git:git://github.com:pcistudio/task-processor.git</connection>
-        <developerConnection>scm:git:git@github.com:pcistudio/task-processor.gitt</developerConnection>
+        <developerConnection>scm:git:git@github.com:pcistudio/task-processor.git</developerConnection>
     </scm>
 
     <developers>
