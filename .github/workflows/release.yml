@@ -19,11 +19,14 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           cache: maven
+      - name: Set Git Author
+        run: |
+          git config --global user.name "release-bot"
+          git config --global user.email "junior.martori@pcistudio.com"
       - name: Create New Release
         run: mvn release:prepare -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B
       - name: Update snapshot version
         run: mvn release:perform -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true"
-
 #      - name: Deploy to Maven Central
 #        run: mvn -B deploy --file pom.xml -Prelease -DskipTests
 #        env:
