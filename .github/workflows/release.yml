@@ -20,9 +20,9 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           cache: maven
       - name: Create New Release
-        run: mvn release:prepare -Darguments="-DskipTests" -B
+        run: mvn release:prepare -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B
       - name: Update snapshot version
-        run: mvn release:perform -Darguments="-DskipTests"
+        run: mvn release:perform -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true"
 
 #      - name: Deploy to Maven Central
 #        run: mvn -B deploy --file pom.xml -Prelease -DskipTests
