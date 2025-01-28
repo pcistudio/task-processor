@@ -19,8 +19,11 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           cache: maven
-      - name: Create Release
-        run: mvn -B release:prepare release:perform -DskipTests
+      - name: Create New Release
+        run: mvn -B release:prepare -DskipTests
+      - name: Update snapshot version
+        run: mvn release:perform -DskipTests
+
 #      - name: Deploy to Maven Central
 #        run: mvn -B deploy --file pom.xml -Prelease -DskipTests
 #        env:
