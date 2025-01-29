@@ -28,11 +28,11 @@ jobs:
       - name: Create New Release
         run: mvn release:prepare -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B
       - name: Update snapshot version
-        run: mvn release:perform -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true"
+        run: mvn release:perform -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B -Prelease
 #      - name: Deploy to Maven Central
 #        run: mvn -B deploy --file pom.xml -Prelease -DskipTests
-#        env:
-#          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-#          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-#          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
