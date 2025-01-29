@@ -31,7 +31,7 @@ public abstract class CursorPageableFactory<ITEM, OFFSET> {
      * It will assume the the last element is the last element of the page
      *
      * @param result
-     * @param previousPage
+     * @param maxSize
      * @return
      */
     public Pageable<ITEM> createPageable(List<ITEM> result, int maxSize) {

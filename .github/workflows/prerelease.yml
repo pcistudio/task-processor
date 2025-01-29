@@ -1,0 +1,40 @@
+name: Testing release
+
+on:
+  push:
+    branches: ["prerelease"]
+permissions:
+  contents: write
+  id-token: write
+jobs:
+  deploy-mvn-central:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          server-id: ossrh
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          cache: maven
+      - name: Set Git Author
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+      - name: Create New Release
+        run: mvn release:clean release:prepare -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B
+
+      - name: Perform Release Deployment to Maven Central
+        run: mvn release:perform -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B -Prelease
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

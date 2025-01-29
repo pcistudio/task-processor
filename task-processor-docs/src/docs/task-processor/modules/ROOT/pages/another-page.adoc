@@ -1,0 +1,6 @@
+= Another Page
+This is another page in the documentation.
+
+You can include images:
+
+image:./logo1.png[Logo]
