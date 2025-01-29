@@ -24,6 +24,7 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           cache: maven
+
       - name: Deploy snapshot to Maven Central
         run: mvn -B deploy --file pom.xml -Prelease
         env:
