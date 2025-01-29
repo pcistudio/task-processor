@@ -2,7 +2,7 @@ name: Publish Documentation with GitHub Pages
 on:
   push:
     branches: [antora]
-  workflow_dispatch:
+#  workflow_dispatch:
 concurrency:
   group: github-pages
   cancel-in-progress: false
