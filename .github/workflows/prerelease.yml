@@ -3,6 +3,9 @@ name: Testing release
 on:
   push:
     branches: ["prerelease"]
+permissions:
+  contents: write
+  id-token: write
 jobs:
   deploy-mvn-central:
     runs-on: ubuntu-latest

@@ -3,6 +3,9 @@ name: Java CI with Maven
 on:
   push:
     branches: [ "develop"]
+permissions:
+  contents: read
+  id-token: write
 jobs:
   deploy-mvn-central:
     runs-on: ubuntu-latest

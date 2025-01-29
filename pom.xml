@@ -331,6 +331,7 @@
                             <useReleaseProfile>false</useReleaseProfile>
                             <releaseProfiles>release</releaseProfiles>
                             <goals>deploy</goals>
+                            <scmCommentPrefix>[release]</scmCommentPrefix>
                         </configuration>
                     </plugin>
                 </plugins>
