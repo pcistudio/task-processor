@@ -2,7 +2,7 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ "main", "prerelease"]
+    branches: [ "main"]
 jobs:
   deploy-mvn-central:
     runs-on: ubuntu-latest
