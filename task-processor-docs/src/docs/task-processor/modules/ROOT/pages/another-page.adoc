@@ -3,4 +3,4 @@ This is another page in the documentation.
 
 You can include images:
 
-image:./logo.png[Logo]
+image:./logo1.png[Logo]
