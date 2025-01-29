@@ -1,10 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.2</version>
-        <relativePath />
+        <relativePath/>
     </parent>
 
     <groupId>com.pcistudio</groupId>
@@ -13,7 +14,8 @@
     <packaging>pom</packaging>
     <name>Task processor</name>
     <description>
-        Task processor is a library that provides a way to process tasks in a distributed environment, and keep track of the execution status of each task.
+        Task processor is a library that provides a way to process tasks in a distributed environment, and keep track of
+        the execution status of each task.
     </description>
     <url>https://pcistudio.github.io/task-processor</url>
 
@@ -39,13 +41,13 @@
 
     <scm>
         <url>https://github.com/pcistudio/task-processor.git</url>
-<!--        <connection>scm:git:git://github.com:pcistudio/task-processor.git</connection>-->
-<!--        <developerConnection>scm:git:git@github.com:pcistudio/task-processor.git</developerConnection>-->
+        <!--        <connection>scm:git:git://github.com:pcistudio/task-processor.git</connection>-->
+        <!--        <developerConnection>scm:git:git@github.com:pcistudio/task-processor.git</developerConnection>-->
 
         <connection>scm:git:https://github.com/pcistudio/task-processor.git</connection>
         <developerConnection>scm:git:https://github.com/pcistudio/task-processor.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <developers>
         <developer>
@@ -326,6 +328,10 @@
                         <version>3.1.1</version>
                         <configuration>
                             <projectVersionPolicyId>SemVerVersionPolicy</projectVersionPolicyId>
+                            <autoVersionSubmodules>true</autoVersionSubmodules>
+                            <useReleaseProfile>false</useReleaseProfile>
+                            <releaseProfiles>release</releaseProfiles>
+                            <goals>deploy</goals>
                         </configuration>
                     </plugin>
                 </plugins>
