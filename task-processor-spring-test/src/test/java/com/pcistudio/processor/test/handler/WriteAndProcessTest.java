@@ -36,15 +36,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @TaskWriterTest
 @TestPropertySource(properties = {
 //        "debug=true",
-        "spring.task.logging.template=true",
-        "logging.level.com.pcistudio.task.procesor.template.LoggingJdbcTemplate=DEBUG",
+//        "spring.task.logging.template=true",
+//        "logging.level.com.pcistudio.task.procesor.template.LoggingJdbcTemplate=DEBUG",
         "logging.level.org.springframework.jdbc.core.JdbcTemplate=INFO",
         "logging.level.com.pcistudio=INFO",
         "task.processor.metrics.enable=true"
 })
 class WriteAndProcessTest {
-    //    static RandomTaskHandler<Person> personRandomTaskHandler = new RandomTaskHandler<Person>()
-//            .builder()
+
     static RandomTaskHandler<Person> personRandomTaskHandler = RandomTaskHandler.<Person>builder()
             .withConsumer(person -> {
                 log.info("{}", person);
