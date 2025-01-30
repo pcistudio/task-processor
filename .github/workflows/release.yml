@@ -2,7 +2,7 @@ name: Creating Release and Deploying to Maven Central
 
 on:
   push:
-    branches: [ "main"]
+    branches: [ "main", "main_release" ]
 permissions:
   contents: write
   id-token: write
