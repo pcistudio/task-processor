@@ -31,6 +31,7 @@ jobs:
         run: |
           git remote set-url origin https://x-access-token:${{ secrets.PCISTUDIO_RELEASE_TOKEN }}@github.com/${{ github.repository }}.git
       - name: Create New Release
+        shell: bash
         run: ./mvnw release:clean release:prepare -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B  -X -Dusername=${{ vars.PCISTUDIO_RELEASE_USER }} -Dpassword=${{ secrets.PCISTUDIO_RELEASE_TOKEN }}
       # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
       - name: Update dependency graph
