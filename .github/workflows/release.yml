@@ -5,7 +5,6 @@ on:
     branches: [ "main", "main_release" ]
 permissions:
   contents: write
-  id-token: write
 jobs:
   deploy-mvn-central:
     runs-on: ubuntu-latest
@@ -42,4 +41,3 @@ jobs:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
