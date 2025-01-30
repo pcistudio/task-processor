@@ -331,7 +331,8 @@
                             <useReleaseProfile>false</useReleaseProfile>
                             <releaseProfiles>release</releaseProfiles>
                             <goals>deploy</goals>
-                            <scmCommentPrefix>[release]</scmCommentPrefix>
+                            <scmDevelopmentCommitComment>[skip ci] - prepare for next development iteration</scmDevelopmentCommitComment>
+                            <scmReleaseCommitComment>[skip ci] - prepare release @{releaseLabel}</scmReleaseCommitComment>
                         </configuration>
                     </plugin>
                 </plugins>
