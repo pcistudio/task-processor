@@ -2,6 +2,7 @@ version: 2
 updates:
 
   - package-ecosystem: "maven"
+    target-branch: "develop"
     directory: "/"
     open-pull-requests-limit: 20
     # Ignore major version updates
