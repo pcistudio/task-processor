@@ -154,8 +154,8 @@
                         <!--                            <useReleaseProfile>false</useReleaseProfile>-->
                         <releaseProfiles>release</releaseProfiles>
                         <goals>deploy</goals>
-                        <scmDevelopmentCommitComment>[skip ci] - prepare for next development iteration</scmDevelopmentCommitComment>
-                        <scmReleaseCommitComment>[skip ci] - prepare release @{releaseLabel}</scmReleaseCommitComment>
+                        <scmDevelopmentCommitComment>[skip ci] - Prepare for next development iteration</scmDevelopmentCommitComment>
+                        <scmReleaseCommitComment>[skip ci] - Prepare release @{releaseLabel}</scmReleaseCommitComment>
                     </configuration>
                 </plugin>
             </plugins>

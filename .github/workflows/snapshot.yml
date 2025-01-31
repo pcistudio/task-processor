@@ -5,6 +5,7 @@ on:
     branches: [ "develop" ]
     paths-ignore:
       - '.github/workflows/release.yml'
+      - '.github/workflows/doc-publish.yml'
 permissions:
   contents: write
   id-token: write
