@@ -81,7 +81,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: maven
       - name: Set Git Author
         run: |
           git config --global user.name "release-bot"
