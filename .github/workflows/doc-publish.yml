@@ -1,7 +1,7 @@
 name: Publish Documentation with GitHub Pages
 on:
   push:
-    branches: [antora]
+    branches: [main]
 #  workflow_dispatch:
 concurrency:
   group: github-pages

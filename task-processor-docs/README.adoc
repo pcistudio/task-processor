@@ -1,0 +1,32 @@
+= Task Processor Documentation
+
+== Generate the documentation using maven
+
+[source,bash]
+----
+mvn antora:antora
+----
+
+The generated documentation will be available in the `task-processor-docs/target/site` directory.
+
+== Generate the documentation using `node`
+
+To run the following command, you will need to have `node` installed on your machine. See https://docs.antora.org/antora/latest/install-and-run-quickstart/[here] for more information.
+
+[source,bash]
+----
+npm i -g antora
+----
+
+Then run the following commands to generate the documentation:
+[source,bash]
+----
+cd task-processor-docs/src/docs
+npx antora antora-playbook.yml
+----
+
+The generated documentation will be available in the `task-processor-docs/src/docs/build/site` directory.
+
+
+
+
