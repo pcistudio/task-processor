@@ -2,12 +2,60 @@ name: Creating Release and Deploying to Maven Central
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "main_test" ]
+    paths-ignore:
+      - '.github/workflows/snapshot.yml'
+env:
+  MAIN_BRANCH: main_test
+  DEVELOP_BRANCH: develop_test
 permissions:
   contents: write
 jobs:
-  deploy-mvn-central:
+#  deploy-mvn-central:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Set up SSH
+#        run: |
+#          mkdir -p ~/.ssh
+#          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+#          chmod 600 ~/.ssh/id_ed25519
+#          ssh-keyscan github.com >> ~/.ssh/known_hosts
+#
+#      - uses: actions/checkout@v4
+#        with:
+#          persist-credentials: true
+#      - name: Set up JDK 17
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: '17'
+#          distribution: 'temurin'
+#          server-id: ossrh
+#          server-username: MAVEN_CENTRAL_USERNAME
+#          server-password: MAVEN_CENTRAL_PASSWORD
+#          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+#          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+#          cache: maven
+#      - name: Set Git Author
+#        run: |
+#          git config --global user.name "release-bot"
+#          git config --global user.email "pcistudio360@gmail.com"
+#      - name: Create New Release
+#        shell: bash
+#        run: ./mvnw release:clean release:prepare -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B  -X
+#      # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
+#      - name: Update dependency graph
+#        uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
+#      - name: Perform Release Deployment to Maven Central
+#        run: ./mvnw release:perform -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B -Prelease
+#        env:
+#          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+#          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+#          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+  synchronize-develop:
     runs-on: ubuntu-latest
+#    needs:
+#      - deploy-mvn-central
     steps:
       - name: Set up SSH
         run: |
@@ -18,50 +66,16 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.DEVELOP_BRANCH }}
           persist-credentials: true
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          server-id: ossrh
-          server-username: MAVEN_CENTRAL_USERNAME
-          server-password: MAVEN_CENTRAL_PASSWORD
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          cache: maven
-      - name: Set Git Author
-        run: |
-          git config --global user.name "pcistudio-bot"
-          git config --global user.email "pcistudio360@gmail.com"
-      - name: Create New Release
-        shell: bash
-        run: ./mvnw release:clean release:prepare -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B  -X
-      # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
-      - name: Update dependency graph
-        uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
-      - name: Perform Release Deployment to Maven Central
-        run: ./mvnw release:perform -Darguments="-DskipTests -Dpmd.skip=true -Dspotbugs.skip=true" -B -Prelease
-        env:
-          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-
-  update-develop:
-    runs-on: ubuntu-latest
-    needs:
-      - deploy-mvn-central
-    steps:
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-
+          fetch-depth: 0
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.MAIN_BRANCH }}
           persist-credentials: true
+          fetch-depth: 0
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -70,10 +84,12 @@ jobs:
           cache: maven
       - name: Set Git Author
         run: |
-          git config --global user.name "pcistudio-bot"
+          git config --global user.name "release-bot"
           git config --global user.email "pcistudio360@gmail.com"
-      - name: Update develop branch
+      - name: Synchronize ${{ env.DEVELOP_BRANCH }} branch with ${{ env.MAIN_BRANCH }}
         run: |
-          git checkout develop
-          git rebase main
-          git push origin develop --force-with-lease
+          git checkout ${{ env.DEVELOP_BRANCH }}
+          git rebase ${{ env.MAIN_BRANCH }}
+      - name: Push changes to ${{ env.DEVELOP_BRANCH }} branch
+        run: git push origin ${{ env.DEVELOP_BRANCH }} --force-with-lease
+
