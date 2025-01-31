@@ -2,7 +2,9 @@ name: Deploying Snapshot to Maven Central
 
 on:
   push:
-    branches: [ "develop"]
+    branches: [ "develop" ]
+    paths-ignore:
+      - '.github/workflows/release.yml'
 permissions:
   contents: write
   id-token: write
