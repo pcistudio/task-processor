@@ -9,7 +9,7 @@
 
     <groupId>com.pcistudio</groupId>
     <artifactId>task-processor</artifactId>
-    <version>0.0.10-SNAPSHOT</version>
+    <version>0.0.28-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Task processor</name>
     <description>
@@ -40,11 +40,11 @@
 
     <scm>
         <url>https://github.com/pcistudio/task-processor.git</url>
-<!--                <connection>scm:git:git://github.com:pcistudio/task-processor.git</connection>-->
-<!--                <developerConnection>scm:git:git@github.com:pcistudio/task-processor.git</developerConnection>-->
+        <connection>scm:git:git://github.com:pcistudio/task-processor.git</connection>
+        <developerConnection>scm:git:git@github.com:pcistudio/task-processor.git</developerConnection>
 
-        <connection>scm:git:https://github.com/pcistudio/task-processor.git</connection>
-        <developerConnection>scm:git:https://github.com/pcistudio/task-processor.git</developerConnection>
+<!--        <connection>scm:git:https://github.com/pcistudio/task-processor.git</connection>-->
+<!--        <developerConnection>scm:git:https://github.com/pcistudio/task-processor.git</developerConnection>-->
         <tag>HEAD</tag>
     </scm>
 
@@ -96,42 +96,42 @@
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-core</artifactId>
-                <version>0.0.10-SNAPSHOT</version>
+                <version>0.0.28-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-common</artifactId>
-                <version>0.0.10-SNAPSHOT</version>
+                <version>0.0.28-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring-jdbc-mysql</artifactId>
-                <version>0.0.10-SNAPSHOT</version>
+                <version>0.0.28-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring-jdbc-mariadb</artifactId>
-                <version>0.0.10-SNAPSHOT</version>
+                <version>0.0.28-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring-jdbc-h2</artifactId>
-                <version>0.0.10-SNAPSHOT</version>
+                <version>0.0.28-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring</artifactId>
-                <version>0.0.10-SNAPSHOT</version>
+                <version>0.0.28-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring-jdbc</artifactId>
-                <version>0.0.10-SNAPSHOT</version>
+                <version>0.0.28-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.pcistudio</groupId>
                 <artifactId>task-processor-spring-test</artifactId>
-                <version>0.0.10-SNAPSHOT</version>
+                <version>0.0.28-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>io.github.resilience4j</groupId>
@@ -142,6 +142,24 @@
     </dependencyManagement>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>3.1.1</version>
+                    <configuration>
+                        <!--                            <projectVersionPolicyId>SemVerVersionPolicy</projectVersionPolicyId>-->
+                        <autoVersionSubmodules>true</autoVersionSubmodules>
+                        <!--                            <useReleaseProfile>false</useReleaseProfile>-->
+                        <releaseProfiles>release</releaseProfiles>
+                        <goals>deploy</goals>
+                        <scmDevelopmentCommitComment>[skip ci] - prepare for next development iteration</scmDevelopmentCommitComment>
+                        <scmReleaseCommitComment>[skip ci] - prepare release @{releaseLabel}</scmReleaseCommitComment>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -320,19 +338,6 @@
                                 </goals>
                             </execution>
                         </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>3.1.1</version>
-                        <configuration>
-                            <projectVersionPolicyId>SemVerVersionPolicy</projectVersionPolicyId>
-                            <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <useReleaseProfile>false</useReleaseProfile>
-                            <releaseProfiles>release</releaseProfiles>
-                            <goals>deploy</goals>
-                            <scmCommentPrefix>[release]</scmCommentPrefix>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
