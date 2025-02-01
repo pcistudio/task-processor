@@ -149,9 +149,7 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>3.1.1</version>
                     <configuration>
-                        <!--                            <projectVersionPolicyId>SemVerVersionPolicy</projectVersionPolicyId>-->
                         <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <!--                            <useReleaseProfile>false</useReleaseProfile>-->
                         <releaseProfiles>release</releaseProfiles>
                         <goals>deploy</goals>
                         <scmDevelopmentCommitComment>[skip ci] - Prepare for next development iteration</scmDevelopmentCommitComment>
