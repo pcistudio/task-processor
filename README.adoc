@@ -1,4 +1,4 @@
-= Task Processor image:https://github.com/pcistudio/task-processing/actions/workflows/maven.yml/badge.svg["Build Status", link="https://github.com/pcistudio/task-processing/actions/workflows/maven.yml"]
+= Task Processor image:https://github.com/pcistudio/task-processor/actions/workflows/release.yml/badge.svg["Release", link="https://github.com/pcistudio/task-processor/actions/workflows/release.yml"] image:https://github.com/pcistudio/task-processor/actions/workflows/codeql-analysis.yml/badge.svg["CodeQL", link="https://github.com/pcistudio/task-processor/actions/workflows/codeql-analysis.yml"] image:https://github.com/pcistudio/task-processor/actions/workflows/snapshot.yml/badge.svg["Snapshot", link="https://github.com/pcistudio/task-processor/actions/workflows/snapshot.yml"]
 
 == Full build
 

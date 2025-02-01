@@ -149,9 +149,7 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>3.1.1</version>
                     <configuration>
-                        <!--                            <projectVersionPolicyId>SemVerVersionPolicy</projectVersionPolicyId>-->
                         <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <!--                            <useReleaseProfile>false</useReleaseProfile>-->
                         <releaseProfiles>release</releaseProfiles>
                         <goals>deploy</goals>
                         <scmDevelopmentCommitComment>[skip ci] - Prepare for next development iteration</scmDevelopmentCommitComment>
@@ -202,7 +200,6 @@
                 <version>3.6.0</version>
                 <configuration>
                     <configLocation>google_checks.xml</configLocation>
-                    <encoding>UTF-8</encoding>
                     <consoleOutput>true</consoleOutput>
                     <failOnViolation>true</failOnViolation>
                 </configuration>
@@ -294,9 +291,6 @@
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
                             <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                            <excludedModules>
-                                <excludedModule>task-processor-sample</excludedModule>
-                            </excludedModules>
                         </configuration>
                     </plugin>
                     <plugin>
