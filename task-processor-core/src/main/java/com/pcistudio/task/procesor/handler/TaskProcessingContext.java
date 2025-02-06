@@ -20,7 +20,7 @@ public final class TaskProcessingContext {
 
     private final Set<Class<? extends RuntimeException>> transientErrors;
     @Getter
-    private final RetryManager retryManager;
+    private final RetryStrategy retryManager;
     @Getter
     private final MessageDecoding messageDecoding;
     /**
@@ -41,7 +41,7 @@ public final class TaskProcessingContext {
         Assert.notNull(builder.taskHandler, "taskHandler cannot be null");
 
         Assert.notNull(builder.taskInfoService, "taskInfoService cannot be null");
-        Assert.notNull(builder.retryManager, "retryManager cannot be null");
+        Assert.notNull(builder.retryStrategy, "retryManager cannot be null");
         Assert.notNull(builder.messageDecoding, "messageDecoding cannot be null");
         Assert.notNull(builder.clock, "clock cannot be null");
 
@@ -53,7 +53,7 @@ public final class TaskProcessingContext {
         this.taskHandlerType = handlerProperties.getTaskHandlerType();
         this.taskInfoService = builder.taskInfoService;
         this.transientErrors = transientExceptions;
-        this.retryManager = builder.retryManager;
+        this.retryManager = builder.retryStrategy;
         this.messageDecoding = builder.messageDecoding;
         this.circuitBreaker = Objects.requireNonNullElseGet(builder.circuitBreaker, DefaultCircuitBreakerDecorator::new);
         this.clock = builder.clock;
@@ -86,7 +86,7 @@ public final class TaskProcessingContext {
         @Nullable
         private TaskInfoService taskInfoService;
         @Nullable
-        private RetryManager retryManager;
+        private RetryStrategy retryStrategy;
         @Nullable
         private MessageDecoding messageDecoding;
         @Nullable
@@ -109,8 +109,8 @@ public final class TaskProcessingContext {
             return this;
         }
 
-        public Builder retryManager(final RetryManager retryManager) {
-            this.retryManager = retryManager;
+        public Builder retryManager(final RetryStrategy retryStrategy) {
+            this.retryStrategy = retryStrategy;
             return this;
         }
 

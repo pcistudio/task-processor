@@ -12,6 +12,7 @@ import java.time.Instant;
 
 @Slf4j
 public final class JsonUtil {
+    private static final int KB = 1024;
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Instant.class, new InstantTypeAdapter())
             .create();
@@ -33,7 +34,11 @@ public final class JsonUtil {
     }
 
     public static byte[] toJsonBytes(Object object) {
-        return gson.toJson(object).getBytes(StandardCharsets.UTF_8);
+        String json = gson.toJson(object);
+        if(log.isTraceEnabled()) {
+            log.trace("Json from object: {}", json.substring(0, Math.min(KB, json.length())));
+        }
+        return json.getBytes(StandardCharsets.UTF_8);
     }
 
     public static <T> T from(byte[] objectBytes, Class<T> clazz) {
@@ -41,6 +46,9 @@ public final class JsonUtil {
     }
 
     public static <T> T from(String objectStr, Class<T> clazz) {
+        if(log.isTraceEnabled()) {
+            log.trace("Object from json: {}", objectStr.substring(0, Math.min(KB, objectStr.length())));
+        }
         return gson.fromJson(objectStr, clazz);
     }
 

@@ -17,7 +17,7 @@ class TestTaskWriterTestAnnotation {
     @Configuration
     static class TestHandlerConfiguration extends AbstractHandlersConfiguration {
         @Override
-        protected void addTask(HandlerManagerImpl.Builder builder) {
+        protected void configureHandler(HandlerManagerImpl.Builder builder) {
             builder.register(HandlerProperties.builder()
                     .handlerName("test")
                     .tableName("test")

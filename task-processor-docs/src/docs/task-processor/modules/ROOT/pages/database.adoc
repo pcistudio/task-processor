@@ -1,0 +1,83 @@
+= Database
+:linkcss:
+:stylesdir: https://pcistudio.github.io/task-processor/_/css/
+:stylesheet: site.css
+:table-caption: Schema
+
+
+
+== Database Schema
+By default, the supported databases are `MariaDB`,`MySQL` and `H2` and the schema will be created automatically when the application starts.
+
+Most of the time each handler will have its own table but if configured, you can have multiple handlers in the same table. By default tha table name will follow the pattern `task_info_{handler_name}` and `task_info_{handler_name}_error`. See [example]
+
+[IMPORTANT]
+====
+* More than one handler can live in the same table.
+* The data type will change depending on the database you are using.
+====
+
+.For task_info_{handler_name}
+[cols="1,1,2",  options="header"]
+|===
+| Column | Type | Description
+
+| id | BIGINT | Primary key
+| batch_id | VARCHAR(50) | Group task that are inserted together
+| status | VARCHAR(50) | Status of the task. Allowed values: `FAILED`, `COMPLETED`, `PENDING`, `PROCESSING`
+| version | BIGINT | Version of the record for optimistic locking
+| created_at | TIMESTAMP | Creation date
+| updated_at | TIMESTAMP | Last update date
+| execution_time | TIMESTAMP | Expected execution date
+| payload | BLOB | Payload of the task
+| retry_count | INT | Number of attempts to process the task
+| partition_id | VARCHAR(36) | Identify the server that is trying to process the task
+| read_token | VARCHAR(36) | Only one server that change the status can read the task
+| handler_name | VARCHAR(70) | Handler name
+| object_type | VARCHAR(128) | Object type
+|===
+
+[NOTE]
+I will by working in a simpler way to create the schema in other databases.
+
+== TaskInfoService
+The `TaskInfoService` is a service that is responsible for the data storage interactions. It will be in charge of storing, retrieving, and updating the tasks in the database. It will also be responsible for storing the errors that occur during the processing of the tasks.
+
+.Definition
+[source,java]
+----
+public interface TaskInfoService extends TaskInfoVisibilityService {
+
+    List<TaskInfo> poll(String handlerName, int limit);
+
+    void markTaskCompleted(TaskInfoOperations task);
+
+    void markTaskToRetry(TaskInfoOperations task, Instant nextRetryTime);
+
+    void markTaskFailed(TaskInfoOperations task);
+
+    List<TaskInfo> retrieveProcessingTimeoutTasks(String handlerName);
+
+    RequeueResult requeueTimeoutTask(String handlerName);
+
+    void storeError(TaskInfoError taskError);
+
+    List<TaskInfoError> getTaskErrors(String handlerName, Long taskId);
+}
+----
+
+[NOTE]
+You can implement this interface to use a different data storage.
+
+The default implementation is `JdbcTaskInfoService` that should work with most `RDBMS` providers. This class uses the `JdbcTemplate` to interact with the database.
+
+
+[NOTE]
+====
+**Why not use hibernate to interact with the database?**
+
+In this application every handler is place in different table as a partitioning strategy.
+
+Hibernate doesn't support this kind of dynamic table creation, and due to that there are only 2 tables for handler doing this implementation with a JdbcTemplate is more than enough.
+====
+

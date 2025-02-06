@@ -54,6 +54,12 @@ public final class HandlerProperties extends HandlerWriteProperties {
     private final Duration processingExpire;
 
     private final Duration processingGracePeriod;
+    /**
+     * <p>Task handler represent the action to be executed for the task to complete.</p>
+     *
+     * taskHandler value should be <code>@Nullable</code> because in the case that Only the producer(writer) is configured,
+     * the taskHandler is NOT NEEDED, but still need to create the table for the task if it does not exist.
+     */
     private final TaskHandler taskHandler;
     private final Class<?> taskHandlerType;
 
