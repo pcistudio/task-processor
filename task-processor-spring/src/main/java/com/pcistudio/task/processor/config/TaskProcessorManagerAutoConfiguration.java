@@ -59,8 +59,8 @@ public class TaskProcessorManagerAutoConfiguration {
                     .taskInfoService(taskInfoService)
                     .retryManager(
                             properties.isExponentialBackoff()
-                                    ? new ExponentialRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries(), clock)
-                                    : new FixRetryManager(properties.getRetryDelayMs(), properties.getMaxRetries(), clock)
+                                    ? new ExponentialRetryStrategy(properties.getRetryDelayMs(), properties.getMaxRetries(), clock)
+                                    : new FixRetryStrategy(properties.getRetryDelayMs(), properties.getMaxRetries(), clock)
                     )
                     .clock(clock)
                     .messageDecoding(messageDecoding)

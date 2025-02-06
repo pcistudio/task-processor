@@ -60,7 +60,7 @@ class WriteAndProcessIT {
     @Configuration
     static class TestHandlerConfiguration extends AbstractHandlersConfiguration {
         @Override
-        protected void addTask(HandlerManagerImpl.Builder builder) {
+        protected void configureHandler(HandlerManagerImpl.Builder builder) {
             builder.register(HandlerProperties.builder()
                     .handlerName("test_slow_calls")
                     .tableName("test_slow_calls")
@@ -135,7 +135,7 @@ class WriteAndProcessIT {
 
         taskInfoServiceTestHelper.printTasks(pageableReader.readAll());
 
-        Map<String, Integer> stats = ((TaskProcessorManager) taskProcessorManager).stats("test_slow_calls");
+        Map<String, Integer> stats = ((TaskProcessorManager) taskProcessorManager).todayStats("test_slow_calls");
 
         Assertions.assertThat(stats.get(ProcessStatus.COMPLETED.name())).isGreaterThan(850);
 

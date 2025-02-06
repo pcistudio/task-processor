@@ -1,0 +1,85 @@
+= Main Concepts
+:linkcss:
+:stylesdir: https://pcistudio.github.io/task-processor/_/css/
+:stylesheet: site.css
+
+== _Handler_
+
+A handler is represented by a class that implements the `TaskHandler` interface. This interface has a single method `process` that receives the payload of the task to be processed. The handler is responsible for processing the task and returning the result. The inderline will be in charge of polling task from the database and sending them to the handler for processing.
+
+[source,java]
+----
+public class TestTaskHandler implements TaskHandler<Payload> {
+    public void process(Payload payload) {
+        // Process the payload
+    }
+}
+----
+
+== _TaskWriter_
+
+The `TaskWriter` is a class that is responsible for sending tasks to the database for been stored. It has a single method `send` that receives a `TaskParams` object. The `TaskParams` object contains the name of the handler that will process the task, the payload of the task, and the delay that the task will be executed by default 0.
+
+[source,java]
+----
+class TestTaskWriter {
+
+    public void send() {
+        TaskWriter taskWriter = new TaskWriter();
+        taskWriter.send(
+            TaskParams.builder()
+                .handlerName("handler_name")
+                .payload(new Payload())
+                .build()
+        );
+    }
+}
+
+----
+
+== _MessageEncoding and MessageDecoding_
+
+The payloads are stored in the database in a LOB field as a byte array. The `MessageEncoding` and `MessageDecoding` are responsible for encoding and decoding the payload to and from the database. The default implementations are `JsonMessageEncoding` and `JsonMessageDecoding` and they use the Gson library to encode and decode the payload.
+
+If you want to use a different encoding you can implement the `MessageEncoding` and `MessageDecoding` interfaces, declaring them as beans in the spring context, and your implementation will be used instead of the default one.
+
+[NOTE]
+We are planning to add out of the box support for `protobuf` and `avro` in next iterations.
+
+== _Encryption_
+[IMPORTANT]
+
+Even when the data is stored in the database as a byte array, many tasks will require some type of PCI, PII information that won't be safe if it is not encrypted at rest. So adding support for encryption is the next priority for the project.
+
+== _RetryStrategy_
+The system will count with 2 types of retry strategies, `FixedRetryStrategy` and `ExponentialRetryStrategy`.
+* The `FixedRetryStrategy` will retry the task a fixed number of times with a fixed delay between retries.
+* The `ExponentialRetryStrategy` will retry the task a fixed number of times with an exponential delay between retries.
+
+
+[source,java]
+----
+import com.pcistudio.task.procesor.HandlerProperties;
+
+@Configuration
+public class TaskProcessorConfig extends AbstractHandlersConfiguration {
+    @Override
+    protected void configureHandler(HandlerManagerImpl.Builder builder) {
+        builder.register(
+                HandlerProperties.builder()
+                        .handlerName("email_notification")
+                        .tableName("email_notification")
+// retry configuration properties
+                        .maxRetries(3)
+                        .retryDelayMs(1000)
+                        .exponentialBackoff(false)
+                        .build()
+        );
+    }
+}
+----
+
+
+
+
+

@@ -1,0 +1,138 @@
+= How To Use
+:linkcss:
+:stylesdir: https://pcistudio.github.io/task-processor/_/css/
+:stylesheet: site.css
+
+== First Application
+
+The follow example demonstrates how to use the Task Processor library. In this example, we will create simple notification app that will be delivering notifications after one minute of been submitted to the server.
+
+* https://github.com/pcistudio/task-processor-app[task-processor-app]
+
+The Application will have two components the `Producer` and the `Consumer`. The `Producer` will be responsible for creating the notifications and the `Consumer` will be responsible to post the notifications at the right time**(1 min in this case)**.You will need a `datasource` configure before running the application.
+
+For this example, I will be using `H2` in-memory database.
+[source,properties]
+----
+spring.datasource.url=jdbc:h2:mem:task-processor-db;MODE=MYSQL;DATABASE_TO_LOWER=TRUE
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.database-platform=org.hibernate.dialect.MySQL5Dialect
+----
+See full https://github.com/pcistudio/task-processor-app/blob/main/src/main/resources/application.properties[code]
+
+=== Consumer
+
+[[configuration]]
+.Consumer Definition
+[source,java]
+----
+@Configuration
+public class TaskProcessorConfig extends AbstractHandlersConfiguration {
+    public static final String HANDLER = "email_notification";
+
+    @Override
+    protected void configureHandler(HandlerManagerImpl.Builder builder) {
+        builder.register(
+                HandlerProperties.builder()
+                        .handlerName("email_notification")
+                        .tableName("email_notification")
+                        .transientExceptions(Set.of(TransientDataAccessException.class))
+                        .taskHandler(new NotifyHandler())
+                        .build()
+        );
+    }
+    static class NotifyHandler implements TaskHandler<Notification> {
+        @Override
+        public void process(Notification notification) {
+            log.info("Notification for {}<{}> message: {}", notification.personName(), notification.email(), notification.message());
+        }
+    }
+}
+----
+See full https://github.com/pcistudio/task-processor-app/blob/main/src/main/java/com/pcistudio/example/taskprocessor/config/TaskProcessorConfig.java[code]
+
+* To configure the task processor you will need to enable the handler in the `application.properties` file.
++
+[source,properties]
+----
+spring.task.handlers.enabled=true
+----
+
+* Also, you will need a configuration class that inherits from `AbstractHandlersConfiguration` and override the `configureHandler` method. In the `configureHandler` method, you will register the handler that will be responsible for processing the task, and the autoconfiguration will take care of creating the handler tables and configuring the `HandlerManagerImpl`.You can have multiple handlers in the same project.
++
+You are only responsible for adding the custom handler that implements `TaskHandler` and you will get all task status tracking, metrics, retries, and circuit breakers for free.
++
+In this case, the handler will be responsible for sending the notification.
+
+For the producer, I will be using a simple `@RestController` to create notifications.
+
+=== Producer
+
+.Producer Definition
+[source,java]
+----
+@RestController
+@RequestMapping("/api/v1/notify")
+public class NotificationController {
+
+    private final TaskWriter writer;
+
+    public NotificationController(TaskWriter writer) {
+        Assert.notNull(writer, "writer is required");
+        this.writer = writer;
+    }
+
+    @PostMapping
+    public ResponseEntity<Void> notify(@RequestBody @Valid @NotNull Notification notification) {
+        Assert.notNull(notification, "notification is required");
+        writer.writeTasks(
+                TaskParams.builder()
+                        .handlerName("email_notification")
+                        .payload(notification)
+// If `delay` not set, it will run in the next poll cycle
+                        .delay(Duration.ofMinutes(1))
+                        .build()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+}
+----
+See full
+https://github.com/pcistudio/task-processor-app/blob/main/src/main/java/com/pcistudio/example/taskprocessor/notification/NotificationController.java[code]
+
+* To configure the producer you will need to enable the writer in the `application.properties` file.
++
+[source,properties]
+----
+spring.task.processor.writer.enabled=true
+----
++
+Once this property is available it will autoconfigure the `TaskWriter` object that is responsible for posting Task in the database, to be consumed by the handlers.
++
+* In this case, the producer will be responsible for creating the notification and posting it to the database to be consumed by the handler.
++
+[IMPORTANT]
+If the consumer is not in the same project you still need to add the Configuration class, but the handler will not be set. Ex:
+
+[source,java]
+----
+@Configuration
+public class TaskProcessorConfig extends AbstractHandlersConfiguration {
+    @Override
+    protected void configureHandler(HandlerManagerImpl.Builder builder) {
+        builder.register(
+                HandlerProperties.builder()
+                        .handlerName("email_notification")
+                        .tableName("email_notification")
+                        .build()
+        );
+    }
+}
+----
+
+
+
+
+

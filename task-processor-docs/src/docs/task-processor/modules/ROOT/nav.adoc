@@ -1,4 +1,5 @@
-*  Architecture
-** xref:ROOT:index.adoc[Home]
-*  Architecture
-** xref:ROOT:another-page.adoc[Another Page]
+* xref:ROOT:index.adoc[Overview]
+* xref:ROOT:getting-started.adoc[Getting Started]
+** xref:ROOT:usage.adoc[Usage]
+** xref:ROOT:concepts.adoc[Concepts]
+** xref:ROOT:database.adoc[Database]

@@ -1,2 +1,0 @@
-include::ROOT:partial$nav.adoc[]
-include::sample:partial$nav.adoc[]

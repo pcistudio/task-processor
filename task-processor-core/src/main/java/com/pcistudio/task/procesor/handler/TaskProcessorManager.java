@@ -92,8 +92,8 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
         processorMap.get(handlerName).start();
     }
 
-    public Map<String, Integer> stats(final String handlerName) {
-        return processorMap.get(handlerName).stats();
+    public Map<String, Integer> todayStats(final String handlerName) {
+        return processorMap.get(handlerName).todayStats();
     }
 
     @Override
@@ -193,7 +193,7 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
                 notifyRequeueListener(getHandlerName(), requeueResult.updateCount(), true);
 
                 if (log.isInfoEnabled()) {
-                    log.info("handlerName={}, stats={}", getHandlerName(), JsonUtil.toJson(stats()));
+                    log.info("handlerName={}, today stats={}", getHandlerName(), JsonUtil.toJson(todayStats()));
                 }
             } catch (RuntimeException ex) {
                 log.error("Requeue failing for handlerName={}", getHandlerName(), ex);//NOPMD
@@ -202,7 +202,7 @@ public class TaskProcessorManager implements TaskProcessorLifecycleManager {
             }
         }
 
-        public Map<String, Integer> stats() {
+        public Map<String, Integer> todayStats() {
             return context.getTaskInfoService()
                     .stats(getHandlerName(), LocalDate.now(context.getClock()));
         }

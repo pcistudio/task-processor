@@ -1,1 +1,2 @@
-* xref:sample:index.adoc[Sample]
+* Tutorial
+** xref:sample:index.adoc[Task Processor Sample App]

@@ -60,7 +60,7 @@ class WriteAndProcessTest {
     @Configuration
     static class TestHandlerConfiguration extends AbstractHandlersConfiguration {
         @Override
-        protected void addTask(HandlerManagerImpl.Builder builder) {
+        protected void configureHandler(HandlerManagerImpl.Builder builder) {
             builder.register(HandlerProperties.builder()
                     .handlerName("test_one")
                     .tableName("test_one")
@@ -131,7 +131,7 @@ class WriteAndProcessTest {
 
         taskProcessorManager.start("test_one");
         Thread.sleep(10000);
-        Map<String, Integer> stats = ((TaskProcessorManager) taskProcessorManager).stats("test_one");
+        Map<String, Integer> stats = ((TaskProcessorManager) taskProcessorManager).todayStats("test_one");
 
         assertEquals(1, stats.get(ProcessStatus.COMPLETED.name()));
         taskProcessorManager.close("test_one");
@@ -148,7 +148,7 @@ class WriteAndProcessTest {
 
         taskInfoServiceTestHelper.waitForTask("test_one_hundred");
 
-        Map<String, Integer> stats = ((TaskProcessorManager) taskProcessorManager).stats("test_one_hundred");
+        Map<String, Integer> stats = ((TaskProcessorManager) taskProcessorManager).todayStats("test_one_hundred");
 
         assertEquals(100, stats.get(ProcessStatus.COMPLETED.name()));
         taskProcessorManager.close("test_one_hundred");
@@ -171,7 +171,7 @@ class WriteAndProcessTest {
 
         taskInfoServiceTestHelper.printTasks(pageableReader.readAll());
 
-        Map<String, Integer> stats = ((TaskProcessorManager) taskProcessorManager).stats("test_one_thousand");
+        Map<String, Integer> stats = ((TaskProcessorManager) taskProcessorManager).todayStats("test_one_thousand");
 
         Assertions.assertThat(stats.get(ProcessStatus.COMPLETED.name())).isGreaterThan(850);
 
