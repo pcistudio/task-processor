@@ -1,8 +1,13 @@
-= Welcome to Example Documentation
+= Overview
 :page-layout: default
 
-This is the home page of the Example Documentation.
+.Under construction
+****
+WARNING: This documentation is a work in progress.
+****
 
-== About
+This project is a library designed for small businesses that are not yet ready to invest in Kafka or a message queue system, but still want a way to process tasks, keep completion records and handle retries and circuit breakers when the underlying infrastructure fails. It has a `Producer-Consumer` approach that allows you to create tasks and execute them asynchronously with the convenience that you can decide the execution time.
 
-Antora is a powerful documentation tool for managing multi-repository and multi-version documentation.
+At the same time, it exposes metrics that can be displayed in the system of your choice to keep track of your system health. In the sample application, I chose Prometheus and Grafana.
+
+The library is designed to be simple to use and easy to integrate into your existing projects.

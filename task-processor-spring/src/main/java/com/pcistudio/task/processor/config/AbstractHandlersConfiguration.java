@@ -22,13 +22,13 @@ public abstract class AbstractHandlersConfiguration {
     HandlerManagerImpl processorRegister(TaskStorageSetup taskStorageSetup) {
         HandlerManagerImpl.Builder builder = HandlerManagerImpl.builder()
                 .taskTableSetup(taskStorageSetup);
-        addTask(builder);
+        configureHandler(builder);
         return builder.build();
     }
 
     // TODO: For next version this need to be implemented thinking in only one task at the time
     // Meaning for each task you will create a different bean
-    protected abstract void addTask(HandlerManagerImpl.Builder builder);
+    protected abstract void configureHandler(HandlerManagerImpl.Builder builder);
 
     //TODO Add Actuator endpoint
     @Bean

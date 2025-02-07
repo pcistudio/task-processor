@@ -7,7 +7,7 @@
 mvn antora:antora
 ----
 
-The generated documentation will be available in the `task-processor-docs/target/site` directory.
+The generated documentation will be available in the `target/site` directory.
 
 == Generate the documentation using `node`
 
@@ -26,7 +26,4 @@ npx antora antora-playbook.yml
 ----
 
 The generated documentation will be available in the `task-processor-docs/src/docs/build/site` directory.
-
-
-
 

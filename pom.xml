@@ -73,6 +73,29 @@
             <artifactId>spotbugs-annotations</artifactId>
             <version>${spotbugs-annotations.version}</version>
         </dependency>
+        <!--junit 5-->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- assertj-->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- mockito -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -149,9 +172,7 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>3.1.1</version>
                     <configuration>
-                        <!--                            <projectVersionPolicyId>SemVerVersionPolicy</projectVersionPolicyId>-->
                         <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <!--                            <useReleaseProfile>false</useReleaseProfile>-->
                         <releaseProfiles>release</releaseProfiles>
                         <goals>deploy</goals>
                         <scmDevelopmentCommitComment>[skip ci] - Prepare for next development iteration</scmDevelopmentCommitComment>
@@ -202,7 +223,6 @@
                 <version>3.6.0</version>
                 <configuration>
                     <configLocation>google_checks.xml</configLocation>
-                    <encoding>UTF-8</encoding>
                     <consoleOutput>true</consoleOutput>
                     <failOnViolation>true</failOnViolation>
                 </configuration>
@@ -294,9 +314,6 @@
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
                             <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                            <excludedModules>
-                                <excludedModule>task-processor-sample</excludedModule>
-                            </excludedModules>
                         </configuration>
                     </plugin>
                     <plugin>
@@ -335,6 +352,29 @@
                                 <phase>verify</phase>
                                 <goals>
                                     <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>source</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>2.4</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
                                 </goals>
                             </execution>
                         </executions>

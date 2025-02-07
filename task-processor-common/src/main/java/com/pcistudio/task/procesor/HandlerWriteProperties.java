@@ -6,8 +6,7 @@ import lombok.Getter;
 public class HandlerWriteProperties {
 
     private final String handlerName;
-    //TODO if tableName is null use handlerName and if handlerName is null use default
-    // si default for tableName is not needed
+
     private final String tableName;
 
     private final boolean encrypt;

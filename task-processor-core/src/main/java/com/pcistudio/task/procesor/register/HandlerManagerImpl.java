@@ -5,7 +5,7 @@ import com.pcistudio.task.procesor.HandlerProperties;
 import com.pcistudio.task.procesor.HandlerPropertiesWrapper;
 import com.pcistudio.task.procesor.util.Assert;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,8 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
 //TODO Centralize processor registration to avoid name collisions
 // where handler tablename and application name should be unique
 // the central registry should fail if `spring.application.name` is not set or unique
-@Slf4j
 public final class HandlerManagerImpl implements HandlerManager {
+
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(HandlerManagerImpl.class);
+
     private final Map<String, HandlerPropertiesWrapper> propertiesMap = new ConcurrentHashMap<>();
 
     private final Map<String, List<HandlerPropertiesWrapper>> handlersByTable = new ConcurrentHashMap<>();
@@ -30,13 +32,15 @@ public final class HandlerManagerImpl implements HandlerManager {
     public void registerHandler(final HandlerProperties handlerProperties) {
         validateHandlerProperties(handlerProperties);
         final HandlerPropertiesWrapper properties = new HandlerPropertiesWrapper(handlerProperties);
+        if (propertiesMap.containsKey(properties.getHandlerName())) {
+            throw new IllegalStateException("Handler already registered: " + properties.getHandlerName());
+        }
         this.propertiesMap.put(properties.getHandlerName(), properties);
         this.handlersByTable.compute(properties.getTableName(), (k, v) -> {
             if (v == null) {
-                v = List.of(properties);
-            } else {
-                v.add(properties);
+                v = new ArrayList<>();
             }
+            v.add(properties);
             return v;
         });
 

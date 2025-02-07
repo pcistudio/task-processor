@@ -23,7 +23,7 @@ public class TaskProcessorConfig extends AbstractHandlersConfiguration {
     public static final String VIDEO_HANDLER = "mp4_video_encoder";
 
     @Override
-    protected void addTask(HandlerManagerImpl.Builder builder) {
+    protected void configureHandler(HandlerManagerImpl.Builder builder) {
         builder.register(
                 HandlerProperties.builder()
                         .handlerName(PERSON_HANDLER)

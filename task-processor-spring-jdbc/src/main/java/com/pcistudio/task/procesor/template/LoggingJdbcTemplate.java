@@ -10,6 +10,7 @@ import org.springframework.util.ReflectionUtils;
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 
 @Slf4j
@@ -76,7 +77,9 @@ public class LoggingJdbcTemplate extends JdbcTemplate {
             for (Object arg : args) {
                 Assert.notNull(arg, "Argument must not be null");
                 if (arg instanceof Instant instant) {
-                    log.debug("millis: {}", instant.toEpochMilli());
+                    log.debug("millis: {}<{}>", instant.toEpochMilli(), instant.atZone(ZoneId.systemDefault()).toLocalDateTime().toString());
+                } else if (arg instanceof byte[] array) {
+                    log.debug("byte[{}]", array.length);
                 } else {
                     log.debug(arg.toString());
                 }

@@ -1,17 +1,138 @@
-= Task Processor image:https://github.com/pcistudio/task-processing/actions/workflows/maven.yml/badge.svg["Build Status", link="https://github.com/pcistudio/task-processing/actions/workflows/maven.yml"]
+= Task Processor image:https://github.com/pcistudio/task-processor/actions/workflows/release.yml/badge.svg["Release", link="https://github.com/pcistudio/task-processor/actions/workflows/release.yml"] image:https://github.com/pcistudio/task-processor/actions/workflows/codeql-analysis.yml/badge.svg["CodeQL", link="https://github.com/pcistudio/task-processor/actions/workflows/codeql-analysis.yml"] image:https://github.com/pcistudio/task-processor/actions/workflows/snapshot.yml/badge.svg["Snapshot", link="https://github.com/pcistudio/task-processor/actions/workflows/snapshot.yml"]
 
-== Full build
+:docs: https://pcistudio.github.io/task-processor/
 
-mvn clean install
+.Under construction
+****
+WARNING: This documentation is a work in progress.
+****
 
-== Run integration test
+
+This project is a library designed for small businesses that are not yet ready to invest in Kafka or a message queue system, but still want a way to process tasks, keep completion records and handle retries and circuit breakers when the underlying infrastructure fails. It has a `Producer-Consumer` approach that allows you to create tasks and execute them asynchronously with the convenience that you can decide the execution time.
+
+At the same time, it exposes metrics that can be displayed in the system of your choice to keep track of your system health. In the sample application, I chose Prometheus and Grafana.
+
+The library is designed to be simple to use and easy to integrate into your existing projects.
+
+== Installation and Getting Started
+
+To use this library see the {docs}[reference documentation], and the sample project would be a good place to {docs}/tutorial/first-application/index.html[``getting started``].
+
+[IMPORTANT]
+.Prerequisites
+====
+* You will need a `datasource` to be configured in you application.
+* Because the consumer and the producer are been shipped in the same jar, you will need to choose which autoconfiguration you want to kick-off. You can enable both.
++
+Enable Writer::
+`spring.task.processor.writer.enabled=true`
+Enable Handler::
+`spring.task.handlers.enabled=true`
+
+
+====
+
+=== Consumer snippet
+[source,java]
+----
+
+@Configuration
+public class TaskProcessorConfig extends AbstractHandlersConfiguration {
+    @Override
+    protected void configureHandler(HandlerManagerImpl.Builder builder) {
+        builder.register(
+                HandlerProperties.builder()
+                        .handlerName("appointment_email")
+                        .tableName("appointment_email")
+                        .transientExceptions(Set.of(TransientDataAccessException.class))
+                        .taskHandler(new EmailPersonHandler())
+                        .build()
+        );
+    }
+
+    static class EmailPersonHandler implements TaskHandler<Person> {
+        @Override
+        public void process(Person person) {
+            log.info("Hi {}, you have an appointment tomorrow", person.getName());
+        }
+    }
+
+    public record Person(int id, String name) {}
+}
+
+----
+
+
+=== Producer snippet
+
+[source,java]
+----
+import com.pcistudio.task.procesor.writer.TaskWriter;
+@RestController
+public class AppointmentController {
+    private final TaskWriter taskWriter;
+
+    public AppointmentController(TaskWriter taskWriter) {
+        this.taskWriter = taskWriter;
+    }
+
+    @PostMapping("/appointment_reminder")
+    public void createAppointmentReminder() {
+        taskWriter.send(
+                TaskParams.builder()
+                .handlerName("appointment_email")
+                .payload(new Person(1, "John Doe"))
+                .delay(Duration.ofDays(2)) // This will make the task run in 2 days
+//                .executionTime(Instant.now().plus(Duration.ofMinutes(30))) // By default is Instant.now()
+                .build()
+        );
+    }
+
+    public record Person(int id, String name) {}
+}
+
+----
+This is a simple example of how to create a task.
+
+[NOTE]
+====
+If the consumer and the producer are not in the same project, you will need to add this configuration.
+
+This will avoid errors when the producer starts before the consumer and the table in the database is not created yet.
+====
+
+[source,java]
+----
+@Configuration
+public class TaskProcessorConfig extends AbstractHandlersConfiguration {
+    @Override
+    protected void configureHandler(HandlerManagerImpl.Builder builder) {
+        builder.register(
+                HandlerProperties.builder()
+                        .handlerName("appointment_email")
+                        .tableName("appointment_email")
+                        .transientExceptions(Set.of(TransientDataAccessException.class))
+                        .build()
+        );
+    }
+}
+----
+
+== Building from Source
 
 [source,bash]
 ----
-mvn verify -P run-it
+./mvnw clean install
 ----
 
-== Run sample project
+=== Run integration test
+
+[source,bash]
+----
+./mvnw verify -P run-it
+----
+
+=== Run sample project
 
 [source,bash]
 ----
@@ -19,9 +140,47 @@ cd task-processor-sample/
 bash run.sh
 ----
 
-== Deploy
+=== Deploy
 
 [source,bash]
 ----
 mvn deploy -P release
 ----
+
+=== Generate documentation
+
+[source,bash]
+----
+mvn antora:antora
+----
+See at link:task-processor-docs/README.adoc[Documentation Generation, link="task-processor-docs/README.adoc"] for more information.
+
+== Modules
+=== task-processor-common
+This module contains the common interfaces that are used by the other modules.
+
+=== task-processor-core
+This module contains the core implementation of the task processor. TaskProcessorManager is the main class that is responsible for managing the tasks.
+Also control the circuit breaker and define the metrics that are exposed by the task processor.
+
+=== task-processor-spring
+This module contains the spring autoconfiguration classes that are used to configure the task processor in a spring application.
+
+=== task-processor-spring-jdbc
+This module contains the spring jdbc implementation of the task processor storage layer. JdbcTaskInfoService is the main class that implements TaskInfoService and is responsible for storing and retrieving the tasks.
+
+=== task-processor-spring-test
+This module contains the spring autoconfiguration classes that are used to configure the task processor in a spring application for integration testing. I comes with two slice annotations that you can use to test your application. `@TaskProcessorTest` and `@TaskWriterTest`.
+
+=== task-processor-sample
+This module contains a sample spring boot application that demonstrates how to use the task processor. This module comes with docker compose files that has 4 containers a MariaDB, Prometheus, Grafana and the task-processor-sample.
+
+=== task-processor-docs
+This module contains the documentation for the task processor. It uses Antora to generate the documentation.
+
+== Guides
+
+* The {docs} has more detailed, developer-targeted documentation.
+
+== License
+Task Processor is Open Source software released under the link:https://www.apache.org/licenses/LICENSE-2.0.txt[Apache 2.0 license]

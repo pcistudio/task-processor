@@ -1,0 +1,76 @@
+= Getting Started
+// :page-layout: default
+:linkcss:
+:stylesdir: https://pcistudio.github.io/task-processor/_/css/
+:stylesheet: site.css
+
+:task-processor-version: 0.0.37
+
+
+You can find binaries in Maven Central, link:https://central.sonatype.com/search?namespace=com.pcistudio[here].
+
+== Installation
+
+You will need to add the following dependencies to your spring project:
+
+[source,xml,subs=attributes+]
+----
+<dependencies>
+    <dependency>
+        <groupId>com.pcistudio</groupId>
+        <artifactId>task-processor-core</artifactId>
+        <version>{task-processor-version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.pcistudio</groupId>
+        <artifactId>task-processor-spring</artifactId>
+        <version>{task-processor-version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.pcistudio</groupId>
+        <artifactId>task-processor-spring-jdbc</artifactId>
+        <version>{task-processor-version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.pcistudio</groupId>
+        <artifactId>task-processor-spring-jdbc-h2</artifactId>
+        <version>{task-processor-version}</version>
+    </dependency>
+</dependencies>
+
+----
+
+== Building
+
+To check out and build from the source, run the follow commands:
+
+[source,shell]
+----
+$ git clone git@github.com:pcistudio/task-processor.git
+$ cd task-processor/
+$ ./mvnw clean install
+----
+
+A build should look similar to this:
+
+[source,log]
+----
+[INFO] Reactor Summary for Task processor 0.0.38-SNAPSHOT:
+[INFO]
+[INFO] Task processor ..................................... SUCCESS [  1.982 s]
+[INFO] task-processor-common .............................. SUCCESS [  2.889 s]
+[INFO] task-processor-core ................................ SUCCESS [  1.439 s]
+[INFO] task-processor-spring-jdbc ......................... SUCCESS [  1.058 s]
+[INFO] task-processor-spring-jdbc-mysql ................... SUCCESS [  0.576 s]
+[INFO] task-processor-spring-jdbc-mariadb ................. SUCCESS [  0.492 s]
+[INFO] task-processor-spring-jdbc-h2 ...................... SUCCESS [  0.473 s]
+[INFO] task-processor-spring .............................. SUCCESS [  0.551 s]
+[INFO] task-processor-spring-test ......................... SUCCESS [  0.899 s]
+[INFO] task-processor-sample .............................. SUCCESS [  0.684 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  11.229 s
+[INFO] Finished at: 2025-02-05T16:39:25-05:00
+[INFO] ------------------------------------------------------------------------
+----

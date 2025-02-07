@@ -358,8 +358,8 @@ public final class TaskProcessor implements Closeable, Runnable {
             Assert.notNull(event, "Event cannot be null");
             final List<Consumer> listeners = eventListenersMap.get(event.getClass());
             if (listeners == null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("No event registered with class={}", event.getClass().getCanonicalName());
+                if (log.isTraceEnabled()) {
+                    log.trace("No event registered with class={}", event.getClass().getCanonicalName());
                 }
                 return;
             }

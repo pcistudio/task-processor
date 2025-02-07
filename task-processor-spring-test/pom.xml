@@ -7,7 +7,6 @@
         <version>0.0.38-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.pcistudio</groupId>
     <artifactId>task-processor-spring-test</artifactId>
 
     <properties>
@@ -37,7 +36,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-<!--            <scope>test</scope>-->
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
@@ -51,6 +49,10 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-jmx</artifactId>
             <version>${micrometer.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
         </dependency>
     </dependencies>
 </project>
