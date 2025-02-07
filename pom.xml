@@ -232,7 +232,7 @@
             <plugin>
                 <groupId>org.antora</groupId>
                 <artifactId>antora-maven-plugin</artifactId>
-                <version>1.0.0-alpha.4</version>
+                <version>1.0.0-alpha.5</version>
                 <configuration>
                     <playbookFile>task-processor-docs/src/docs/antora-playbook.yml</playbookFile>
                 </configuration>
