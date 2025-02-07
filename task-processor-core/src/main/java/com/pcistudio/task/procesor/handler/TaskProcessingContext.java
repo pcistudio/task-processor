@@ -41,7 +41,7 @@ public final class TaskProcessingContext {
         Assert.notNull(builder.taskHandler, "taskHandler cannot be null");
 
         Assert.notNull(builder.taskInfoService, "taskInfoService cannot be null");
-        Assert.notNull(builder.retryStrategy, "retryManager cannot be null");
+        Assert.notNull(builder.retryStrategy, "retryStrategy cannot be null");
         Assert.notNull(builder.messageDecoding, "messageDecoding cannot be null");
         Assert.notNull(builder.clock, "clock cannot be null");
 

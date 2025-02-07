@@ -32,13 +32,15 @@ public final class HandlerManagerImpl implements HandlerManager {
     public void registerHandler(final HandlerProperties handlerProperties) {
         validateHandlerProperties(handlerProperties);
         final HandlerPropertiesWrapper properties = new HandlerPropertiesWrapper(handlerProperties);
+        if (propertiesMap.containsKey(properties.getHandlerName())) {
+            throw new IllegalStateException("Handler already registered: " + properties.getHandlerName());
+        }
         this.propertiesMap.put(properties.getHandlerName(), properties);
         this.handlersByTable.compute(properties.getTableName(), (k, v) -> {
             if (v == null) {
-                v = List.of(properties);
-            } else {
-                v.add(properties);
+                v = new ArrayList<>();
             }
+            v.add(properties);
             return v;
         });
 
