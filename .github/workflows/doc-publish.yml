@@ -7,7 +7,7 @@ on:
       - completed
   push:
     branches:
-      - 21-create-antora-documentation
+      - documentation
 #  workflow_dispatch:
 concurrency:
   group: github-pages
