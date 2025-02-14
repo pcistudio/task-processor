@@ -5,11 +5,10 @@
 :table-caption: Schema
 
 
-
 == Database Schema
 By default, the supported databases are `MariaDB`,`MySQL` and `H2` and the schema will be created automatically when the application starts.
 
-Most of the time each handler will have its own table but if configured, you can have multiple handlers in the same table. By default tha table name will follow the pattern `task_info_{handler_name}` and `task_info_{handler_name}_error`. See [example]
+Most of the time each handler will have its own table but if configured, you can have multiple handlers in the same table. By default tha table name will follow the pattern `task_info_<handler_name>` and `task_info_<handler_name>_error`. See [example]
 
 [IMPORTANT]
 ====
@@ -17,7 +16,7 @@ Most of the time each handler will have its own table but if configured, you can
 * The data type will change depending on the database you are using.
 ====
 
-.For task_info_{handler_name}
+.For task_info_<handler_name>
 [cols="1,1,2",  options="header"]
 |===
 | Column | Type | Description
@@ -35,6 +34,19 @@ Most of the time each handler will have its own table but if configured, you can
 | read_token | VARCHAR(36) | Only one server that change the status can read the task
 | handler_name | VARCHAR(70) | Handler name
 | object_type | VARCHAR(128) | Object type
+|===
+
+
+.For task_info_<handler_name>_error
+[cols="1,1,2",  options="header"]
+|===
+| Column | Type | Description
+
+| id | CHAR(36) | Primary key
+| task_id | BIGINT | Task id
+| partition_id | VARCHAR(36) | Identify the server that is trying to process the task
+| error_message | VARCHAR(512) | Error message
+| created_at | TIMESTAMP | Creation date
 |===
 
 [NOTE]
@@ -76,8 +88,12 @@ The default implementation is `JdbcTaskInfoService` that should work with most `
 ====
 **Why not use hibernate to interact with the database?**
 
-In this application every handler is place in different table as a partitioning strategy.
+In this application every handler is place in different tables one for the metadata and other for the errors.
 
-Hibernate doesn't support this kind of dynamic table creation, and due to that there are only 2 tables for handler doing this implementation with a JdbcTemplate is more than enough.
+Hibernate doesn't support this kind of dynamic table creation, and because there are only 2 tables for handler doing this implementation with a JdbcTemplate is more than enough.
 ====
 
+[cols="<,>"]
+|===
+| xref:ROOT:concepts.adoc[← Previous]  | xref:ROOT:configuration.adoc[Next →]
+|===

@@ -40,3 +40,8 @@ build/
 *.log
 .attach_pid*
 cache/
+
+### Node ###
+node_modules/
+package-lock.json
+package.json

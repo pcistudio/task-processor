@@ -1,0 +1,54 @@
+= Error Handling
+:linkcss:
+:stylesdir: https://pcistudio.github.io/task-processor/_/css/
+:stylesheet: site.css
+
+== Exceptions and retries
+The task processor provides a way to handle errors that occur during task processing. It deals with two types of errors: Transient errors that are errors that will be retried and Permanent errors that will fail the task.
+
+To inform the system that an error is transient, and it should be retried you can throw from the `TaskHandler` implementation a `TaskTransientException` or any of its subclasses.
+
+[source,java]
+----
+import java.net.http.HttpTimeoutException;public class TestTaskHandler implements TaskHandler<Payload> {
+    public void process(Payload payload) {
+        try {
+            // api call
+        } catch (HttpTimeoutException e) {
+            throw new TaskTransientException("api call timeout", e);
+        }
+    }
+}
+----
+
+Other option is to use the `transientExceptions` property in the `HandlerProperties` object to configure a set of exceptions that are considered transient and will be retried.
+
+[source,java]
+----
+@Configuration
+public class TaskProcessorConfig extends AbstractHandlersConfiguration {
+    @Override
+    protected void configureHandler(HandlerManagerImpl.Builder builder) {
+        builder.register(
+                HandlerProperties.builder()
+                        .handlerName("email_notification")
+                        .tableName("email_notification")
+                        .transientExceptions(Set.of(HttpTimeoutException.class))
+                        .build()
+        );
+    }
+}
+----
+
+
+[IMPORTANT]
+Any other exception will be considered a permanent error and the task will be failed.
+
+== Circuit Breaker
+
+Each handler is equipped with a circuit breaker that will prevent the handler from processing tasks if it is failing too much. The default implementation is using `*Resilience4j*` but you can use other library by implementing the `*CircuitBreakerDecorator*` interface and place it in the spring context as a bean and it will be used instead of the default one.
+
+[cols="<,>"]
+|===
+| xref:ROOT:configuration.adoc[← Previous]  | xref:ROOT:metrics.adoc[Next →]
+|===

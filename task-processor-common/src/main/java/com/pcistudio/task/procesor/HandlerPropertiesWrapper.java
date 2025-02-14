@@ -48,10 +48,6 @@ public class HandlerPropertiesWrapper {
         return delegate.getRequeueInterval();
     }
 
-    public long getTaskExecutionTimeout() {
-        return delegate.getTaskExecutionTimeout();
-    }
-
     public long getLongTaskTimeMs() {
         return delegate.getLongTaskTimeMs();
     }

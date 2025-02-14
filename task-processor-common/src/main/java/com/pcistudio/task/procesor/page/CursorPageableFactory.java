@@ -14,7 +14,7 @@ import java.util.function.BiFunction;
 public abstract class CursorPageableFactory<ITEM, OFFSET> {
     protected final Class<OFFSET> offsetClass;
 
-    public CursorPageableFactory() {
+    protected CursorPageableFactory() {
         offsetClass = (Class<OFFSET>) GenericTypeUtil.getGenericTypeFromSuperclass(getClass(), 1);
     }
 
