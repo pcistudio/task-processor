@@ -7,6 +7,7 @@
 mvn antora:antora
 ----
 
+
 The generated documentation will be available in the `target/site` directory.
 
 == Generate the documentation using `node`
