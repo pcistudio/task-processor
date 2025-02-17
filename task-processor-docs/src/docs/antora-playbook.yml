@@ -10,7 +10,7 @@ content:
 
 ui:
   bundle:
-    url: https://github.com/pcistudio/doc-site-ui/releases/download/v0.30/ui-bundle.zip
+    url: https://github.com/pcistudio/doc-site-ui/releases/download/v0.39/ui-bundle.zip
     snapshot: true
   supplemental_files:
     - path: ui.yml
@@ -19,6 +19,13 @@ ui:
         - .nojekyll
     - path: .nojekyll
 
+antora:
+  extensions:
+    - require: '@antora/lunr-extension'
+
+asciidoc:
+  attributes:
+    page-search: true
 #runtime:
 #  cache_dir: ./cache
 #  log:

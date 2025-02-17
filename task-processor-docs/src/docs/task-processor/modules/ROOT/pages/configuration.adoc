@@ -1,0 +1,55 @@
+= Configuration
+:linkcss:
+:stylesdir: https://pcistudio.github.io/task-processor/_/css/
+:stylesheet: site.css
+
+
+== Properties
+
+The following properties are available to configure the task processor:
+
+.HandlerProperties
+[cols="1,1,1,2",  options="header"]
+|===
+| Property | Type | Default | Description
+
+| `maxRetries` | int | 3 | Maximum number of retries for a task
+| retryDelayMs | int | 1000 | Delay between retries
+| `exponentialBackoff` | boolean | false | Use exponential backoff for retries
+| `transientExceptions` | Set<Class<? extends RuntimeException>> | empty | Set of exceptions that are considered transient and are going to be retried
+| `maxPoll` | int | 16 | Maximum number of tasks to poll from the queue at once
+| `pollInterval` | int | 60000 | Interval to poll for tasks from the database once no more tasks are available
+| `requeueInterval` | int | 300000 | Interval to requeue tasks
+| `processingExpire` | Duration | 5 min | Duration to consider a task as expired. Work in conjunction with `processingGracePeriod` and `requeueInterval`
+| `processingGracePeriod` | Duration | 0 | Duration to consider a task as expired. Work in conjunction with `processingExpire` and `requeueInterval`
+| `longTaskTimeMs` | int | 180000 | Maximum time a task can run before being considered a long task (in milliseconds).
+| `longTaskCheckIntervalMs` | int | 60000 | Interval to check for long running tasks and try to cancel them
+| `longTaskCheckInitialDelayMs` | int | 1000 | Initial delay to check for long running tasks
+| `maxParallelTasks` | int | 1 | Maximum number of tasks that will run in parallel
+| `taskHandler` | TaskHandler | <optional> | Task handler represent the action to be executed for the task to complete
+| `taskHandlerType` | Class<?> | <required> | Task handler type
+| `handlerName` | String | <required> | Task handler name
+| `tableName` | String | <required> | Table in the database where the tasks will be stored
+| `encrypt` | boolean | false | Encrypt the payload before storing it in the database
+| `autoStartEnabled` | boolean | true | start the handler automatically after creation
+|===
+
+== External Properties
+
+.Application Properties
+[cols="1,1,1,2",  options="header"]
+|===
+| Property | Type | Default | Description
+
+| `task.processor.metrics.enable` | boolean | true | Enable metrics for the task processor
+| `spring.task.processor.writer.enabled` | boolean | dalse | Enable the writer for the task processor
+| `spring.task.handlers.enabled` | boolean | false | Enable the task handlers
+| `spring.task.logging.template` | boolean | false | Enable the logging for the JdbcTemplate
+| `task.processor.partitionId` | String | UUID.randomUUID() | Partition ID for the task processor
+|===
+
+
+[cols="<,>"]
+|===
+| xref:ROOT:database.adoc[← Previous]  | xref:ROOT:error-handler.adoc[Next →]
+|===

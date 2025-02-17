@@ -123,11 +123,10 @@ class WriteAndProcessTest {
     TaskInfoServiceTestHelper taskInfoServiceTestHelper;
 
     @Test
-    void writeOne() throws InterruptedException, ExecutionException {
+    void writeOne() throws InterruptedException {
 
         taskWriterHelper
-                .writeSyncData("test_one", 1, () -> new Person("Hello World", 31))
-                .get();
+                .writeData("test_one", 1, () -> new Person("Hello World", 31));
 
         taskProcessorManager.start("test_one");
         Thread.sleep(10000);
@@ -141,8 +140,7 @@ class WriteAndProcessTest {
     void writeOneHundred() throws InterruptedException, ExecutionException {
 
         taskWriterHelper
-                .writeSyncData("test_one_hundred", 100, () -> new Person("Hello World", 31))
-                .get();
+                .writeData("test_one_hundred", 100, () -> new Person("Hello World", 31));
 
         taskProcessorManager.start("test_one_hundred");
 
@@ -158,8 +156,7 @@ class WriteAndProcessTest {
     void write1000() throws InterruptedException, ExecutionException {
 
         taskWriterHelper
-                .writeSyncData("test_one_thousand", 1000, () -> new Person("Hello World", 31))
-                .get();
+                .writeData("test_one_thousand", 1000, () -> new Person("Hello World", 31));
 
         taskProcessorManager.start("test_one_thousand");
 

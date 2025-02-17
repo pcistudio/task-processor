@@ -32,8 +32,6 @@ public final class HandlerProperties extends HandlerWriteProperties {
 
     private final int requeueInterval;
 
-    private final int taskExecutionTimeout;
-
     /**
      * Maximum time a task can run before being considered a long task
      */
@@ -73,7 +71,7 @@ public final class HandlerProperties extends HandlerWriteProperties {
         this.maxPoll = builder.maxPoll;
         this.pollInterval = builder.pollInterval;
         this.requeueInterval = builder.requeueInterval;
-        this.taskExecutionTimeout = builder.taskExecutionTimeout;
+
         this.longTaskTimeMs = builder.longTaskTimeMs;
         this.longTaskCheckIntervalMs = builder.longTaskCheckIntervalMs;
         this.longTaskCheckInitialDelayMs = builder.longTaskCheckInitialDelayMs;
@@ -101,7 +99,6 @@ public final class HandlerProperties extends HandlerWriteProperties {
         private int maxPoll = 16;
         private int pollInterval = 60000;
         private int requeueInterval = 300000;
-        private int taskExecutionTimeout = 180000;
         private int longTaskTimeMs = 180000;
         private int longTaskCheckIntervalMs = 60000;
         private int longTaskCheckInitialDelayMs = 60000;
@@ -143,11 +140,6 @@ public final class HandlerProperties extends HandlerWriteProperties {
 
         public HandlerPropertiesBuilder requeueInterval(int requeueInterval) {
             this.requeueInterval = requeueInterval;
-            return this;
-        }
-
-        public HandlerPropertiesBuilder taskExecutionTimeout(int taskExecutionTimeout) {
-            this.taskExecutionTimeout = taskExecutionTimeout;
             return this;
         }
 

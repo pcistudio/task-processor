@@ -22,7 +22,7 @@ public class TaskWriterHelper {
         return CompletableFuture.runAsync(() -> writeData(handlerName, limit, supplier));
     }
 
-    private void writeData(String handlerName, int limit, Supplier<Object> supplier) {
+    public void writeData(String handlerName, int limit, Supplier<?> supplier) {
         Stream.iterate(1, integer -> integer + 1)
                 .limit(limit)
                 .forEach(integer -> {

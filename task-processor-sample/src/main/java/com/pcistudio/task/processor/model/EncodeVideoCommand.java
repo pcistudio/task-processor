@@ -12,6 +12,4 @@ import java.util.UUID;
 public class EncodeVideoCommand {
     private UUID videoId;
     private String videoPath;
-
-
 }

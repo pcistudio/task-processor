@@ -5,11 +5,11 @@
 
 == First Application
 
-The follow example demonstrates how to use the Task Processor library. In this example, we will create simple notification app that will be delivering notifications after one minute of been submitted to the server.
+The follow example demonstrates how to use the Task Processor library. In this example, we will create simple notification app that will be delivering notifications after one minute of been submitted to the server. For make thinks simpler the notification will be printed in the console.
 
 * https://github.com/pcistudio/task-processor-app[task-processor-app]
 
-The Application will have two components the `Producer` and the `Consumer`. The `Producer` will be responsible for creating the notifications and the `Consumer` will be responsible to post the notifications at the right time**(1 min in this case)**.You will need a `datasource` configure before running the application.
+The Application will have two components the *Producer* and the `*Consumer*`. The `*Producer*` will be responsible for creating the notifications and the `*Consumer*` will be responsible to post the notifications at the right time**(1 min in this case)**.You will need a `*datasource*` configure before running the application.
 
 For this example, I will be using `H2` in-memory database.
 [source,properties]
@@ -60,15 +60,16 @@ See full https://github.com/pcistudio/task-processor-app/blob/main/src/main/java
 spring.task.handlers.enabled=true
 ----
 
-* Also, you will need a configuration class that inherits from `AbstractHandlersConfiguration` and override the `configureHandler` method. In the `configureHandler` method, you will register the handler that will be responsible for processing the task, and the autoconfiguration will take care of creating the handler tables and configuring the `HandlerManagerImpl`.You can have multiple handlers in the same project.
+* Also, you will need a configuration class that inherits from `*AbstractHandlersConfiguration*` and override the `*configureHandler*` method. In the `*configureHandler*` method, you will register the handler that will be responsible for processing the task, and the autoconfiguration will take care of creating the handler tables and configuring the `*HandlerManagerImpl*`.You can have multiple handlers in the same project.
 +
-You are only responsible for adding the custom handler that implements `TaskHandler` and you will get all task status tracking, metrics, retries, and circuit breakers for free.
+You are only responsible for adding the custom handler that implements `*TaskHandler*` and you will get all task status tracking, metrics, retries, and circuit breakers for free.
 +
 In this case, the handler will be responsible for sending the notification.
 
-For the producer, I will be using a simple `@RestController` to create notifications.
+
 
 === Producer
+For the producer, I will be using a simple `*@RestController*` to create notifications.
 
 .Producer Definition
 [source,java]
@@ -102,14 +103,14 @@ public class NotificationController {
 See full
 https://github.com/pcistudio/task-processor-app/blob/main/src/main/java/com/pcistudio/example/taskprocessor/notification/NotificationController.java[code]
 
-* To configure the producer you will need to enable the writer in the `application.properties` file.
+* To configure the producer you will need to enable the writer in the `_application.properties_` file.
 +
 [source,properties]
 ----
 spring.task.processor.writer.enabled=true
 ----
 +
-Once this property is available it will autoconfigure the `TaskWriter` object that is responsible for posting Task in the database, to be consumed by the handlers.
+Once this property is available it will autoconfigure the `*TaskWriter*` object that is responsible for posting Task in the database, to be consumed by the handlers.
 +
 * In this case, the producer will be responsible for creating the notification and posting it to the database to be consumed by the handler.
 +
@@ -132,7 +133,36 @@ public class TaskProcessorConfig extends AbstractHandlersConfiguration {
 }
 ----
 
+The whole example is available in the https://github.com/pcistudio/task-processor-app[task-processor-app]
+You can run the application and test following the readme instructions. It comes with a postman collection to make it easier or you can execute a `curl` command.
 
+You should expect to see the following log in the console. One for each notification created.
+
+.Expect logs after the tasks are processed
+[source,log]
+----
+Notification for John Wick<email@gmail.com> message: Appointment Tomorrow 2
+Notification for Junior<junior@gmail.com> message: 3 Appointment Tomorrow
+----
+
+== Variation same problem - Two Handlers, Same Table
+
+In this case there are two types of notifications(email,sms) that will be sent to the same table and the library will make sure that the right handler will be called for each notification.
+
+The whole example is available in the same repository
+https://github.com/pcistudio/task-processor-app/tree/two_handler_same_table_sample[task-processor-app] but in the branch `two_handler_same_table_sample`.
+
+.Expect logs after the tasks are processed
+[source,log]
+----
+SMS for John Wick<123456789> message: Appointment Tomorrow 2
+Email for John Wick<email@gmail.com> message: Appointment Tomorrow 2
+----
+
+[cols="<,>"]
+|===
+| xref:ROOT:getting-started.adoc[← Previous]  | xref:ROOT:concepts.adoc[Next →]
+|===
 
 
 

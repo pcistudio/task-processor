@@ -1,4 +1,4 @@
-package com.pcistudio.processor.test.handler;
+package com.pcistudio.processor.test;
 
 import com.pcistudio.task.procesor.HandlerProperties;
 import com.pcistudio.task.procesor.register.HandlerManagerImpl;
@@ -50,7 +50,6 @@ public class Application implements CommandLineRunner {
                     .setName("testdb;MODE=MYSQL;DATABASE_TO_LOWER=TRUE")
                     .build();
             return new JdbcTemplate(db);
-//            return db;
         }
     }
 

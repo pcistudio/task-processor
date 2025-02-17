@@ -1,5 +1,7 @@
 = Overview
-:page-layout: default
+:linkcss:
+:stylesdir: https://pcistudio.github.io/task-processor/_/css/
+:stylesheet: site.css
 
 .Under construction
 ****
@@ -11,3 +13,12 @@ This project is a library designed for small businesses that are not yet ready t
 At the same time, it exposes metrics that can be displayed in the system of your choice to keep track of your system health. In the sample application, I chose Prometheus and Grafana.
 
 The library is designed to be simple to use and easy to integrate into your existing projects.
+
+At this point, the library is still in its early stages, and I am still working  the code and the documentation. I have set up a GitHub project to keep track of the features that I want to implement in next iterations.
+
+
+
+[cols=">"]
+|===
+| xref:ROOT:getting-started.adoc[Next →]
+|===

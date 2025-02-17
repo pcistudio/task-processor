@@ -11,6 +11,7 @@ The generated documentation will be available in the `target/site` directory.
 
 == Generate the documentation using `node`
 
+
 To run the following command, you will need to have `node` installed on your machine. See https://docs.antora.org/antora/latest/install-and-run-quickstart/[here] for more information.
 
 [source,bash]

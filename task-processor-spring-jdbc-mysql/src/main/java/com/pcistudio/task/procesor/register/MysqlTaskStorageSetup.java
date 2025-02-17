@@ -40,7 +40,11 @@ public class MysqlTaskStorageSetup implements TaskStorageSetup {
                 """.formatted(tableName, tableName));
 
         jdbcTemplate.execute("""
-                CREATE Index IF NOT EXISTS %s_updated_at_idx ON %s (updated_at);
+                create index IF NOT EXISTS %s_execution_time_status_handler_idx on %s(handler_name,status,execution_time);
+                """.formatted(tableName, tableName));
+
+        jdbcTemplate.execute("""
+                CREATE Index IF NOT EXISTS %s_updated_at_status_idx ON %s (status,updated_at);
                 """.formatted(tableName, tableName));
 
         jdbcTemplate.execute("""

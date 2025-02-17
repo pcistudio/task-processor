@@ -1,13 +1,207 @@
 = Task Processor Sample Application
-:page-layout: default
+:linkcss:
+:stylesdir: https://pcistudio.github.io/task-processor/_/css/
+:stylesheet: site.css
+:github: https://github.com/pcistudio/task-processor/blob/main
 
-.Under construction
-****
-WARNING: This documentation is a work in progress.
-****
+== Overview
+
+This application is intended to showcase the features of the Task Processor library. It has two Handlers.
+
+* One handler will process persons, and it will run smoothly, no failures or slow calls.
+* The other one will convert videos, and it will be dealing with failures and slow calls that emulate a real-world scenario, when some external service is having issues or slow.
+
+This test environment is configure using docker compose, and it provides 4 services.
+
+* `MariaDb`: The database that will be used to store the tasks.
+* `Prometheus`: The metrics collector.
+* `Grafana`: The metrics visualization tool.
+* The sample application itself, that has two the task processor configured.
+
+== Configuration
+[NOTE]
+See full config link:{github}/task-processor-sample/src/main/java/com/pcistudio/task/processor/config/TaskProcessorConfig.java[here].
+
+=== Handlers Configuration
+The person handler is configured with a simple handler that just prints the person name in the console; it should have your custom logic when you implement your handler.
+
+.Person Handler
+[source,java]
+----
+@Configuration
+public class TaskProcessorConfig extends AbstractHandlersConfiguration {
+    public static final String PERSON_HANDLER = "person";
+
+    @Override
+    protected void configureHandler(HandlerManagerImpl.Builder builder) {
+        builder.register(
+                HandlerProperties.builder()
+                        .handlerName(PERSON_HANDLER)
+                        .tableName(PERSON_HANDLER)
+                        .requeueInterval(120000)
+                        .processingExpire(Duration.ofMinutes(2))
+                        .transientExceptions(Set.of(TransientDataAccessException.class))
+                        .taskHandler(new PrintPersonHandler())
+                        .build()
+        );
+    }
+
+    static class PrintPersonHandler implements TaskHandler<Person> {
+        @Override
+        public void process(Person payload) {
+            JsonUtil.print("Person ", payload);
+        }
+    }
+}
+----
+
+The second handler is configured with a `RandomTaskHandler` that will simulate the behavior of a task handler in a real environment that is failing a lot. It is useful for testing purposes. The main goal is that you can see how the app is recovering from failures, and continuing processing the tasks.
+
+.Video Encoder Handler
+[source,java]
+----
+@Override
+    protected void configureHandler(HandlerManagerImpl.Builder builder) {
+        builder.register(
+                HandlerProperties.builder()
+                        .handlerName(VIDEO_HANDLER)
+                        .tableName(VIDEO_HANDLER)
+                        .requeueInterval(120000)
+                        .processingExpire(Duration.ofMinutes(2))
+                        .transientExceptions(Set.of(TransientDataAccessException.class))
+                        .taskHandler(getVideoHandler())
+                        .taskHandlerType(EncodeVideoCommand.class)
+                        // For a faster processing, increase the number of parallel tasks
+                        // using: .maxParallelTasks(16)
+                        .build()
+        );
+    }
+
+    TaskHandler<EncodeVideoCommand> getVideoHandler() {
+        return RandomTaskHandler.<EncodeVideoCommand>builder()
+        .withConsumer(video -> log.info("Encoding videoId={}", video.getVideoId()))
+        .withTaskCount(50)
+        .withExpectedException(new RuntimeException("Mock msg"), 1)
+        .withExpectedException(new TaskTransientException("Mock msg"), 3)
+        .withExpectedException(new TaskHandlerTransientException("Mock msg"), 3)
+        .withExpectedException(new IllegalArgumentException("Mock msg"), 3)
+        .withSlowTaskCount(8)
+        .withSlowTaskDurationMs(2001)
+        .enableRandomizeDurationCalls()
+        .build();
+    }
+----
+
+[NOTE]
+I am running this example in a single thread to keep the sample simple. You can make it run wild changing the `.maxParallelTasks(16)` in the `TaskProcessorConfig` class.
+
+=== Fake data creation
+
+The data for this app is been generated for the class `WriterScheduler` that will generate data for both handlers.
+
+It will generate 10 000 task every time the previous 10 000 has been processed.
+
+[source,java]
+----
+    @Scheduled(cron = "0 0/1 * * * ?")
+    public void writePersons() {
+        int count = 10_000;
+        generateTasks(TaskProcessorConfig.PERSON_HANDLER, count, this::generatePerson);
+
+    }
+----
 
 
-== About
+== How to run it
+You will need to have docker and docker compose installed in your machine. Once you have that, you can run the following command to start the application.
 
-This project is a sample application that demonstrates how to use the Task Processor library.
+
+If you are running in a bash shell, you can just run:
+[source,shell]
+----
+bash task-processor-sample/run.sh
+----
+
+Otherwise, you can run the following commands:
+[source,shell]
+----
+./mvnw clean install
+cd task-processor-sample
+./mvnw spring-boot:build-image
+docker-compose up
+----
+
+== How to use it
+
+Once the application is running. You will have the following services running:
+
+* `MariaDb`: You can configure you favorite client using the following credentials:
+  - `user`: task_processor
+  - `password`: taskdb123
+  - `url`: jdbc:mariadb://localhost:3308/taskdb
+* `Prometheus`: You can access the metrics using the following url: http://localhost:9090. To see all the metrics see the xref:ROOT:metrics.adoc[Metrics] section.
+
+* `Grafana`: You can visualize the metrics using http://localhost:3000. Were I preconfigured a basic dashboard for you. The credentials are:
+  - `user`: admin
+  - `password`: admin
+* `Task Processor`: Because this is a library, you will not see a web interface. But I will be implementing and REST API as a separate module in case you want to include it in your project.
+
+[NOTE]
+For this example, I will be using the `Grafana` dashboard to see how the system is behaving, and you can access the database to see the data been stored, and the tasks been processed.
+
+== Up and running
+
+Because the handlers are just printing in the console, you can see the task been processed in the console and check the database to check the status. For a general overview of the system health, you can check the `Grafana` dashboard that can be found at `Home /Dashboards/Handlers Overview` where you will see the following graphics:
+
+In the top-left corner you will be able to choose the handler you want to see the metrics for. In this case, I will be using the `mp4_video_encoder` handler.
+
+Also the auto refresh is off by default, you can change it in the top right corner.
+
+|===
+| Select Handlers  | Select Auto Refresh
+
+| image:./dashboard.png[Grafana Dashboard] | image:./dashboard_auto_refresh.png[Auto Refresh]
+|===
+
+=== Metrics Visualization
+
+Most of the graphics are self-explanatory, The P99 and P99.9 are the 99th and 99.9th percentile of the processing time or the polling time.
+
+The requeue task is the number of task that have been requeued because they weren't processed in the configured time. You can trigger this by stopping the application and all the ongoing task will be requeued when you start the application again.
+
+image:sample:dashboard_section1.png[]
+
+image:sample:dashboard_section2.png[]
+
+image:sample:dashboard_section3.png[]
+
+
+
+Other exercise that you can do is to stop the database and see how the system behaves.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

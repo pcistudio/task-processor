@@ -5,7 +5,7 @@
 
 == _Handler_
 
-A handler is represented by a class that implements the `TaskHandler` interface. This interface has a single method `process` that receives the payload of the task to be processed. The handler is responsible for processing the task and returning the result. The inderline will be in charge of polling task from the database and sending them to the handler for processing.
+A handler is the consumer, and it should implement the `*TaskHandler*` interface. This interface has a single method `process` that receives the payload of the task to be processed. The handler is responsible for processing the task. The underline library will be in charge of polling task from the database and sending them to the specific handler for processing.
 
 [source,java]
 ----
@@ -16,9 +16,12 @@ public class TestTaskHandler implements TaskHandler<Payload> {
 }
 ----
 
+[WARNING]
+When using a lambda to implement the  `*TaskHandler*` interface, the payload type can not be inferred, and you will need to specify the type explicitly. Use `taskHandlerType` property to specify the generic type of the handler.
+
 == _TaskWriter_
 
-The `TaskWriter` is a class that is responsible for sending tasks to the database for been stored. It has a single method `send` that receives a `TaskParams` object. The `TaskParams` object contains the name of the handler that will process the task, the payload of the task, and the delay that the task will be executed by default 0.
+The `TaskWriter` is the Producer and is the class responsible for sending tasks to the database for later consumption. It has a single method `send` that receives a `TaskParams` object. The `TaskParams` object contains the name of the handler that will process the task, the payload of the task, and the delay that the task will be executed by default 0.
 
 [source,java]
 ----
@@ -44,18 +47,19 @@ The payloads are stored in the database in a LOB field as a byte array. The `Mes
 If you want to use a different encoding you can implement the `MessageEncoding` and `MessageDecoding` interfaces, declaring them as beans in the spring context, and your implementation will be used instead of the default one.
 
 [NOTE]
-We are planning to add out of the box support for `protobuf` and `avro` in next iterations.
+Planning to add out of the box support for `*protobuf*` and `*avro*` in next iterations.
 
 == _Encryption_
 [IMPORTANT]
 
-Even when the data is stored in the database as a byte array, many tasks will require some type of PCI, PII information that won't be safe if it is not encrypted at rest. So adding support for encryption is the next priority for the project.
+Even when the data is stored in the database as a byte array, many tasks will require some type of PCI, PII information that won't be safe if it is not encrypted at rest. Adding support for encryption is the next priority for the project.
 
 == _RetryStrategy_
 The system will count with 2 types of retry strategies, `FixedRetryStrategy` and `ExponentialRetryStrategy`.
 * The `FixedRetryStrategy` will retry the task a fixed number of times with a fixed delay between retries.
 * The `ExponentialRetryStrategy` will retry the task a fixed number of times with an exponential delay between retries.
 
+The retry strategy will be configured in the `HandlerProperties` object.
 
 [source,java]
 ----
@@ -73,13 +77,54 @@ public class TaskProcessorConfig extends AbstractHandlersConfiguration {
                         .maxRetries(3)
                         .retryDelayMs(1000)
                         .exponentialBackoff(false)
+                        .transientExceptions(Set.of(TransientDataAccessException.class))
                         .build()
         );
     }
 }
 ----
 
+=== TransientExceptions
+The `transientExceptions` property is a set of exceptions that are considered transient and are going to be retried. The system will use this `Set` to determine if the task should be retried or not.
+
+ _Task Status_
+
+The task has 4 status:
+
+* `PENDING`
+* `PROCESSING`
+* `COMPLETED`
+* `FAILED`
+
+The status of the task will change depending on the result of the processing. The task will start in PENDING status, then it will change to PROCESSING status when the handler is processing the task. If the task is completed successfully the status will change to COMPLETED, if the task fails the status will change to FAILED.
+
+image:./status.png[Status]
 
 
+== _Polling Process_
+The polling process will be in charge of polling the database for tasks that are in PENDING status and with execution time less than or equal to the actual time, and send them to the handler to be process.
+
+The polling process will use the configuration for `maxPoll` that will have the number of task to be consumed in one poll and `pollInterval` that is the property that determine how long to wait before polling again, after consuming all the tasks available.
+
+== _Requeue Process_
+
+The task has 4 status FAILED, COMPLETED, PENDING, PROCESSING. when the task is in processing status it means that the handler is running the task, and as long as is in that status no other handler will try to process it. But what about if the server that is processing the task goes down? The task will be stuck in processing status forever. The requeue process will be in charge of requeueing the tasks that haven't complete.
+
+The requeue process will query the database for tasks that are taking too long to complete and will requeue them, meaning changing the status to PENDING, so other handler can try to process them.
+
+It will use the configuration for `processingExpire` and `processingGracePeriod` properties to determine if a task is taking too long to process.
+
+== _TaskExecutionTracker_
+
+While the requeue process will take care of setting the status of the tasks in the database to PENDINGG, the `TaskExecutionTracker` will be in charge of checking if a task is taking too long to process and will try to cancel it.
+
+In this case the system will use the configuration for `longTaskTimeMs`, `longTaskCheckIntervalMs`, and `longTaskCheckInitialDelayMs` to determine if a task is taking too long to process.
+
+[NOTE]
+`Requeue` will change the database status to PENDING, and the `TaskExecutionTracker` will try to cancel the running task.
 
 
+[cols="<,>"]
+|===
+| xref:ROOT:usage.adoc[← Previous]  | xref:ROOT:database.adoc[Next →]
+|===
