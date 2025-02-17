@@ -3,3 +3,6 @@
 ** xref:ROOT:usage.adoc[Usage]
 ** xref:ROOT:concepts.adoc[Concepts]
 ** xref:ROOT:database.adoc[Database]
+** xref:ROOT:configuration.adoc[Configuration]
+** xref:ROOT:error-handler.adoc[Error Handling]
+** xref:ROOT:metrics.adoc[Metrics]

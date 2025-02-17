@@ -1,15 +1,15 @@
 package com.pcistudio.task.procesor.util;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
-@Slf4j
 public class TaskExecutionTracker implements ExecutionTracker {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(TaskExecutionTracker.class);
     private final Map<Long, TimeFuture> futureMap = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final ThreadPoolExecutor executorService;

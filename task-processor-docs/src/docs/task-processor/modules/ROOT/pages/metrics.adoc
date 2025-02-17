@@ -1,0 +1,42 @@
+= Metrics
+:linkcss:
+:stylesdir: https://pcistudio.github.io/task-processor/_/css/
+:stylesheet: site.css
+
+The system will expose metrics to monitor the task processor. The metrics are exposed using the `Micrometer` library. The following metrics are available:
+
+.Handlers Health
+[cols="1,1,2",  options="header"]
+|===
+| Metric | Type | Description
+| `task.processor.handler.count` | Gauge | Number of handlers registered
+| `task.processor.handler.running` | Gauge | Number of running tasks
+| `task.processor.handler.paused` | Gauge | Number of paused tasks
+|===
+
+.Task Metrics
+[cols="1,1,2",  options="header"]
+|===
+| Metric | Type | Description
+
+| `task.processor.handler.requeue` | Counter | Number of tasks requeued
+| `task.processor.handler.requeue.seconds` | Timer | Time taken in each requeue operation
+| `task.processor.handler.polling.seconds` | Timer | Time taken in each polling operation
+| `task.processor.handler.processing.seconds` | Timer | Time taken in each task to be processed
+| `task.processor.track.executions` | Gauge | Number of executions at the moment
+| `task.processor.track.long.executions` | Gauge | Number of long running tasks at the moment
+|===
+
+You can use Prometheus or any other supported metrics system to collect the metrics. In the sample application we are using Prometheus to collect the metrics.
+See xref:sample:index.adoc[Sample App] for more information.
+
+[cols="<"]
+|===
+| xref:ROOT:error-handler.adoc[← Previous]
+
+|===
+
+
+
+
+

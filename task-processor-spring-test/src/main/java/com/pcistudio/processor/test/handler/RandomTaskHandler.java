@@ -20,8 +20,8 @@ import java.util.function.Consumer;
 
 @Slf4j
 public final class RandomTaskHandler<T> implements TaskHandler<T> {
-    private final static String SLOW_CALLS = "SLOW_CALLS";
-    private final static SecureRandom RANDOM = new SecureRandom();
+    private static final String SLOW_CALLS = "SLOW_CALLS";
+    private static final SecureRandom RANDOM = new SecureRandom();
     private final AtomicInteger numberOfCalls = new AtomicInteger(0);
     private final Map<Integer, ConsumerHolder<T>> exceptionsAndSlowIndexMap;
 
@@ -33,6 +33,9 @@ public final class RandomTaskHandler<T> implements TaskHandler<T> {
     private final Consumer<T> defaultConsumer;
     private final int taskCount;
 
+    /**
+     * Duration to be considered slow task in milliseconds
+     */
     private final int slowTaskDurationMs;
     private final Duration stopSlowCallsAfter;
     private final Duration stopErrorsCallsAfter;

@@ -25,6 +25,8 @@ public class WriterScheduler {
     private final TaskWriter taskWriter;
     private final TaskInfoVisibilityService taskInfoVisibilityService;
     private final SecureRandom random = new SecureRandom();
+    private int personCount = 0;
+    private int videoCount = 0;
 
     @Scheduled(cron = "0 0/1 * * * ?")
     public void writePersons() {
@@ -57,18 +59,17 @@ public class WriterScheduler {
         int age = random.nextInt(80);
         return TaskParams.builder()
                 .handlerName(TaskProcessorConfig.PERSON_HANDLER)
-                .payload(new Person("Name LastName" + age, age))
+                .payload(new Person("Name LastName" + personCount++, age))
                 .build();
     }
 
     private TaskParams generateVideo() {
-        int id = random.nextInt(2000_000);
         return TaskParams.builder()
                 .handlerName(TaskProcessorConfig.VIDEO_HANDLER)
                 .payload(
                         EncodeVideoCommand.builder()
                                 .videoId(UUID.randomUUID())
-                                .videoPath("/path/video" + id)
+                                .videoPath("/path/video" + videoCount++)
                                 .build()
                 )
                 .build();

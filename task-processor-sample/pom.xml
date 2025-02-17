@@ -77,6 +77,10 @@
                     <!-- Set the image name -->
                     <image>
                         <name>com.pcistudio/task-processor-sample:${project.version}</name>
+                        <createdDate>${maven.build.timestamp}</createdDate>
+                        <tags>
+                            <tag>com.pcistudio/task-processor-sample:latest</tag>
+                        </tags>
                     </image>
                     <!-- Set environment variables -->
                     <environment>
