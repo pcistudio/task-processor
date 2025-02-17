@@ -14,6 +14,10 @@ At the same time, it exposes metrics that can be displayed in the system of your
 
 The library is designed to be simple to use and easy to integrate into your existing projects.
 
+At this point, the library is still in its early stages, and I am still working  the code and the documentation. I have set up a GitHub project to keep track of the features that I want to implement in next iterations.
+
+
+
 [cols=">"]
 |===
 | xref:ROOT:getting-started.adoc[Next →]

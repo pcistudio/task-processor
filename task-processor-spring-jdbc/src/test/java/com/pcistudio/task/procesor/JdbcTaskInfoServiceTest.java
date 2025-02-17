@@ -36,7 +36,7 @@ class JdbcTaskInfoServiceTest {
 
     private HandlerLookup handlerLookup = new HandlerLookup() {
         public HandlerPropertiesWrapper getProperties(String handlerName) {
-            TaskHandler<TaskInfo> taskInfoTaskHandler = (taskInfo) -> {
+            TaskHandler<TaskInfo> taskInfoTaskHandler = taskInfo -> {
                 log.info("taskInfo={}", taskInfo);
             };
             return new HandlerPropertiesWrapper(HandlerProperties.builder()
@@ -65,12 +65,12 @@ class JdbcTaskInfoServiceTest {
 
         List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 10);
         assertEquals(10, taskTable.size());
-        taskTable.forEach(taskInfo -> jdbcTaskInfoService.markTaskCompleted(taskInfo));
+        taskTable.forEach(jdbcTaskInfoService::markTaskCompleted);
 
         List<TaskInfo> taskTable2 = jdbcTaskInfoService.poll("task_table", 10);
         assertEquals(2, taskTable2.size());
 
-        taskTable2.forEach(taskInfo -> jdbcTaskInfoService.markTaskCompleted(taskInfo));
+        taskTable2.forEach(jdbcTaskInfoService::markTaskCompleted);
 
         List<TaskInfo> taskTable3 = jdbcTaskInfoService.poll("task_table", 10);
         assertEquals(0, taskTable3.size());
@@ -106,7 +106,7 @@ class JdbcTaskInfoServiceTest {
         assertEquals(2, taskTable2.size());  // try to poll 10 but there are only 2 ready
 
         stopWatch.start("mark 2 tasks completed");
-        taskTable2.forEach(taskInfo -> jdbcTaskInfoService.markTaskCompleted(taskInfo));
+        taskTable2.forEach(jdbcTaskInfoService::markTaskCompleted);
         stopWatch.stop();
 
         // No more tasks to process
@@ -124,7 +124,7 @@ class JdbcTaskInfoServiceTest {
         stopWatch.stop();
         log.info(stopWatch.prettyPrint());
         assertEquals(10, taskTable4.size());
-        taskTable4.forEach(taskInfo -> jdbcTaskInfoService.markTaskCompleted(taskInfo));
+        taskTable4.forEach(jdbcTaskInfoService::markTaskCompleted);
 
         Assertions.assertThat(taskTable4)
                 .extracting(taskInfo -> new String(taskInfo.getPayloadBytes()))
@@ -158,7 +158,7 @@ class JdbcTaskInfoServiceTest {
         List<TaskInfo> taskTable = jdbcTaskInfoService.poll("task_table", 10);
         assertEquals(10, taskTable.size());
 
-        taskTable.forEach(taskInfo -> jdbcTaskInfoService.markTaskFailed(taskInfo));
+        taskTable.forEach(jdbcTaskInfoService::markTaskFailed);
 
         Pageable<TaskInfo> pageable = jdbcTaskInfoService.getTasks("task_table", ProcessStatus.FAILED, null, 10, Sort.DESC);
         assertEquals(14, pageable.results().get(0).getId());

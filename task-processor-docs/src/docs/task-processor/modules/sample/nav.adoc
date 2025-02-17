@@ -1,2 +1,3 @@
 * Tutorial
 ** xref:sample:index.adoc[Task Processor Sample App]
+*** xref:sample:trobleshooting.adoc[Trobleshooting]

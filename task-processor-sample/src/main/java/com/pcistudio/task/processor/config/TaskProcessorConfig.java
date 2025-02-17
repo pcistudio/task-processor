@@ -66,8 +66,6 @@ public class TaskProcessorConfig extends AbstractHandlersConfiguration {
                 .withSlowTaskCount(8)
                 .withSlowTaskDurationMs(2001)
                 .enableRandomizeDurationCalls()
-                .withStopErrorsCallsAfter(null)
-                .withStopSlowCallsAfter(null)
                 .build();
     }
 

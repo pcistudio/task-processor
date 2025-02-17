@@ -1,0 +1,135 @@
+= Library Troubleshooting and Optimization Journey
+:linkcss:
+:stylesdir: https://pcistudio.github.io/task-processor/_/css/
+:stylesheet: site.css
+:github: https://github.com/pcistudio/task-processor/blob/main
+
+[WARNING]
+ To be able to follow this piece you probably should havee read the xref:sample:index.adoc[Task Processor Sample Application]
+
+I decided to include this troubleshooting exercise to show you how to use the metrics in your application and why having the right metrics is important.
+
+== Overview
+Doing this tutorial I was exploring the grafana graphics to see how the system was behaving. My premise was that the `person` handler should be running faster than the `mp4_video_encoder` handler. Because the `person` handler is only printing in the console and the `mp4_video_encoder` is using the `RandomTaskHandler` that is simulating a real world scenario with slow calls and errors.
+
+See previous section xref:sample:index.adoc[Task Processor Sample Application] for more context.
+
+
+So I was expecting a bigger difference between the task processed in the last hour for both handlers.
+
+|===
+| Person  | Video
+
+| image:./person_task_processed.png[Person] | image:./video_task_processed.png[Video]
+|===
+
+[NOTE]
+I am running this example in a single thread to keep the sample simple. You can make it run wild changing the `.maxParallelTasks(16)` in the `TaskProcessorConfig` class.
+
+The data generation for does two handlers follow the same pattern. I generate 10 000 task every time the previous 10 000 has been processed.
+
+- For the `mp4_video_encoder` I can justify this numbers, because the processing time when `enableRandomizeDurationCalls` is set to true in the `RandomTaskHandler` is kind of like this:
+  * slow calls will range between 2 and 4 seconds. I will use `3` seconds for the math.
+  * success calls will range 0 and 1. I will use `0.5` for the math.
+  * exception calls will range between 0 and 1. I will use `0.5` for the math.
+
++
+[source,java]
+----
+TaskHandler<EncodeVideoCommand> getVideoHandler() {
+        return RandomTaskHandler.<EncodeVideoCommand>builder()
+                .withConsumer(video -> log.info("Encoding videoId={}", video.getVideoId()))
+                .withTaskCount(50)
+                .withExpectedException(new RuntimeException("Mock Runtime Exception"), 1)
+                .withExpectedException(new TaskTransientException("Mock error saving in DB"), 3)
+                .withExpectedException(new TaskHandlerTransientException("Mock error saving in handler"), 3)
+                .withExpectedException(new IllegalArgumentException("Mock Illegal Argument"), 3)
+                .withSlowTaskCount(8)
+                .withSlowTaskDurationMs(2001)
+                .enableRandomizeDurationCalls()
+                .withStopErrorsCallsAfter(null)
+                .withStopSlowCallsAfter(null)
+                .build();
+    }
+----
+
++
+Looking at this configuration I can see that:
+
+* 16% are slow calls
+* 20% are errors
+* 64% are success calls
++
+Base on the previous graphic we can see that close to 3000 task are processed in the last hour.
++
+.Math using the 3000 total task for `mp4_video_encoder` handler
+|===
+| Task Type | Percentage | Task Count | Processing Time (seconds) | Total Time (seconds) | Total Time (minutes)
+| Slow Calls | 16% of 3000  | 480 | 3 | 1440 | 24
+| Errors | 20% of 3000| 600 | 0.5 | 300 | 5
+| Success Calls | 64% of 3000| 1920 | 0.5 | 960 | 16
+| Total | 100% | 3000 |  | 2700 | 45
+|===
++
+[NOTE]
+Remember that these numbers are just an approximation, but they are close enough to see that the system is behaving as expected.
+
+
+- Now let's take a look to the `person` handler.
+This handler is just printing in the console without any type of delay. Checking the processing time for the P99.9 in the next graphic I can see that is around 0.01 seconds the max processing time.
++
+image:./person_processing.png[]
++
+If we use the max value recorded in the P99.9 for the processing time,  that is 0.01 seconds,  in hour we will be able to process
++
+`3600 seconds / 0.01 seconds = 360 000 task`
++
+Because this is an approximation I will be fine with something close to `400 000` by hour.
+
+== What is going on?
+
+I start looking other graphics in the dashboard and I found that something was going on in the polling process.
+
+While the `mp4_video_encoder`  polling graphic looks like this:
+
+.mp4_video_encoder handler polling heatmap
+image:./video_polling.png[]
+
+With calls under 0.5 seconds.
+
+The `person` handler looks like this:
+.Person handler polling heatmap
+image:./person_polling.png[]
+
+With calls up to 7 seconds and event one spikes up to 15 second.
+
+So here we have our suspect.
+
+Now my first thought is going after the database query for the polling process.
+
+After looking at the code and checking the query plan I found that the query that is doing the polling, needs some extra indexes to improve the performance.
+
+[source,sql]
+----
+select * from  task_info_person
+where handler_name='person'  and status = 'PENDING' and execution_time<=NOW()
+order by execution_time
+----
+
+So I add the following indexes to the table `task_info_person`:
+[source,sql]
+----
+create index IF NOT EXISTS task_info_person_handler_status_execution_time_idx on task_info_person(handler_name,status,execution_time);
+----
+
+So the final view of the dashboard looks like this:
+
+.Person handler with fix query
+|===
+| Task process last hour  |  Polling
+
+| image:./person_fix_processed_task.png[Person] | image:./person_fix_polling.png[Video]
+|===
+
+Now these numbers are more in line with what I was expecting.
+

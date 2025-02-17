@@ -2,14 +2,74 @@
 :linkcss:
 :stylesdir: https://pcistudio.github.io/task-processor/_/css/
 :stylesheet: site.css
+:github: https://github.com/pcistudio/task-processor/blob/main
 
-.Under construction
-****
-WARNING: This documentation is a work in progress.
-****
+In the `task-processor-spring-test` module, you will find the `@TaskProcessorTest` and `@TaskWriterTest` annotations that are used to test the task processor and task writer respectively. These annotations are designed to simplify the testing process by automatically configuring the necessary beans, the database and dependencies, without having to load the entire spring context.  But at the moment they are only been use for integration testing. I need to simplify the test configuration and make it easier to use for unit testing.
+
+See the link:{github}/task-processor-spring-test/src/test/java/com/pcistudio/processor/test/handler/WriteAndProcessIT.java[WriteAndProcessIT] for more information.
 
 
-== About
+== _RandomTaskHandler_
+This is a special TaskHandler design to simulate the behavior of a task handler in a real environment. It is useful for testing purposes and to generate traffic. The main goal is that you can define the expected number of task and there results, been success execution, transient exceptions, failures, or slow calls.
+It has a builder that allows you to configure the type of response and the number of expected responses.
 
-This project is a sample application that demonstrates how to use the Task Processor library.
+[source,java]
+----
+
+static RandomTaskHandler<Person> slowCalls = RandomTaskHandler.<Person>builder()
+        .withConsumer(person -> log.info("{}", person))
+        .withTaskCount(50)
+        .withExpectedException(new RuntimeException(), 1)
+        .withExpectedException(new TaskTransientException(""), 3)
+        .withExpectedException(new TaskHandlerTransientException(""), 3)
+        .withExpectedException(new IllegalArgumentException(""), 3)
+        .withStopErrorsCallsAfter(Duration.ofMinutes(3))
+        .withStopSlowCallsAfter(Duration.ofMinutes(2))
+        .withSlowTaskCount(26)
+        .withSlowTaskDurationMs(2001)
+        .build();
+----
+[IMPORTANT]
+The TaskCount in this configuration is not the maximum number of task that the handler will process. This is just saying that every 50 task the handler will return the configured result.
+
+The previous configuration will create a task handler that every 50 tasks will return:
+
+* 26 slow calls.
+* 1 will throw a RuntimeException
+* 3 will throw a TaskTransientException
+* 3 will throw a TaskHandlerTransientException
+* 3 will throw a IllegalArgumentException.
+* The rest of the calls will be success. In this case 14 calls out of 50 will be success.
+
+Also in the configuration you can define the time that the task handler will stop replying with errors and slow calls.
+In this case, the task handler will stop replying with errors after 3 minutes and slow calls after 2 minutes.
+
+See full example in link:{github}/task-processor-spring-test/src/test/java/com/pcistudio/processor/test/handler/WriteAndProcessIT.java[WriteAndProcessIT]
+[NOTE]
+This handler is use heavily in the task-processor-sample module to showcase the task processor.
+
+== _TaskWriterHelper_
+This is a helper class that is autoconfigured in the test context, and it helps with the writing bulk tasks to the database. It is useful for testing purposes. It has 2 methods writeSyncData and writeData that will write the tasks to the database and wait for the tasks to be processed.
+
+== _TaskInfoServiceTestHelper_
+This is a helper class that is autoconfigured in the test context and has the `waitForTask` method that receives the handler name and will wait for the all task in that handler to be processed. It is useful for testing purposes.
+
+
+.How to use it
+[source,java]
+----
+
+ @Test
+    void test() throws InterruptedException {
+        //This will write 1000 tasks to the database
+        taskWriterHelper
+                .writeData("test_slow_calls", 1000, () -> new Person("Hello World", 31));
+
+        //This will start the task processor
+        taskProcessorManager.start("test_slow_calls");
+
+        //This will wait for all task to be processed
+        taskInfoServiceTestHelper.waitForTask("test_slow_calls");
+}
+----
 

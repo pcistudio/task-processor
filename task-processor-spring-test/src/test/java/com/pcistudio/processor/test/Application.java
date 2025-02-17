@@ -50,7 +50,6 @@ public class Application implements CommandLineRunner {
                     .setName("testdb;MODE=MYSQL;DATABASE_TO_LOWER=TRUE")
                     .build();
             return new JdbcTemplate(db);
-//            return db;
         }
     }
 
