@@ -182,6 +182,7 @@ public final class HandlerProperties extends HandlerWriteProperties {
         public HandlerProperties build() {
             Assert.notNull(taskHandler, "TaskHandler cannot be null");
             taskHandlerType = discoverTaskHandlerType(taskHandler);
+            checkRequiredFields();
             return new HandlerProperties(this);
         }
 

@@ -16,6 +16,7 @@ public class HandlerWriteProperties {
     private final boolean encrypt;
 
     protected HandlerWriteProperties(HandlerWritePropertiesBuilder<?> builder) {
+
         this.handlerName = Objects.requireNonNullElse(builder.handlerName, builder.tableName);
         this.tableName = Objects.requireNonNullElse(builder.tableName, builder.handlerName);
         this.encrypt = builder.encrypt;
@@ -52,10 +53,14 @@ public class HandlerWriteProperties {
         }
 
         public HandlerWriteProperties build() {
+            checkRequiredFields();
+            return new HandlerWriteProperties(this);
+        }
+
+        protected void checkRequiredFields() {
             if (tableName == null && handlerName == null) {
                 throw new IllegalArgumentException("tableName or handlerName must be set");
             }
-            return new HandlerWriteProperties(this);
         }
     }
 
