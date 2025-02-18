@@ -1,6 +1,10 @@
 package com.pcistudio.task.procesor;
 
+import com.pcistudio.task.procesor.util.Assert;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
+
+import java.util.Objects;
 
 @Getter
 public class HandlerWriteProperties {
@@ -12,8 +16,9 @@ public class HandlerWriteProperties {
     private final boolean encrypt;
 
     protected HandlerWriteProperties(HandlerWritePropertiesBuilder<?> builder) {
-        this.handlerName = builder.handlerName;
-        this.tableName = builder.tableName;
+
+        this.handlerName = Objects.requireNonNullElse(builder.handlerName, builder.tableName);
+        this.tableName = Objects.requireNonNullElse(builder.tableName, builder.handlerName);
         this.encrypt = builder.encrypt;
     }
 
@@ -22,16 +27,22 @@ public class HandlerWriteProperties {
     }
 
     public static class HandlerWritePropertiesBuilder<T extends HandlerWritePropertiesBuilder<T>> {
-        private String tableName = "default";
-        private String handlerName = "default";
+        @Nullable
+        private String tableName;
+        @Nullable
+        private String handlerName;
         private boolean encrypt = false;
 
         public T tableName(String tableName) {
+            Assert.notNull(tableName, "tableName cannot be null");
+            Assert.isFalse(tableName.isBlank(), "tableName cannot be empty");
             this.tableName = tableName;
             return (T) this;
         }
 
         public T handlerName(String handlerName) {
+            Assert.notNull(handlerName, "handlerName cannot be null");
+            Assert.isFalse(handlerName.isBlank(), "handlerName cannot be empty");
             this.handlerName = handlerName;
             return (T) this;
         }
@@ -42,7 +53,14 @@ public class HandlerWriteProperties {
         }
 
         public HandlerWriteProperties build() {
+            checkRequiredFields();
             return new HandlerWriteProperties(this);
+        }
+
+        protected void checkRequiredFields() {
+            if (tableName == null && handlerName == null) {
+                throw new IllegalArgumentException("tableName or handlerName must be set");
+            }
         }
     }
 
