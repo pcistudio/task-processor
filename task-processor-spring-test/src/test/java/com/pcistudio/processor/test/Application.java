@@ -33,16 +33,6 @@ public class Application implements CommandLineRunner {
 
     @Configuration
     static class TestConfig {
-//        @Bean
-//        DataSource dataSource() {
-//            EmbeddedDatabase db = new EmbeddedDatabaseBuilder()
-//                    .setType(EmbeddedDatabaseType.H2)
-//                    .setName("testdb;MODE=MYSQL;DATABASE_TO_LOWER=TRUE")
-//                    .build();
-////            return new JdbcTemplate(db);
-//            return db;
-//        }
-
         @Bean
         JdbcTemplate taskProcessorJdbcTemplate() {
             EmbeddedDatabase db = new EmbeddedDatabaseBuilder()
@@ -60,10 +50,6 @@ public class Application implements CommandLineRunner {
             builder.register(HandlerProperties.builder()
                     .handlerName("test")
                     .tableName("test")
-                    .taskHandler(payload -> {
-                        System.out.println("test");
-                    })
-                    .taskHandlerType(String.class)
                     .build());
         }
     }

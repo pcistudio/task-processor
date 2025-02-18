@@ -3,6 +3,7 @@ package com.pcistudio.task.procesor;
 import com.pcistudio.task.procesor.handler.TaskHandler;
 import lombok.Getter;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.time.Duration;
 import java.util.Set;
@@ -77,10 +78,12 @@ public class HandlerPropertiesWrapper {
         return delegate.getProcessingGracePeriod();
     }
 
+    @Nullable
     public TaskHandler getTaskHandler() {
         return delegate.getTaskHandler();
     }
 
+    @Nullable
     public Class<?> getTaskHandlerType() {
         return delegate.getTaskHandlerType();
     }
