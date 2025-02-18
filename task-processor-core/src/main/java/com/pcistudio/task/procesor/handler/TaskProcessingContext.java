@@ -39,6 +39,7 @@ public final class TaskProcessingContext {
             throw new IllegalArgumentException("Handler properties cannot be null");
         }
         Assert.notNull(builder.taskHandler, "taskHandler cannot be null");
+        Assert.notNull(builder.handlerProperties.getTaskHandlerType(), "taskHandlerType cannot be null");
 
         Assert.notNull(builder.taskInfoService, "taskInfoService cannot be null");
         Assert.notNull(builder.retryStrategy, "retryStrategy cannot be null");

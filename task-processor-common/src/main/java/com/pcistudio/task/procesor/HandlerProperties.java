@@ -58,7 +58,9 @@ public final class HandlerProperties extends HandlerWriteProperties {
      * taskHandler value should be <code>@Nullable</code> because in the case that Only the producer(writer) is configured,
      * the taskHandler is NOT NEEDED, but still need to create the table for the task if it does not exist.
      */
+    @Nullable
     private final TaskHandler taskHandler;
+    @Nullable
     private final Class<?> taskHandlerType;
 
     private final boolean autoStartEnabled;
@@ -78,8 +80,8 @@ public final class HandlerProperties extends HandlerWriteProperties {
         this.maxParallelTasks = builder.maxParallelTasks;
         this.processingExpire = builder.processingExpire;
         this.processingGracePeriod = builder.processingGracePeriod;
-        this.taskHandler = Objects.requireNonNull(builder.taskHandler, "TaskHandler cannot be null");
-        this.taskHandlerType = Objects.requireNonNull(builder.taskHandlerType, "TaskHandlerType cannot be null");
+        this.taskHandler = builder.taskHandler;
+        this.taskHandlerType =builder.taskHandlerType;
         this.autoStartEnabled = builder.autoStartEnabled;
         this.transientExceptions = Objects.requireNonNullElse(builder.transientExceptions, Collections.emptySet());
     }
@@ -173,20 +175,24 @@ public final class HandlerProperties extends HandlerWriteProperties {
             return this;
         }
 
-        public HandlerPropertiesBuilder transientExceptions(Set<Class<? extends RuntimeException>> transientExceptions) {
+        public HandlerPropertiesBuilder transientExceptions(@Nullable Set<Class<? extends RuntimeException>> transientExceptions) {
             this.transientExceptions = transientExceptions == null ? Collections.emptySet() : Collections.unmodifiableSet(transientExceptions);
             return this;
         }
 
         @Override
         public HandlerProperties build() {
-            Assert.notNull(taskHandler, "TaskHandler cannot be null");
             taskHandlerType = discoverTaskHandlerType(taskHandler);
             checkRequiredFields();
             return new HandlerProperties(this);
         }
 
-        private Class<?> discoverTaskHandlerType(TaskHandler taskHandler) {
+        @Nullable
+        private Class<?> discoverTaskHandlerType(@Nullable TaskHandler taskHandler) {
+            if (taskHandlerType == null) {
+                return null;
+            }
+
             try {
                 return GenericTypeUtil.getGenericTypeFromInterface(taskHandler.getClass(), TaskHandler.class);
             } catch (RuntimeException ex) {
