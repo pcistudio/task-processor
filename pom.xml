@@ -60,6 +60,7 @@
     <properties>
         <resilience4jVersion>2.3.0</resilience4jVersion>
         <spotbugs-annotations.version>4.9.0</spotbugs-annotations.version>
+        <json-smart.version>2.5.2</json-smart.version>
     </properties>
 
     <dependencies>
