@@ -1,11 +1,12 @@
 package com.pcistudio.task.processor;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.util.Map;
 
@@ -20,13 +21,18 @@ class MainTest {
     @LocalServerPort
     private int port;
 
+    @Autowired
+    private RestClient.Builder restClientBuilder;
+
     @Test
     void test() {
+        RestClient restClient = restClientBuilder.build();
 
-        RestTemplate restTemplate = new RestTemplate();
         String url = BASE_URL + port + "/actuator";
-        ResponseEntity<Map> response = restTemplate.
-                getForEntity(url, Map.class);
+        ResponseEntity<Map> response = restClient.get()
+                .uri(url)
+                .retrieve()
+                .toEntity(Map.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody().get("_links"));

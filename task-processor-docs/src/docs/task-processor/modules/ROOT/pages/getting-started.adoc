@@ -4,7 +4,7 @@
 :stylesdir: https://pcistudio.github.io/task-processor/_/css/
 :stylesheet: site.css
 
-:task-processor-version: 0.0.37
+:task-processor-version: 0.0.41
 
 
 You can find binaries in Maven Central, link:https://central.sonatype.com/search?namespace=com.pcistudio[here].
