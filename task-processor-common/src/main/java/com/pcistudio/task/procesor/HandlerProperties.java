@@ -54,7 +54,7 @@ public final class HandlerProperties extends HandlerWriteProperties {
     private final Duration processingGracePeriod;
     /**
      * <p>Task handler represent the action to be executed for the task to complete.</p>
-     *
+     * <p>
      * taskHandler value should be <code>@Nullable</code> because in the case that Only the producer(writer) is configured,
      * the taskHandler is NOT NEEDED, but still need to create the table for the task if it does not exist.
      */
@@ -81,7 +81,7 @@ public final class HandlerProperties extends HandlerWriteProperties {
         this.processingExpire = builder.processingExpire;
         this.processingGracePeriod = builder.processingGracePeriod;
         this.taskHandler = builder.taskHandler;
-        this.taskHandlerType =builder.taskHandlerType;
+        this.taskHandlerType = builder.taskHandlerType;
         this.autoStartEnabled = builder.autoStartEnabled;
         this.transientExceptions = Objects.requireNonNullElse(builder.transientExceptions, Collections.emptySet());
     }
@@ -189,7 +189,7 @@ public final class HandlerProperties extends HandlerWriteProperties {
 
         @Nullable
         private Class<?> discoverTaskHandlerType(@Nullable TaskHandler taskHandler) {
-            if (taskHandlerType == null) {
+            if (taskHandler == null) {
                 return null;
             }
 
