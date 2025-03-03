@@ -54,6 +54,8 @@ Planning to add out of the box support for `*protobuf*` and `*avro*` in next ite
 
 Even when the data is stored in the database as a byte array, many tasks will require some type of PCI, PII information that won't be safe if it is not encrypted at rest. Adding support for encryption is the next priority for the project.
 
+The first part of the encryption is already implemented in the link:https://github.com/pcistudio/simple-kms[simple-kms] library. The next step is to create a Spring module to set up the auto-configuration. At that point, we can proceed with integrating this library.
+
 == _RetryStrategy_
 The system will count with 2 types of retry strategies, `FixedRetryStrategy` and `ExponentialRetryStrategy`.
 * The `FixedRetryStrategy` will retry the task a fixed number of times with a fixed delay between retries.

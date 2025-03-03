@@ -5,7 +5,7 @@
 
 .Under construction
 ****
-WARNING: This documentation is a work in progress.
+WARNING: This documentation is a work in progress. *If you are in a hurry just look at xref:sample:index.adoc[Sample]*
 ****
 
 This project is a library designed for small businesses that are not yet ready to invest in Kafka or a message queue system, but still want a way to process tasks, keep completion records and handle retries and circuit breakers when the underlying infrastructure fails. It has a `Producer-Consumer` approach that allows you to create tasks and execute them asynchronously with the convenience that you can decide the execution time.
