@@ -8,11 +8,18 @@ public class InstantTypeAdapter implements JsonSerializer<Instant>, JsonDeserial
 
     @Override
     public JsonElement serialize(Instant src, Type typeOfSrc, JsonSerializationContext context) {
+        if (src == null) {
+            return JsonNull.INSTANCE;
+        }
         return new JsonPrimitive(src.getEpochSecond()); // Epoch seconds
     }
 
     @Override
     public Instant deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        if (json == null || json.isJsonNull()) {
+            return null;
+        }
+
         return Instant.ofEpochSecond(json.getAsLong());
     }
 

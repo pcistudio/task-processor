@@ -34,7 +34,6 @@ public final class TaskProcessingContext {
     private final Class<?> taskHandlerType;
 
     private TaskProcessingContext(Builder builder) {
-//        Assert.notNull(builder.handlerProperties, "Handler properties cannot be null");
         if (builder.handlerProperties == null) {
             throw new IllegalArgumentException("Handler properties cannot be null");
         }
